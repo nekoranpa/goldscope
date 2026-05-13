@@ -4,346 +4,350 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GoldScope v1.2.2 — XAUUSD Pro Analyzer</title>
-<meta name="description" content="XAUUSDリアルタイム分析ツール。ADX・BB・EMA・マーケット構造・モンテカルロ予測を統合。">
+<title>GoldScope Vision — AI Market Intelligence for GOLD (XAUUSD)</title>
+<meta name="description" content="GoldScope Vision（ゴールドスコープビジョン）。GOLD/XAUUSDの市場情報整理・分析支援ツール。投資助言・売買指示ではありません。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-/* ===================== VARIABLES ===================== */
 :root{
   --g:#B8942A;--gl:#E8C96A;--gd:#7A5C0A;
-  --gr:#1BAE82;--grL:rgba(27,174,130,.10);
-  --rd:#E05530;--rdL:rgba(224,85,48,.09);
-  --am:#C07A10;--amL:rgba(192,122,16,.09);
-  --pu:#8A7EE8;--bl:#3A8AE0;
-  --bg:#080A0D;--bg2:#0F1218;--bg3:#161B24;--bg4:#1E2530;--bg5:#252D3C;
-  --bo:rgba(255,255,255,.06);--bo2:rgba(255,255,255,.12);--bo3:rgba(255,255,255,.18);
-  --tx:#ECEAE4;--tx2:#8E8C86;--tx3:#4A4845;
+  --gr:#1BAE82;--grL:rgba(27,174,130,.09);
+  --rd:#E05530;--rdL:rgba(224,85,48,.08);
+  --am:#C07A10;--amL:rgba(192,122,16,.08);
+  --pu:#8A7EE8;--bl:#3A8AE0;--cy:#2ABBD4;
+  --bg:#070909;--bg2:#0D1014;--bg3:#131820;--bg4:#1A2029;--bg5:#212838;
+  --bo:rgba(255,255,255,.05);--bo2:rgba(255,255,255,.10);--bo3:rgba(255,255,255,.16);
+  --tx:#ECE9E2;--tx2:#8C8A84;--tx3:#484644;
   --mn:'JetBrains Mono',monospace;--sf:'Syne',sans-serif;--jp:'Noto Sans JP',sans-serif;
   --r:10px;--rs:6px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+.page{display:none;min-height:100vh;flex-direction:column;}
+.page.active{display:flex;}
 
-/* ===================== PAGE ROUTER ===================== */
-.page{display:none;min-height:100vh;}
-.page.active{display:flex;flex-direction:column;}
-
-/* ===================== LOGIN PAGE ===================== */
-#page-login{align-items:center;justify-content:center;background:
-  radial-gradient(ellipse 80% 60% at 50% -10%,rgba(184,148,42,.12) 0%,transparent 70%),
-  var(--bg);}
-.login-box{width:100%;max-width:420px;padding:0 20px;}
-.login-logo{text-align:center;margin-bottom:40px;}
-.login-logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;box-shadow:0 8px 32px rgba(184,148,42,.25);}
-.login-logo-text{font-family:var(--sf);font-size:28px;font-weight:800;letter-spacing:-0.5px;}
-.login-logo-text span{color:var(--g);}
-.login-ver{font-size:11px;font-family:var(--mn);color:var(--tx3);margin-top:4px;}
-.login-card{background:var(--bg2);border:0.5px solid var(--bo2);border-radius:16px;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,.4);}
-.login-title{font-size:15px;font-weight:600;margin-bottom:6px;}
-.login-sub{font-size:12px;color:var(--tx2);margin-bottom:24px;line-height:1.6;}
-.form-group{margin-bottom:16px;}
-.form-label{font-size:11px;color:var(--tx2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:block;}
-.form-input{width:100%;background:var(--bg3);border:0.5px solid var(--bo2);border-radius:var(--rs);padding:11px 14px;color:var(--tx);font-size:14px;font-family:var(--jp);outline:none;transition:border-color .2s;}
-.form-input:focus{border-color:var(--g);}
-.form-err{font-size:12px;color:var(--rd);margin-top:6px;display:none;}
-.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--g),var(--gd));color:#000;font-size:14px;font-weight:700;font-family:var(--sf);border:none;border-radius:var(--rs);cursor:pointer;margin-top:8px;transition:opacity .2s;}
+/* LOGIN */
+#page-login{align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(184,148,42,.10) 0%,transparent 65%),var(--bg);}
+.login-wrap{width:100%;max-width:400px;padding:0 20px;}
+.login-logo{text-align:center;margin-bottom:32px;}
+.logo-icon-lg{width:56px;height:56px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;box-shadow:0 8px 40px rgba(184,148,42,.22);}
+.logo-name{font-family:var(--sf);font-size:26px;font-weight:800;letter-spacing:-.5px;}
+.logo-name span{color:var(--g);}
+.logo-sub{font-size:11px;color:var(--tx3);margin-top:3px;font-family:var(--mn);}
+.login-card{background:var(--bg2);border:0.5px solid var(--bo2);border-radius:16px;padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.45);}
+.lc-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.lc-sub{font-size:12px;color:var(--tx2);margin-bottom:20px;line-height:1.65;}
+.fi{margin-bottom:14px;}
+.fi label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px;}
+.fi input{width:100%;background:var(--bg3);border:0.5px solid var(--bo2);border-radius:var(--rs);padding:10px 13px;color:var(--tx);font-size:13px;font-family:var(--jp);outline:none;transition:border-color .2s;}
+.fi input:focus{border-color:var(--g);}
+.login-err{font-size:11px;color:var(--rd);margin-top:5px;display:none;}
+.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--g),var(--gd));color:#000;font-size:14px;font-weight:700;font-family:var(--sf);border:none;border-radius:var(--rs);cursor:pointer;margin-top:6px;transition:opacity .2s;letter-spacing:.02em;}
 .btn-login:hover{opacity:.88;}
-.login-links{display:flex;justify-content:space-between;margin-top:16px;}
-.login-link{font-size:12px;color:var(--tx2);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
-.login-link:hover{color:var(--tx);}
-.trial-note{font-size:11px;color:var(--tx3);text-align:center;margin-top:14px;}
-.plan-badges{display:flex;gap:8px;margin-top:20px;}
-.plan-badge{flex:1;background:var(--bg3);border:0.5px solid var(--bo);border-radius:var(--rs);padding:10px;text-align:center;}
-.plan-badge.premium{border-color:rgba(184,148,42,.3);background:rgba(184,148,42,.05);}
-.plan-name{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;}
-.plan-price{font-size:13px;font-weight:700;font-family:var(--mn);color:var(--tx);margin-top:2px;}
-.plan-badge.premium .plan-name{color:var(--g);}
+.login-links{display:flex;justify-content:space-between;margin-top:14px;}
+.ll{font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.ll:hover{color:var(--tx2);}
+.trial-note{font-size:10px;color:var(--tx3);text-align:center;margin-top:12px;}
+.price-badge{background:linear-gradient(135deg,rgba(184,148,42,.12),rgba(184,148,42,.06));border:0.5px solid rgba(184,148,42,.3);border-radius:var(--rs);padding:12px;text-align:center;margin-top:16px;}
+.pb-plan{font-size:10px;color:var(--g);text-transform:uppercase;letter-spacing:.1em;}
+.pb-price{font-size:20px;font-weight:700;font-family:var(--mn);color:var(--tx);margin-top:3px;}
+.pb-note{font-size:10px;color:var(--tx3);margin-top:2px;}
+.disclaimer-mini{font-size:10px;color:var(--tx3);text-align:center;margin-top:14px;line-height:1.7;padding:0 4px;}
 
-/* ===================== APP LAYOUT ===================== */
-.app-hdr{border-bottom:0.5px solid var(--bo);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;background:rgba(8,10,13,.94);backdrop-filter:blur(16px);}
-.hdr-logo{display:flex;align-items:center;gap:8px;cursor:pointer;}
-.hdr-logo-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;}
-.hdr-logo-text{font-family:var(--sf);font-size:15px;font-weight:700;}
-.hdr-logo-text span{color:var(--g);}
-.hdr-ver{font-size:9px;font-family:var(--mn);color:var(--tx3);border:0.5px solid var(--gd);color:var(--g);padding:1px 6px;border-radius:20px;margin-left:4px;}
-.hdr-nav{display:flex;align-items:center;gap:4px;}
-.hdr-nav-btn{font-size:12px;padding:5px 10px;border-radius:var(--rs);border:none;background:transparent;color:var(--tx2);cursor:pointer;font-family:var(--jp);transition:all .15s;}
-.hdr-nav-btn:hover,.hdr-nav-btn.active{background:var(--bg3);color:var(--tx);}
-.hdr-right{display:flex;align-items:center;gap:10px;}
-.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2);background:var(--bg3);border:0.5px solid var(--bo);border-radius:20px;padding:3px 10px;}
-.ldot{width:6px;height:6px;border-radius:50%;background:var(--tx3);}
+/* APP HEADER */
+.app-hdr{border-bottom:0.5px solid var(--bo);padding:0 20px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;background:rgba(7,9,9,.94);backdrop-filter:blur(16px);}
+.hdr-left{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.hdr-icon{width:24px;height:24px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.hdr-name{font-family:var(--sf);font-size:14px;font-weight:700;}
+.hdr-name span{color:var(--g);}
+.hdr-ver{font-size:9px;font-family:var(--mn);color:var(--g);border:0.5px solid var(--gd);border-radius:20px;padding:1px 6px;margin-left:3px;}
+.hdr-nav{display:flex;align-items:center;gap:2px;}
+.hn-btn{font-size:11px;padding:4px 10px;border-radius:var(--rs);border:none;background:transparent;color:var(--tx3);cursor:pointer;font-family:var(--jp);transition:all .15s;}
+.hn-btn:hover,.hn-btn.act{background:var(--bg3);color:var(--tx);}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.live-pill{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx3);background:var(--bg3);border:0.5px solid var(--bo);border-radius:20px;padding:3px 9px;}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--tx3);}
 .ldot.on{background:var(--gr);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.plan-pill{font-size:10px;font-family:var(--mn);padding:2px 8px;border-radius:20px;}
-.plan-basic{background:var(--bg3);color:var(--tx2);border:0.5px solid var(--bo);}
-.plan-premium{background:rgba(184,148,42,.15);color:var(--g);border:0.5px solid rgba(184,148,42,.3);}
 .speak-anim{display:none;align-items:center;gap:2px;}
 .speak-anim.on{display:inline-flex;}
-.sb{width:2.5px;background:var(--gr);border-radius:2px;animation:sbA .5s ease-in-out infinite alternate;}
-.sb:nth-child(1){height:4px;animation-delay:0s}.sb:nth-child(2){height:9px;animation-delay:.15s}.sb:nth-child(3){height:6px;animation-delay:.3s}
+.sb{width:2px;background:var(--gr);border-radius:2px;animation:sbA .5s ease-in-out infinite alternate;}
+.sb:nth-child(1){height:4px}.sb:nth-child(2){height:8px;animation-delay:.15s}.sb:nth-child(3){height:5px;animation-delay:.3s}
 @keyframes sbA{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
-.btn-stop-voice{font-size:11px;padding:4px 10px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx3);cursor:pointer;display:block;transition:all .2s;}
-.btn-stop-voice.on{border-color:var(--rd);color:var(--rd);background:rgba(224,85,48,.12);animation:stopPulse 1.2s ease-in-out infinite;}
-@keyframes stopPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,85,48,0)}50%{box-shadow:0 0 0 3px rgba(224,85,48,.25)}}
-.speed-sel{font-size:11px;padding:4px 8px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);font-family:var(--mn);cursor:pointer;outline:none;}
+.speed-sel{font-size:10px;padding:3px 7px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);font-family:var(--mn);cursor:pointer;outline:none;}
 
-/* ===================== MAIN CONTENT ===================== */
-.app-body{max-width:1020px;margin:0 auto;padding:20px;}
+/* ACTION BAR — top */
+.action-bar{background:var(--bg3);border-bottom:0.5px solid var(--bo);padding:8px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ab-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg4);color:var(--tx2);cursor:pointer;font-size:12px;font-family:var(--jp);transition:all .15s;white-space:nowrap;}
+.ab-btn:hover{background:var(--bg5);color:var(--tx);}
+.ab-btn.primary{background:linear-gradient(135deg,var(--g),var(--gd));color:#000;border:none;font-weight:700;font-family:var(--sf);}
+.ab-btn.primary:hover{opacity:.88;}
+.ab-btn.stop{border-color:var(--rd);color:var(--rd);background:rgba(224,85,48,.08);}
+.ab-btn.stop.on{animation:stopPls 1.2s ease-in-out infinite;}
+@keyframes stopPls{0%,100%{box-shadow:0 0 0 0 rgba(224,85,48,0)}50%{box-shadow:0 0 0 3px rgba(224,85,48,.25)}}
+.ab-sep{width:1px;height:20px;background:var(--bo2);margin:0 2px;}
 
-/* ===================== PRICE HERO ===================== */
-.price-hero{background:linear-gradient(135deg,rgba(184,148,42,.05) 0%,transparent 60%);border:0.5px solid var(--bo);border-radius:14px;padding:20px 24px;margin-bottom:16px;display:grid;grid-template-columns:1fr auto auto;gap:20px;align-items:center;}
-.price-lbl{font-size:10px;color:var(--tx3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
-.price-big{font-family:var(--mn);font-size:44px;font-weight:700;line-height:1;letter-spacing:-1px;}
-.price-chg{font-size:13px;font-family:var(--mn);margin-top:5px;}
-.price-chg.up{color:var(--gr)}.price-chg.dn{color:var(--rd);}
-.market-state-box{text-align:center;padding:12px 18px;background:var(--bg3);border-radius:var(--r);border:0.5px solid var(--bo);}
-.ms-label{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
-.ms-state{font-size:15px;font-weight:700;}
-.ms-adx{font-size:11px;font-family:var(--mn);color:var(--tx2);margin-top:3px;}
-.adx-mini{height:4px;border-radius:2px;overflow:hidden;background:var(--bg4);margin-top:5px;}
-.adx-fill{height:100%;border-radius:2px;transition:width .8s;}
-.time-info{text-align:right;}
-.time-str{font-size:11px;font-family:var(--mn);color:var(--tx3);}
-.src-str{font-size:10px;color:var(--tx3);margin-top:2px;}
+/* BODY */
+.app-body{max-width:1000px;margin:0 auto;padding:18px 20px 40px;}
 
-/* ===================== ENTRY VERDICT ===================== */
-.entry-box{border-radius:var(--r);padding:16px 18px;margin-bottom:14px;border:1.5px solid var(--bo2);transition:all .4s;}
-.entry-box.go{border-color:var(--gr);background:var(--grL);}
-.entry-box.wait{border-color:var(--rd);background:var(--rdL);}
-.entry-box.caution{border-color:var(--am);background:var(--amL);}
-.entry-hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
-.entry-verdict{font-size:20px;font-weight:700;font-family:var(--sf);}
-.entry-reason{font-size:13px;color:var(--tx2);line-height:1.8;margin-bottom:10px;}
-.adx-row{display:flex;align-items:center;gap:8px;}
-.adx-track{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
-.adx-fill2{height:100%;border-radius:2px;transition:width .8s;}
-.adx-nums{font-size:11px;font-family:var(--mn);color:var(--tx2);}
+/* LOADING OVERLAY */
+.loading-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.spin{animation:spin .9s linear infinite;display:inline-block;font-size:16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--tx2);}
 
-/* ===================== PILLS ===================== */
-.pill{font-size:10px;padding:2px 8px;border-radius:3px;font-weight:600;font-family:var(--mn);white-space:nowrap;display:inline-block;}
-.p-bull{background:rgba(27,174,130,.2);color:#5DD4A5;border:0.5px solid rgba(27,174,130,.4);}
-.p-bear{background:rgba(224,85,48,.2);color:#F0A080;border:0.5px solid rgba(224,85,48,.4);}
-.p-warn{background:rgba(192,122,16,.2);color:#F0A030;border:0.5px solid rgba(192,122,16,.4);}
-.p-info{background:rgba(58,138,224,.2);color:#80B8EC;border:0.5px solid rgba(58,138,224,.4);}
-.p-pur{background:rgba(138,126,232,.2);color:#B0A8F0;border:0.5px solid rgba(138,126,232,.4);}
-.p-gold{background:rgba(184,148,42,.2);color:var(--gl);border:0.5px solid rgba(184,148,42,.4);}
-.p-neut{background:rgba(255,255,255,.06);color:var(--tx2);border:0.5px solid var(--bo2);}
-.p-danger{background:rgba(224,85,48,.25);color:#F0A080;border:0.5px solid rgba(224,85,48,.5);}
-.p-range{background:rgba(58,138,224,.15);color:#80B8EC;border:0.5px solid rgba(58,138,224,.3);}
-.p-trend{background:rgba(184,148,42,.15);color:var(--gl);border:0.5px solid rgba(184,148,42,.3);}
-.p-tri{background:rgba(138,126,232,.15);color:#B0A8F0;border:0.5px solid rgba(138,126,232,.3);}
+/* PRICE HERO */
+.price-hero{background:linear-gradient(135deg,rgba(184,148,42,.05),transparent 60%);border:0.5px solid rgba(184,148,42,.2);border-radius:14px;padding:18px 22px;margin-bottom:14px;}
+.ph-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:10px;}
+.ph-label{font-size:9px;color:var(--tx3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
+.ph-price{font-family:var(--mn);font-size:46px;font-weight:700;line-height:1;letter-spacing:-1px;}
+.ph-chg{font-size:12px;font-family:var(--mn);margin-top:5px;}
+.ph-chg.up{color:var(--gr)}.ph-chg.dn{color:var(--rd);}
+.ph-meta{text-align:right;}
+.ph-meta-row{font-size:10px;font-family:var(--mn);color:var(--tx3);margin-bottom:2px;}
+.ph-meta-row span{color:var(--tx2);}
+.bid-ask-row{display:flex;gap:14px;flex-wrap:wrap;}
+.ba-item{background:var(--bg3);border-radius:var(--rs);padding:6px 12px;border:0.5px solid var(--bo);}
+.ba-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;}
+.ba-val{font-family:var(--mn);font-size:13px;font-weight:600;margin-top:2px;}
 
-/* ===================== TF GRID ===================== */
-.tf-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
-.tf-card{border-radius:var(--r);padding:14px 15px;border:0.5px solid var(--bo2);background:var(--bg2);transition:all .4s;position:relative;overflow:hidden;}
-.tf-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0;background:var(--bo);transition:background .4s;}
+/* AI SUMMARY BOX (top, prominent) */
+.ai-summary{background:var(--bg2);border:0.5px solid var(--bo2);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;position:relative;}
+.ai-summary::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0;background:linear-gradient(90deg,var(--g),var(--pu));}
+.ais-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.ais-title{font-family:var(--sf);font-size:13px;font-weight:700;color:var(--g);letter-spacing:.05em;}
+.ais-badge{font-size:9px;font-family:var(--mn);padding:2px 8px;border-radius:20px;border:0.5px solid var(--g);color:var(--g);}
+.ais-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.ais-item{background:var(--bg3);border-radius:var(--rs);padding:10px 12px;border:0.5px solid var(--bo);}
+.ais-item-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+.ais-item-val{font-size:13px;font-weight:600;}
+.ais-item-sub{font-size:10px;color:var(--tx3);margin-top:2px;}
+.dir-arrow{font-size:22px;margin-right:6px;}
+.ais-comment{font-size:12px;color:var(--tx2);line-height:1.8;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border-left:3px solid var(--g);}
+
+/* DIRECTION CARDS */
+.dir-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.dir-card{border-radius:var(--r);padding:14px 15px;border:0.5px solid var(--bo2);background:var(--bg2);position:relative;overflow:hidden;transition:all .4s;}
+.dir-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;transition:background .4s;}
+.dir-card.bull::before{background:var(--gr);}
+.dir-card.bear::before{background:var(--rd);}
+.dir-card.bull{border-color:rgba(27,174,130,.3);background:var(--grL);}
+.dir-card.bear{border-color:rgba(224,85,48,.3);background:var(--rdL);}
+.dc-lbl{font-size:9px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
+.dc-arrow{font-size:28px;margin-bottom:4px;}
+.dc-bias{font-size:14px;font-weight:700;margin-bottom:3px;}
+.dc-sub{font-size:11px;color:var(--tx2);line-height:1.5;}
+.pbar{height:5px;border-radius:3px;overflow:hidden;display:flex;margin-top:8px;}
+.pb-b{background:var(--gr);transition:width .8s;}
+.pb-s{background:var(--rd);transition:width .8s;}
+
+/* IMPORTANT UPDATE BANNER */
+.update-banner{display:none;background:rgba(192,122,16,.1);border:1px solid rgba(192,122,16,.4);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;}
+.update-banner.on{display:flex;align-items:flex-start;gap:10px;}
+.ub-icon{font-size:18px;flex-shrink:0;}
+.ub-title{font-size:12px;font-weight:700;color:var(--am);margin-bottom:3px;}
+.ub-body{font-size:12px;color:var(--tx2);line-height:1.7;}
+
+/* SQUEEZE / VOLATILITY */
+.squeeze-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+.sq-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
+.sq-title{font-size:11px;color:var(--tx2);font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.sq-state{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;border:0.5px solid;}
+.sq-normal{background:rgba(255,255,255,.05);color:var(--tx2);border-color:var(--bo2);}
+.sq-squeeze{background:rgba(232,201,106,.1);color:#E8C96A;border-color:rgba(232,201,106,.4);}
+.sq-expand{background:rgba(138,126,232,.1);color:#B0A8F0;border-color:rgba(138,126,232,.4);}
+.sq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sq-item{background:var(--bg3);border-radius:var(--rs);padding:8px 10px;border:0.5px solid var(--bo);}
+.sq-item-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.sq-item-val{font-size:12px;font-weight:600;font-family:var(--mn);}
+.squeeze-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+.dot-squeeze{background:#E8C96A;animation:sqPulse 1s ease-in-out infinite;}
+.dot-expand{background:#B0A8F0;animation:sqPulse .7s ease-in-out infinite;}
+.dot-normal{background:var(--tx3);}
+@keyframes sqPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+
+/* RANGE FILTER */
+.rf-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+.rf-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--bo);}
+.rf-row:last-child{border-bottom:none;}
+.rf-key{font-size:11px;color:var(--tx3);}
+.rf-val{font-size:12px;font-family:var(--mn);font-weight:600;}
+
+/* EXPECTED VALUE */
+.ev-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+.ev-gauges{display:flex;gap:10px;margin-top:10px;}
+.ev-gauge{flex:1;background:var(--bg3);border-radius:var(--rs);padding:10px 12px;border:0.5px solid var(--bo);}
+.ev-g-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.ev-g-num{font-family:var(--mn);font-size:18px;font-weight:700;}
+.ev-g-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden;}
+.ev-g-fill{height:100%;border-radius:2px;transition:width .9s ease;}
+.ev-state{text-align:center;font-size:12px;font-weight:600;margin-top:10px;padding:7px;border-radius:var(--rs);background:var(--bg3);}
+
+/* REFERENCE ZONES (TP/SL) */
+.ref-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+.ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
+.ref-col-title{font-size:11px;font-weight:600;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--bo);}
+.ref-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bo);}
+.ref-row:last-child{border:none;padding-bottom:0;}
+.ref-tag{font-size:10px;color:var(--tx2);}
+.ref-price{font-family:var(--mn);font-size:13px;font-weight:700;}
+.ref-dist{font-size:10px;color:var(--tx3);}
+
+/* REALTIME / MAIN DIRECTION SPLIT */
+.rt-main-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.rtm-card{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:13px 15px;}
+.rtm-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.rtm-val{font-size:14px;font-weight:700;}
+.rtm-sub{font-size:11px;color:var(--tx2);line-height:1.6;margin-top:5px;}
+
+/* SLOW TREND */
+.slow-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:0.5px solid;}
+.slow-bull{background:rgba(27,174,130,.12);color:#5DD4A5;border-color:rgba(27,174,130,.35);}
+.slow-bear{background:rgba(224,85,48,.12);color:#F0A080;border-color:rgba(224,85,48,.35);}
+.slow-neut{background:rgba(255,255,255,.05);color:var(--tx2);border-color:var(--bo2);}
+
+/* TF GRID */
+.tf-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.tf-card{border-radius:var(--r);padding:12px 13px;border:0.5px solid var(--bo2);background:var(--bg2);position:relative;overflow:hidden;transition:all .4s;}
+.tf-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bo);transition:background .4s;}
 .tf-card.bull::before{background:var(--gr);}
 .tf-card.bear::before{background:var(--rd);}
-.tf-card.bull{border-color:rgba(27,174,130,.35);background:var(--grL);}
-.tf-card.bear{border-color:rgba(224,85,48,.35);background:var(--rdL);}
-.tf-label{font-size:9px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;}
-.tf-target{font-family:var(--mn);font-size:20px;font-weight:700;line-height:1;}
-.tf-dir{font-size:11px;font-weight:600;margin-top:3px;}
-.tf-sub{font-size:10px;color:var(--tx2);line-height:1.5;margin-top:5px;}
-.tf-pbar{height:4px;border-radius:2px;overflow:hidden;display:flex;margin-top:6px;}
-.tf-pb{background:var(--gr);transition:width .8s;}
-.tf-ps{background:var(--rd);transition:width .8s;}
+.tf-card.bull{border-color:rgba(27,174,130,.3);background:var(--grL);}
+.tf-card.bear{border-color:rgba(224,85,48,.3);background:var(--rdL);}
+.tf-lbl{font-size:8px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
+.tf-price{font-family:var(--mn);font-size:18px;font-weight:700;line-height:1;}
+.tf-dir{font-size:10px;font-weight:600;margin-top:3px;}
+.tf-sub{font-size:9px;color:var(--tx2);line-height:1.4;margin-top:4px;}
 
-/* ===================== PRED & PATTERN ===================== */
-.pred-pat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.pred-box{background:var(--bg2);border:0.5px solid rgba(184,148,42,.2);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:12px;}
-.pred-icon{font-size:18px;color:var(--g);}
-.pred-txt{font-size:12px;color:var(--tx2);flex:1;line-height:1.5;}
-.pred-time-val{font-family:var(--mn);font-size:16px;font-weight:700;color:var(--g);white-space:nowrap;}
-.pat-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:13px 16px;}
-.pat-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
-.pat-items{display:flex;flex-wrap:wrap;gap:6px;}
+/* LOCKABLE */
+.lockable{position:relative;}
+.lock-ov{display:none;position:absolute;inset:0;background:rgba(7,9,9,.82);backdrop-filter:blur(4px);border-radius:var(--r);align-items:center;justify-content:center;flex-direction:column;gap:6px;z-index:10;}
+.lock-ov.on{display:flex;}
+.lock-ov-txt{font-size:11px;color:var(--tx2);text-align:center;line-height:1.5;}
 
-/* ===================== MONTE CARLO ===================== */
-.mc-box{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
-.mc-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.mc-grid{display:flex;gap:10px;align-items:stretch;}
-.mc-chart-wrap{flex:1;height:80px;position:relative;}
-.mc-stats{display:flex;flex-direction:column;gap:4px;justify-content:center;padding-left:12px;border-left:0.5px solid var(--bo);}
-.mc-stat{font-size:11px;color:var(--tx2);}
-.mc-stat strong{font-family:var(--mn);color:var(--tx);}
-.mc-bias{font-size:12px;font-weight:700;}
+/* PILLS */
+.pill{font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600;font-family:var(--mn);white-space:nowrap;display:inline-block;border:0.5px solid;}
+.p-bull{background:rgba(27,174,130,.18);color:#5DD4A5;border-color:rgba(27,174,130,.4);}
+.p-bear{background:rgba(224,85,48,.18);color:#F0A080;border-color:rgba(224,85,48,.4);}
+.p-warn{background:rgba(192,122,16,.18);color:#F0A030;border-color:rgba(192,122,16,.4);}
+.p-info{background:rgba(58,138,224,.18);color:#80B8EC;border-color:rgba(58,138,224,.4);}
+.p-gold{background:rgba(184,148,42,.18);color:var(--gl);border-color:rgba(184,148,42,.4);}
+.p-pur{background:rgba(138,126,232,.18);color:#B0A8F0;border-color:rgba(138,126,232,.4);}
+.p-neut{background:rgba(255,255,255,.05);color:var(--tx2);border-color:var(--bo2);}
+.p-range{background:rgba(58,138,224,.12);color:#80B8EC;border-color:rgba(58,138,224,.3);}
+.p-trend{background:rgba(184,148,42,.12);color:var(--gl);border-color:rgba(184,148,42,.3);}
+.p-squeeze{background:rgba(232,201,106,.12);color:#E8C96A;border-color:rgba(232,201,106,.35);}
+.p-expand{background:rgba(138,126,232,.12);color:#B0A8F0;border-color:rgba(138,126,232,.35);}
 
-/* ===================== TP/SL PANEL ===================== */
-.tpsl-panel{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:15px 16px;margin-bottom:14px;}
-.tpsl-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
-.tpsl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.tpsl-col-hdr{font-size:11px;font-weight:600;padding-bottom:8px;border-bottom:0.5px solid var(--bo);margin-bottom:8px;}
-.tpsl-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bo);}
-.tpsl-row:last-child{border-bottom:none;padding-bottom:0;}
-.tpsl-tag{font-size:10px;color:var(--tx2);}
-.tpsl-val{font-family:var(--mn);font-size:13px;font-weight:700;}
-.tpsl-sub{font-size:10px;color:var(--tx3);}
-
-/* ===================== INDICATOR RIBBON ===================== */
-.event-ticker{background:var(--bg3);border:0.5px solid var(--bo);border-radius:var(--r);padding:10px 16px;margin-bottom:14px;overflow:hidden;}
-.event-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
-.event-items{display:flex;gap:16px;flex-wrap:wrap;}
-.event-item{display:flex;align-items:center;gap:6px;}
-.event-time{font-family:var(--mn);font-size:11px;color:var(--g);}
-.event-name{font-size:12px;color:var(--tx);}
-.event-impact{font-size:10px;padding:1px 6px;border-radius:3px;}
-.ei-high{background:rgba(224,85,48,.2);color:#F0A080;border:0.5px solid rgba(224,85,48,.3);}
-.ei-med{background:rgba(192,122,16,.2);color:#F0A030;border:0.5px solid rgba(192,122,16,.3);}
-.ei-low{background:rgba(255,255,255,.06);color:var(--tx3);border:0.5px solid var(--bo);}
-
-/* ===================== COMMENT ===================== */
-.cmt-box{background:var(--bg2);border-radius:var(--rs);padding:13px 15px;margin-bottom:14px;border:0.5px solid var(--bo);font-size:13px;color:var(--tx2);line-height:1.85;position:relative;}
-.cmt-refresh{position:absolute;top:10px;right:12px;font-size:10px;color:var(--tx3);font-family:var(--mn);}
-
-/* ===================== TABS ===================== */
-.tab-row{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap;}
-.tab{font-size:12px;padding:6px 13px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:transparent;color:var(--tx2);cursor:pointer;font-family:var(--jp);transition:all .15s;}
+/* PANELS / TABS */
+.panel{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;}
+.panel.dark{background:var(--bg3);}
+.panel-lbl{font-size:9px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:11px;}
+.row-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--bo);}
+.row-item:last-child{border-bottom:none;}
+.next-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--bo);}
+.next-item:last-child{border-bottom:none;}
+.ndot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.tab-row{display:flex;gap:3px;margin-bottom:11px;flex-wrap:wrap;}
+.tab{font-size:11px;padding:5px 12px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:transparent;color:var(--tx3);cursor:pointer;font-family:var(--jp);transition:all .15s;}
 .tab:hover{background:var(--bg3);color:var(--tx);}
 .tab.active{background:var(--tx);color:var(--bg);border-color:var(--tx);font-weight:600;}
+.chart-wrap{height:200px;background:var(--bg3);border-radius:var(--r);overflow:hidden;border:0.5px solid var(--bo);margin-bottom:9px;}
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 8px;}
+.leg-item{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--tx3);}
+.leg-line{width:12px;height:2px;display:inline-block;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.csm{background:var(--bg3);border-radius:var(--rs);padding:10px 12px;border:0.5px solid var(--bo);}
+.meter{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:5px 0;}
+.meter-bar{height:100%;border-radius:2px;transition:width .9s ease;}
 
-/* ===================== PANELS ===================== */
-.panel{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:15px 16px;margin-bottom:12px;}
-.panel.dark{background:var(--bg3);}
-.panel-lbl{font-size:10px;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
-.row-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--bo);}
-.row-item:last-child{border-bottom:none;}
-.next-item{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:0.5px solid var(--bo);}
-.next-item:last-child{border-bottom:none;padding-bottom:0;}
-.ndot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-.chart-wrap2{height:220px;background:var(--bg3);border-radius:var(--r);overflow:hidden;border:0.5px solid var(--bo);margin-bottom:10px;}
-.legend{display:flex;flex-wrap:wrap;gap:10px;padding:4px 0 10px;}
-.legend-item{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--tx3);}
-.legend-line{width:14px;height:2px;display:inline-block;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.csm{background:var(--bg3);border-radius:var(--rs);padding:11px 13px;border:0.5px solid var(--bo);}
-.meter-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:6px 0;}
-.meter-bar{height:100%;border-radius:2px;transition:width .9s;}
-.pbar2{height:7px;border-radius:4px;overflow:hidden;display:flex;margin:4px 0;}
-.pb2b{background:var(--gr);transition:width .8s;}.pb2s{background:var(--rd);transition:width .8s;}
+/* POLICY / ACCOUNT */
+.policy-body,.acc-body{max-width:720px;margin:0 auto;padding:28px 20px;}
+.pol-h1{font-family:var(--sf);font-size:22px;font-weight:800;margin-bottom:16px;}
+.pol-h2{font-size:13px;font-weight:700;border-left:2px solid var(--g);padding-left:10px;margin-bottom:8px;margin-top:16px;}
+.pol-p{font-size:12px;color:var(--tx2);line-height:1.9;margin-bottom:6px;}
+.pol-card{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.pol-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.pol-tbl td{padding:7px 10px;border-bottom:0.5px solid var(--bo);color:var(--tx2);}
+.pol-tbl td:first-child{color:var(--tx3);width:130px;}
+.agency-box{background:linear-gradient(135deg,rgba(184,148,42,.08),transparent);border:0.5px solid rgba(184,148,42,.25);border-radius:var(--r);padding:18px;margin-top:18px;}
+.agency-title{font-size:14px;font-weight:700;color:var(--g);margin-bottom:8px;}
 
-/* ===================== LOCK OVERLAY ===================== */
-.lock-overlay{display:none;position:absolute;inset:0;background:rgba(8,10,13,.85);backdrop-filter:blur(4px);border-radius:var(--r);align-items:center;justify-content:center;flex-direction:column;gap:8px;z-index:10;}
-.lock-overlay.on{display:flex;}
-.lock-icon{font-size:24px;color:var(--g);}
-.lock-txt{font-size:13px;color:var(--tx2);text-align:center;line-height:1.6;}
-.lock-upgrade{font-size:12px;color:var(--g);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
-.lockable{position:relative;}
-
-/* ===================== BTN ROW ===================== */
-.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0;}
-.btn{display:flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);cursor:pointer;font-size:13px;font-family:var(--jp);transition:all .15s;}
-.btn:hover{background:var(--bg4);}
-.btn:active{transform:scale(.97);}
-.btn-primary{background:linear-gradient(135deg,var(--g),var(--gd));color:#000;border:none;font-weight:700;font-family:var(--sf);}
-.btn-primary:hover{opacity:.88;background:linear-gradient(135deg,var(--g),var(--gd));}
-.btn-stop2{background:var(--rd);border-color:var(--rd);color:#fff;}
-.btn-stop2:hover{opacity:.85;background:var(--rd);}
-.spin{animation:spin .8s linear infinite;display:inline-block;}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ===================== POLICY PAGE ===================== */
-#page-policy .policy-body{max-width:760px;margin:0 auto;padding:32px 20px;}
-.policy-section{margin-bottom:36px;}
-.policy-h1{font-family:var(--sf);font-size:26px;font-weight:800;margin-bottom:8px;}
-.policy-h2{font-size:15px;font-weight:700;border-left:3px solid var(--g);padding-left:12px;margin-bottom:12px;}
-.policy-p{font-size:13px;color:var(--tx2);line-height:1.9;margin-bottom:8px;}
-.policy-list{font-size:13px;color:var(--tx2);line-height:1.9;padding-left:18px;}
-.policy-list li{margin-bottom:4px;}
-.policy-card{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:20px;margin-bottom:16px;}
-.policy-table{width:100%;border-collapse:collapse;font-size:13px;}
-.policy-table td{padding:8px 12px;border-bottom:0.5px solid var(--bo);color:var(--tx2);}
-.policy-table td:first-child{color:var(--tx3);width:140px;}
-
-/* ===================== ACCOUNT PAGE ===================== */
-#page-account .acc-body{max-width:680px;margin:0 auto;padding:28px 20px;}
-.acc-card{background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:20px;margin-bottom:14px;}
-.acc-plan-hero{background:linear-gradient(135deg,rgba(184,148,42,.08),transparent);border:0.5px solid rgba(184,148,42,.25);border-radius:var(--r);padding:20px;margin-bottom:14px;}
-.acc-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gd));display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px;}
-.acc-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--bo);}
-.acc-row:last-child{border-bottom:none;}
-.acc-key{font-size:12px;color:var(--tx3);}
-.acc-val{font-size:13px;font-family:var(--mn);}
-
-/* ===================== FOOTER ===================== */
-.app-footer{border-top:0.5px solid var(--bo);padding:16px 20px;margin-top:auto;}
-.footer-inner{max-width:1020px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
-.footer-txt{font-size:11px;color:var(--tx3);}
-.footer-links{display:flex;gap:12px;}
-.footer-link{font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+/* FOOTER */
+.app-footer{border-top:0.5px solid var(--bo);padding:14px 20px;margin-top:auto;}
+.footer-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+.footer-txt{font-size:10px;color:var(--tx3);}
+.footer-links{display:flex;gap:10px;}
+.footer-link{font-size:10px;color:var(--tx3);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
 .footer-link:hover{color:var(--tx2);}
-.disclaimer{font-size:10px;color:var(--tx3);line-height:1.7;padding:10px 14px;background:var(--bg2);border-radius:var(--rs);border:0.5px solid var(--bo);margin-top:10px;max-width:1020px;margin-left:auto;margin-right:auto;}
+.disclaimer{font-size:10px;color:var(--tx3);line-height:1.7;padding:9px 14px;background:var(--bg2);border-radius:var(--rs);border:0.5px solid var(--bo);margin-top:8px;}
 
-/* ===================== RESPONSIVE ===================== */
-@media(max-width:700px){
+@media(max-width:680px){
   .tf-grid{grid-template-columns:1fr 1fr;}
-  .price-hero{grid-template-columns:1fr;gap:12px;}
-  .pred-pat-row{grid-template-columns:1fr;}
-  .tpsl-grid{grid-template-columns:1fr;}
-  .app-body{padding:14px;}
+  .ais-grid{grid-template-columns:1fr;}
+  .dir-grid,.rt-main-grid,.ref-grid,.ev-gauges{grid-template-columns:1fr;}
+  .sq-grid{grid-template-columns:1fr 1fr;}
+  .app-body{padding:12px 14px 30px;}
+  .ph-price{font-size:34px;}
+  .bid-ask-row{gap:8px;}
   .hdr-nav{display:none;}
-  .grid2{grid-template-columns:1fr;}
 }
 </style>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImcxIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6I0U4Qzk2QSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM3QTVDMEEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImcyIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6I0I4OTQyQSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNFOEM5NkEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDwhLS0g6IOM5pmvOiDpu5IgLS0+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzA4MEEwRCIvPgogIDwhLS0gU2NvcGXlpJbjg6rjg7PjgrAgKOWkpykgLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTMuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2cxKSIgc3Ryb2tlLXdpZHRoPSIxLjIiIG9wYWNpdHk9IjAuNyIvPgogIDwhLS0gU2NvcGXlhoXjg6rjg7PjgrAgLS0+CiAgPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0I4OTQyQSIgc3Ryb2tlLXdpZHRoPSIwLjgiIG9wYWNpdHk9IjAuNSIvPgogIDwhLS0g44Kv44Ot44K544OY44KiOiDmsLTlubMgLS0+CiAgPGxpbmUgeDE9IjIiIHkxPSIxNiIgeDI9IjgiIHkyPSIxNiIgc3Ryb2tlPSIjQjg5NDJBIiBzdHJva2Utd2lkdGg9IjEuMiIgb3BhY2l0eT0iMC44Ii8+CiAgPGxpbmUgeDE9IjI0IiB5MT0iMTYiIHgyPSIzMCIgeTI9IjE2IiBzdHJva2U9IiNCODk0MkEiIHN0cm9rZS13aWR0aD0iMS4yIiBvcGFjaXR5PSIwLjgiLz4KICA8IS0tIOOCr+ODreOCueODmOOCojog5Z6C55u0IC0tPgogIDxsaW5lIHgxPSIxNiIgeTE9IjIiIHgyPSIxNiIgeTI9IjgiIHN0cm9rZT0iI0I4OTQyQSIgc3Ryb2tlLXdpZHRoPSIxLjIiIG9wYWNpdHk9IjAuOCIvPgogIDxsaW5lIHgxPSIxNiIgeTE9IjI0IiB4Mj0iMTYiIHkyPSIzMCIgc3Ryb2tlPSIjQjg5NDJBIiBzdHJva2Utd2lkdGg9IjEuMiIgb3BhY2l0eT0iMC44Ii8+CiAgPCEtLSBHIOaWh+WtlyAo5Lit5aSuKSAtLT4KICA8dGV4dCB4PSIxNiIgeT0iMjEuNSIgCiAgICBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIAogICAgZm9udC1zaXplPSIxNCIgCiAgICBmb250LXdlaWdodD0iYm9sZCIKICAgIGZpbGw9InVybCgjZzIpIgogICAgdGV4dC1hbmNob3I9Im1pZGRsZSIKICAgIGxldHRlci1zcGFjaW5nPSItMC41Ij5HPC90ZXh0PgogIDwhLS0g5bCP44GV44GE6Lyd44GN54K5IC0tPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMyIgcj0iMSIgZmlsbD0iI0U4Qzk2QSIgb3BhY2l0eT0iMC42Ii8+CiAgPGNpcmNsZSBjeD0iMjkiIGN5PSIxNiIgcj0iMSIgZmlsbD0iI0U4Qzk2QSIgb3BhY2l0eT0iMC42Ii8+Cjwvc3ZnPg==">
 </head>
 <body>
 
-<!-- ==================== LOGIN PAGE ==================== -->
+<!-- ==================== LOGIN ==================== -->
 <div id="page-login" class="page active">
-  <div class="login-box">
+  <div class="login-wrap">
     <div class="login-logo">
-      <div class="login-logo-icon">⬡</div>
-      <div class="login-logo-text">Gold<span>Scope</span></div>
-      <div class="login-ver">v1.2.2</div>
+      <div class="logo-icon-lg">⬡</div>
+      <div class="logo-name">GoldScope <span>Vision</span></div>
+      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · goldscope.ai</div>
     </div>
     <div class="login-card">
-      <div class="login-title">アカウントにログイン</div>
-      <div class="login-sub">XAUUSD プロ分析ツール。サブスクリプション登録後にご利用いただけます。<br>初回は3日間無料でお試しいただけます。</div>
-      <div class="form-group">
-        <label class="form-label" for="inp-user">ユーザーID / メールアドレス</label>
-        <input class="form-input" id="inp-user" type="text" placeholder="soundterrace" autocomplete="username">
+      <div class="lc-title">会員ログイン</div>
+      <div class="lc-sub">GoldScope Visionは市場情報整理・分析支援ツールです。<br>投資助言・売買指示ではありません。</div>
+      <div class="fi">
+        <label>ユーザーID</label>
+        <input id="inp-id" type="text" placeholder="soundterrace" autocomplete="username">
       </div>
-      <div class="form-group">
-        <label class="form-label" for="inp-pass">パスワード</label>
-        <input class="form-input" id="inp-pass" type="password" placeholder="••••" autocomplete="current-password">
-        <div class="form-err" id="login-err">IDまたはパスワードが正しくありません。</div>
+      <div class="fi">
+        <label>パスワード</label>
+        <input id="inp-pw" type="password" placeholder="••••" autocomplete="current-password">
+        <div class="login-err" id="login-err">IDまたはパスワードが正しくありません</div>
       </div>
       <button class="btn-login" onclick="doLogin()">ログイン</button>
       <div class="login-links">
-        <span class="login-link" onclick="showPage('policy')">利用規約 / プライバシーポリシー</span>
-        <span class="login-link" onclick="alert('パスワードリセットはinfo@soundterrace.co.jpまでご連絡ください。')">パスワードを忘れた</span>
+        <span class="ll" onclick="showPage('policy')">利用規約 / プライバシーポリシー</span>
+        <span class="ll" onclick="alert('パスワードリセットは info@soundterrace.co.jp へ')">パスワード忘れ</span>
       </div>
-      <div class="trial-note">※ テスト用: ID <strong>soundterrace</strong> / PW <strong>0000</strong> でログイン (Premium)</div>
-      <div class="plan-badges">
-        <div class="plan-badge">
-          <div class="plan-name">Basic</div>
-          <div class="plan-price">¥3,300/月</div>
-        </div>
-        <div class="plan-badge premium">
-          <div class="plan-name">⭐ Premium</div>
-          <div class="plan-price">¥5,500/月</div>
-        </div>
+      <div class="price-badge">
+        <div class="pb-plan">GoldScope Vision 会員</div>
+        <div class="pb-price">¥15,000 <span style="font-size:13px;font-weight:400">/月</span></div>
+        <div class="pb-note">GOLD/XAUUSD対応 · 他通貨ペアは今後対応予定 · 3日間無料トライアル</div>
       </div>
+      <div class="disclaimer-mini">GoldScope Visionは情報提供および分析支援を目的としたツールです。<br>投資助言・売買指示・利益保証を行うものではありません。<br>投資判断はご自身の責任で行ってください。</div>
+      <div class="trial-note" style="margin-top:10px">テスト: ID <strong>soundterrace</strong> / PW <strong>0000</strong></div>
     </div>
   </div>
 </div>
 
-<!-- ==================== MAIN APP PAGE ==================== -->
+<!-- ==================== MAIN APP ==================== -->
 <div id="page-app" class="page">
   <header class="app-hdr">
-    <div class="hdr-logo" onclick="showPage('app')">
-      <div class="hdr-logo-icon">⬡</div>
-      <span class="hdr-logo-text">Gold<span>Scope</span></span>
-      <span class="hdr-ver">v1.2.2</span>
+    <div class="hdr-left" onclick="showPage('app')">
+      <div class="hdr-icon">⬡</div>
+      <span class="hdr-name">GoldScope <span>Vision</span></span>
+      <span class="hdr-ver">v1.3.0</span>
     </div>
     <nav class="hdr-nav">
-      <button class="hdr-nav-btn active" onclick="showPage('app')">分析</button>
-      <button class="hdr-nav-btn" onclick="showPage('account')">アカウント</button>
-      <button class="hdr-nav-btn" onclick="showPage('policy')">ポリシー</button>
+      <button class="hn-btn act" onclick="showPage('app')">分析</button>
+      <button class="hn-btn" onclick="showPage('account')">アカウント</button>
+      <button class="hn-btn" onclick="showPage('policy')">ポリシー</button>
     </nav>
     <div class="hdr-right">
       <div class="live-pill">
@@ -351,303 +355,379 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
         <span id="liveLabel">待機中</span>
         <div class="speak-anim" id="speakAnim"><div class="sb"></div><div class="sb"></div><div class="sb"></div></div>
       </div>
-      <span class="plan-pill plan-premium" id="planPill">PREMIUM</span>
-      <button class="btn-stop-voice" id="btnStopVoice" onclick="stopVoice()">■ 停止</button>
-      <select class="speed-sel" id="speedSel" onchange="changeSpeed()">
+      <select class="speed-sel" id="speedSel" onchange="voiceRate=parseFloat(this.value)">
         <option value="1.0" selected>1.0×</option>
         <option value="1.2">1.2×</option>
         <option value="1.5">1.5×</option>
         <option value="2.0">2.0×</option>
       </select>
-      <button class="btn" style="font-size:12px;padding:5px 10px" onclick="doLogout()">ログアウト</button>
+      <button class="hn-btn" onclick="doLogout()" style="color:var(--tx3)">ログアウト</button>
     </div>
   </header>
 
+  <!-- ACTION BAR (top) -->
+  <div class="action-bar">
+    <button class="ab-btn primary" id="startBtn" onclick="startMonitoring()"><i class="ti ti-player-play"></i> リアルタイム開始</button>
+    <div class="ab-sep"></div>
+    <button class="ab-btn" onclick="speakNow()"><i class="ti ti-refresh"></i> 再度読み上げ</button>
+    <button class="ab-btn stop" id="btnStop" onclick="stopVoice()"><i class="ti ti-player-pause"></i> 音声中断</button>
+    <div class="ab-sep"></div>
+    <span style="font-size:10px;color:var(--tx3)">音声速度</span>
+    <select class="speed-sel" id="speedSel2" onchange="voiceRate=parseFloat(this.value);document.getElementById('speedSel').value=this.value">
+      <option value="1.0" selected>1.0×</option>
+      <option value="1.2">1.2×</option>
+      <option value="1.5">1.5×</option>
+      <option value="2.0">2.0×</option>
+    </select>
+    <button class="ab-btn" id="voiceBtn" onclick="toggleVoice()" style="margin-left:auto"><i class="ti ti-bell"></i> 音声: ON</button>
+  </div>
+
   <div class="app-body">
+
+    <!-- LOADING -->
+    <div class="loading-box" id="loadingBox" style="display:none">
+      <span class="spin">⟳</span>
+      <div>
+        <div class="loading-txt" id="loadingTxt">Alpha Vantageから価格データ取得中...</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:2px">しばらくお待ちください</div>
+      </div>
+    </div>
+
+    <!-- IMPORTANT UPDATE BANNER -->
+    <div class="update-banner" id="updateBanner">
+      <div class="ub-icon">⚠️</div>
+      <div>
+        <div class="ub-title">【Important Update】市場傾向に変化が見られます</div>
+        <div class="ub-body">保有中のポジションがある場合は、現在価格・参考SL・リスク許容幅を再確認してください。<br>※投資判断はご自身の責任で行ってください。</div>
+      </div>
+    </div>
 
     <!-- PRICE HERO -->
     <div class="price-hero">
-      <div>
-        <div class="price-lbl">XAU / USD · Gold Spot リアルタイム</div>
-        <div class="price-big" id="priceDisp">----.-</div>
-        <div class="price-chg" id="chgDisp">変動率 --</div>
+      <div class="ph-top">
+        <div>
+          <div class="ph-label">GOLD / XAUUSD · Current Price (Mid)</div>
+          <div class="ph-price" id="priceDisp">----.-</div>
+          <div class="ph-chg" id="chgDisp">変動率 --</div>
+        </div>
+        <div class="ph-meta">
+          <div class="ph-meta-row">Last Refreshed: <span id="lastRefreshed">--</span></div>
+          <div class="ph-meta-row">Time Zone: <span id="timeZone">--</span></div>
+          <div class="ph-meta-row">Source: <span id="dataSrc">--</span></div>
+          <div class="ph-meta-row" id="updTime" style="margin-top:4px;color:var(--g)"></div>
+        </div>
       </div>
-      <div class="market-state-box">
-        <div class="ms-label">マーケット状態</div>
-        <div class="ms-state" id="msState">-- 待機 --</div>
-        <div class="ms-adx" id="msAdx">ADX --</div>
-        <div class="adx-mini"><div class="adx-fill" id="adxFill" style="width:0%;background:var(--tx3)"></div></div>
-      </div>
-      <div class="time-info">
-        <div class="time-str" id="updTime">--:--:--</div>
-        <div class="src-str" id="dataSrc">--</div>
+      <div class="bid-ask-row">
+        <div class="ba-item">
+          <div class="ba-lbl">Bid</div>
+          <div class="ba-val" id="bidDisp" style="color:var(--rd)">--</div>
+        </div>
+        <div class="ba-item">
+          <div class="ba-lbl">Ask</div>
+          <div class="ba-val" id="askDisp" style="color:var(--gr)">--</div>
+        </div>
+        <div class="ba-item">
+          <div class="ba-lbl">Mid (表示価格)</div>
+          <div class="ba-val" id="midDisp" style="color:var(--g)">--</div>
+        </div>
+        <div class="ba-item">
+          <div class="ba-lbl">Spread</div>
+          <div class="ba-val" id="spreadDisp">--</div>
+        </div>
       </div>
     </div>
 
-    <!-- ENTRY VERDICT -->
-    <div id="entryBox" class="entry-box caution">
-      <div class="entry-hdr">
-        <div class="entry-verdict" id="entryVerdict">-- 分析待ち</div>
-        <span class="pill p-neut" id="adxPill">ADX --</span>
-        <span class="pill p-neut" id="msPill">-- 相場</span>
+    <!-- AI MARKET SUMMARY (top, prominent) -->
+    <div class="ai-summary" id="aiSummary">
+      <div class="ais-hdr">
+        <div class="ais-title">⬡ AI Market Summary — GoldScope Vision</div>
+        <div class="ais-badge" id="aisBadge">分析待ち</div>
       </div>
-      <div class="entry-reason" id="entryReason">「リアルタイム開始」を押してください。</div>
-      <div class="adx-row">
-        <span style="font-size:11px;color:var(--tx3);white-space:nowrap">ADX</span>
-        <div class="adx-track"><div class="adx-fill2" id="adxFill2" style="width:0%;background:var(--tx3)"></div></div>
-        <span class="adx-nums" id="adxNums">-- / -- / --</span>
+      <div class="ais-grid">
+        <div class="ais-item">
+          <div class="ais-item-lbl">現在の市場傾向</div>
+          <div class="ais-item-val" id="mktTrend">--</div>
+          <div class="ais-item-sub" id="mktTrendSub">--</div>
+        </div>
+        <div class="ais-item">
+          <div class="ais-item-lbl">Short-term Direction</div>
+          <div class="ais-item-val" id="shortDirDisp"><span class="dir-arrow" id="shortArrow">→</span><span id="shortBias">--</span></div>
+          <div class="ais-item-sub" id="shortDirSub">--</div>
+        </div>
+        <div class="ais-item">
+          <div class="ais-item-lbl">Mid-term Direction</div>
+          <div class="ais-item-val" id="midDirDisp"><span class="dir-arrow" id="midArrow">→</span><span id="midBias">--</span></div>
+          <div class="ais-item-sub" id="midDirSub">--</div>
+        </div>
+        <div class="ais-item">
+          <div class="ais-item-lbl">注意価格帯 / Volatility</div>
+          <div class="ais-item-val" id="volDisp">--</div>
+          <div class="ais-item-sub" id="volSub">--</div>
+        </div>
+      </div>
+      <div class="ais-comment" id="aisComment">分析後に表示されます。「リアルタイム開始」を押してください。</div>
+    </div>
+
+    <!-- SHORT / MID DIRECTION CARDS -->
+    <div class="dir-grid">
+      <div class="dir-card" id="shortCard">
+        <div class="dc-lbl">Short-term Direction · 短期方向</div>
+        <div class="dc-arrow" id="shortCardArrow">→</div>
+        <div class="dc-bias" id="shortCardBias">Range / Neutral</div>
+        <div class="dc-sub" id="shortCardSub">分析待ち</div>
+        <div class="pbar"><div class="pb-b" id="sPbB" style="width:50%"></div><div class="pb-s" id="sPbS" style="width:50%"></div></div>
+      </div>
+      <div class="dir-card" id="midCard">
+        <div class="dc-lbl">Mid-term Direction · 中期方向</div>
+        <div class="dc-arrow" id="midCardArrow">→</div>
+        <div class="dc-bias" id="midCardBias">Range / Neutral</div>
+        <div class="dc-sub" id="midCardSub">分析待ち</div>
+        <div class="pbar"><div class="pb-b" id="mPbB" style="width:50%"></div><div class="pb-s" id="mPbS" style="width:50%"></div></div>
       </div>
     </div>
 
-    <!-- TIMEFRAME GRID -->
+    <!-- REALTIME UPDATE / MAIN DIRECTION -->
+    <div class="rt-main-grid">
+      <div class="rtm-card">
+        <div class="rtm-lbl">【Realtime Update】随時更新</div>
+        <div class="rtm-val" id="rtVal">--</div>
+        <div class="rtm-sub" id="rtSub">直近の短期変化・価格動向</div>
+      </div>
+      <div class="rtm-card">
+        <div class="rtm-lbl">【Main Direction】大局方向</div>
+        <div class="rtm-val" id="mainDirVal">--</div>
+        <div class="rtm-sub" id="mainDirSub">中長期での市場が向かいやすい方向</div>
+      </div>
+    </div>
+
+    <!-- SQUEEZE / VOLATILITY BOX -->
+    <div class="squeeze-box">
+      <div class="sq-hdr">
+        <span class="sq-title">Volatility Status · スクイーズ分析</span>
+        <span class="sq-state sq-normal" id="sqState"><span class="squeeze-dot dot-normal" id="sqDot"></span><span id="sqStateText">--</span></span>
+      </div>
+      <div class="sq-grid">
+        <div class="sq-item">
+          <div class="sq-item-lbl">BB Width</div>
+          <div class="sq-item-val" id="sqBBW">--</div>
+        </div>
+        <div class="sq-item">
+          <div class="sq-item-lbl">KC Width</div>
+          <div class="sq-item-val" id="sqKCW">--</div>
+        </div>
+        <div class="sq-item">
+          <div class="sq-item-lbl">Squeeze</div>
+          <div class="sq-item-val" id="sqRatio">--</div>
+        </div>
+        <div class="sq-item">
+          <div class="sq-item-lbl">Direction Conf.</div>
+          <div class="sq-item-val" id="sqDir">--</div>
+        </div>
+        <div class="sq-item">
+          <div class="sq-item-lbl">Momentum</div>
+          <div class="sq-item-val" id="sqMom">--</div>
+        </div>
+        <div class="sq-item">
+          <div class="sq-item-lbl">Expansion</div>
+          <div class="sq-item-val" id="sqExp">--</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--tx2);margin-top:10px;line-height:1.7" id="sqComment">スクイーズ分析はボラティリティの圧縮・拡大を確認するための分析支援ロジックです。売買指示ではありません。</div>
+    </div>
+
+    <!-- RANGE FILTER BOX -->
+    <div class="rf-box">
+      <div class="panel-lbl" style="margin-bottom:8px">GoldScope 独自レンジフィルター（ノイズ除去方向判定）</div>
+      <div class="rf-row"><span class="rf-key">Filtered Price</span><span class="rf-val" id="rfPrice">--</span></div>
+      <div class="rf-row"><span class="rf-key">Market Bias</span><span class="rf-val" id="rfBias">--</span></div>
+      <div class="rf-row"><span class="rf-key">Filter Direction</span><span class="rf-val" id="rfDir">--</span></div>
+      <div class="rf-row"><span class="rf-key">Distance from Filter</span><span class="rf-val" id="rfDist">--</span></div>
+      <div class="rf-row"><span class="rf-key">Slow Trend</span><span id="rfSlowBadge">--</span></div>
+    </div>
+
+    <!-- EXPECTED VALUE -->
+    <div class="ev-box">
+      <div class="panel-lbl" style="margin-bottom:2px">期待値目安 · Expected Value Reference</div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:8px">現在の市場状況から見た参考余地です。利益保証ではありません。</div>
+      <div class="ev-gauges">
+        <div class="ev-gauge">
+          <div class="ev-g-lbl">上方向余地</div>
+          <div class="ev-g-num" id="evUp" style="color:var(--gr)">+-- pips</div>
+          <div class="ev-g-bar"><div class="ev-g-fill" id="evUpBar" style="width:0%;background:var(--gr)"></div></div>
+        </div>
+        <div class="ev-gauge">
+          <div class="ev-g-lbl">下方向リスク</div>
+          <div class="ev-g-num" id="evDn" style="color:var(--rd)">--- pips</div>
+          <div class="ev-g-bar"><div class="ev-g-fill" id="evDnBar" style="width:0%;background:var(--rd)"></div></div>
+        </div>
+        <div class="ev-gauge">
+          <div class="ev-g-lbl">想定レンジ分析</div>
+          <div class="ev-g-num" id="evRange" style="font-size:13px;color:var(--g)">--</div>
+          <div class="ev-g-bar"><div class="ev-g-fill" id="evRangeBar" style="width:50%;background:var(--g)"></div></div>
+        </div>
+      </div>
+      <div class="ev-state" id="evState">--</div>
+    </div>
+
+    <!-- REFERENCE ZONES (TP/SL) -->
+    <div class="ref-box">
+      <div class="panel-lbl" style="margin-bottom:2px">参考価格帯 · Reference Price Zone</div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">売買指示・利益確定指示ではありません。参考価格帯として活用してください。</div>
+      <div class="ref-grid" id="refGrid">
+        <div>
+          <div class="ref-col-title" style="color:var(--gr)">↑ 上方向シナリオ（Bullish Bias）</div>
+          <div id="refLong"><div style="font-size:12px;color:var(--tx3)">分析後に表示</div></div>
+        </div>
+        <div>
+          <div class="ref-col-title" style="color:var(--rd)">↓ 下方向シナリオ（Bearish Bias）</div>
+          <div id="refShort"><div style="font-size:12px;color:var(--tx3)">分析後に表示</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TF GRID -->
     <div class="tf-grid">
       <div class="tf-card" id="tf-ultra">
-        <div class="tf-label">超短期 · 1分足</div>
-        <div class="tf-target" id="tf-ultra-target">----</div>
-        <div class="tf-dir" id="tf-ultra-dir">--</div>
-        <div class="tf-sub" id="tf-ultra-sub">--</div>
-        <div class="tf-pbar"><div class="tf-pb" id="tf-ultra-pb" style="width:50%"></div><div class="tf-ps" id="tf-ultra-ps" style="width:50%"></div></div>
+        <div class="tf-lbl">超短期 · 1分</div>
+        <div class="tf-price" id="tf-ultra-p">----</div>
+        <div class="tf-dir" id="tf-ultra-d">--</div>
+        <div class="tf-sub" id="tf-ultra-s">--</div>
       </div>
       <div class="tf-card lockable" id="tf-short">
-        <div class="lock-overlay" id="lock-short">
-          <div class="lock-icon"><i class="ti ti-lock"></i></div>
-          <div class="lock-txt">短期リアルタイム目線は<br>Premiumプランで利用可能</div>
-          <div class="lock-upgrade" onclick="alert('プレミアムプランへのアップグレードはinfo@soundterrace.co.jpまで')">アップグレード →</div>
+        <div class="lock-ov" id="lock-short">
+          <span style="font-size:18px">🔒</span>
+          <div class="lock-ov-txt">会員限定機能</div>
         </div>
-        <div class="tf-label">短期 · 5m / 15m / 30m</div>
-        <div class="tf-target" id="tf-short-target">----</div>
-        <div class="tf-dir" id="tf-short-dir">--</div>
-        <div class="tf-sub" id="tf-short-sub">--</div>
-        <div class="tf-pbar"><div class="tf-pb" id="tf-short-pb" style="width:50%"></div><div class="tf-ps" id="tf-short-ps" style="width:50%"></div></div>
+        <div class="tf-lbl">短期 · 5m/15m/30m</div>
+        <div class="tf-price" id="tf-short-p">----</div>
+        <div class="tf-dir" id="tf-short-d">--</div>
+        <div class="tf-sub" id="tf-short-s">--</div>
       </div>
       <div class="tf-card" id="tf-mid">
-        <div class="tf-label">中期 · 1h / 4h</div>
-        <div class="tf-target" id="tf-mid-target">----</div>
-        <div class="tf-dir" id="tf-mid-dir">--</div>
-        <div class="tf-sub" id="tf-mid-sub">--</div>
-        <div class="tf-pbar"><div class="tf-pb" id="tf-mid-pb" style="width:50%"></div><div class="tf-ps" id="tf-mid-ps" style="width:50%"></div></div>
+        <div class="tf-lbl">中期 · 1h/4h</div>
+        <div class="tf-price" id="tf-mid-p">----</div>
+        <div class="tf-dir" id="tf-mid-d">--</div>
+        <div class="tf-sub" id="tf-mid-s">--</div>
       </div>
       <div class="tf-card" id="tf-long">
-        <div class="tf-label">長期 · 日足 / 週足</div>
-        <div class="tf-target" id="tf-long-target">----</div>
-        <div class="tf-dir" id="tf-long-dir">--</div>
-        <div class="tf-sub" id="tf-long-sub">--</div>
-        <div class="tf-pbar"><div class="tf-pb" id="tf-long-pb" style="width:50%"></div><div class="tf-ps" id="tf-long-ps" style="width:50%"></div></div>
+        <div class="tf-lbl">長期 · 日足</div>
+        <div class="tf-price" id="tf-long-p">----</div>
+        <div class="tf-dir" id="tf-long-d">--</div>
+        <div class="tf-sub" id="tf-long-s">--</div>
       </div>
-    </div>
-
-    <!-- PRED + PATTERN -->
-    <div class="pred-pat-row">
-      <div class="pred-box" id="predBox" style="opacity:.4">
-        <i class="ti ti-clock pred-icon"></i>
-        <div class="pred-txt" id="predTxt">TP1到達の予測時間を計算中...</div>
-        <div class="pred-time-val" id="predTimeVal">--</div>
-      </div>
-      <div class="pat-box">
-        <div class="pat-lbl">相場パターン検出</div>
-        <div class="pat-items" id="patItems"><span style="font-size:12px;color:var(--tx3)">分析後に表示</span></div>
-      </div>
-    </div>
-
-    <!-- MONTE CARLO -->
-    <div class="mc-box">
-      <div class="mc-lbl">
-        <i class="ti ti-chart-dots"></i>
-        モンテカルロ 価格シナリオ予測
-        <span class="pill p-neut" style="font-size:9px">200試行</span>
-      </div>
-      <div class="mc-grid">
-        <div class="mc-chart-wrap"><canvas id="mcChart" role="img" aria-label="Monte Carlo simulation chart"></canvas></div>
-        <div class="mc-stats">
-          <div class="mc-stat">上昇確率: <strong id="mcUpPct">--%</strong></div>
-          <div class="mc-stat">下落確率: <strong id="mcDnPct">--%</strong></div>
-          <div class="mc-stat">予測レンジ: <strong id="mcRange">--</strong></div>
-          <div class="mc-bias" id="mcBias" style="margin-top:6px">--</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TP/SL PANEL (PRIMARY) -->
-    <div class="tpsl-panel">
-      <div class="tpsl-lbl">TP / SL 一覧</div>
-      <div class="tpsl-grid">
-        <div>
-          <div class="tpsl-col-hdr" style="color:var(--gr)">📈 ロング</div>
-          <div id="tpsl-long-rows"><div style="font-size:12px;color:var(--tx3)">分析後に表示</div></div>
-        </div>
-        <div>
-          <div class="tpsl-col-hdr" style="color:var(--rd)">📉 ショート</div>
-          <div id="tpsl-short-rows"><div style="font-size:12px;color:var(--tx3)">分析後に表示</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- EVENTS TICKER -->
-    <div class="event-ticker">
-      <div class="event-lbl"><i class="ti ti-calendar-event"></i> 今日の重要経済指標（羊飼いFXより）</div>
-      <div class="event-items" id="eventItems">
-        <div style="font-size:12px;color:var(--tx3)">読み込み中...</div>
-      </div>
-    </div>
-
-    <!-- COMMENT -->
-    <div class="cmt-box">
-      <div class="cmt-refresh" id="cmtRefreshTag">--</div>
-      <div id="aiComment">待機中...</div>
     </div>
 
     <!-- TABS -->
     <div class="tab-row">
-      <button class="tab active" onclick="showTab('next')">次の目線</button>
+      <button class="tab active" onclick="showTab('next')">市場構造</button>
       <button class="tab" onclick="showTab('chart')">チャート</button>
-      <button class="tab" onclick="showTab('market')">相場構造</button>
       <button class="tab" onclick="showTab('sentiment')">センチメント</button>
       <button class="tab" onclick="showTab('guide')">使い方</button>
     </div>
 
     <div id="tab-next">
-      <div class="panel"><div class="panel-lbl">次に見るべきポイント（シナリオ別）</div><div id="nextItems"><div style="color:var(--tx3);font-size:13px">分析後に表示</div></div></div>
-      <div class="panel dark"><div class="panel-lbl">障壁マップ（現在値との距離）</div><div id="levelMap"><div style="color:var(--tx3);font-size:13px">分析後に表示</div></div></div>
+      <div class="panel"><div class="panel-lbl">次に見るべきポイント（シナリオ別）</div><div id="nextItems"><div style="font-size:12px;color:var(--tx3)">分析後に表示</div></div></div>
+      <div class="panel dark"><div class="panel-lbl">障壁マップ · OB / EMA / BB レベル</div><div id="levelMap"><div style="font-size:12px;color:var(--tx3)">分析後に表示</div></div></div>
     </div>
-
     <div id="tab-chart" style="display:none">
-      <div class="chart-wrap2"><canvas id="priceChart" role="img" aria-label="XAUUSD price chart"></canvas></div>
+      <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
       <div class="legend" id="chartLegend"></div>
     </div>
-
-    <div id="tab-market" style="display:none">
-      <div class="panel">
-        <div class="panel-lbl">Market Structure（高値・安値の構造）</div>
-        <div id="msItems"><div style="color:var(--tx3);font-size:13px">分析後に表示</div></div>
-      </div>
-      <div class="panel dark">
-        <div class="panel-lbl">ADX 詳細 / トレンド強度</div>
-        <div id="adxDetail"><div style="color:var(--tx3);font-size:13px">分析後に表示</div></div>
-      </div>
-    </div>
-
     <div id="tab-sentiment" style="display:none">
       <div class="grid2">
-        <div class="csm"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">短期テクニカル</div><div style="font-size:17px;font-weight:500;margin:3px 0" id="techVal">--</div><div class="meter-wrap"><div class="meter-bar" id="techBar" style="width:0%"></div></div><div style="font-size:10px;color:var(--tx3)" id="techTag">--</div></div>
-        <div class="csm"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">中期テクニカル</div><div style="font-size:17px;font-weight:500;margin:3px 0" id="midTechVal">--</div><div class="meter-wrap"><div class="meter-bar" id="midTechBar" style="width:0%"></div></div><div style="font-size:10px;color:var(--tx3)" id="midTechTag">--</div></div>
-        <div class="csm"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">SNS / X 推定</div><div style="font-size:17px;font-weight:500;margin:3px 0" id="snsVal">--</div><div class="meter-wrap"><div class="meter-bar" id="snsBar" style="width:0%"></div></div><div style="font-size:10px;color:var(--tx3)" id="snsTag">--</div></div>
-        <div class="csm"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">ファンダメンタル</div><div style="font-size:17px;font-weight:500;margin:3px 0" id="fundVal">--</div><div class="meter-wrap"><div class="meter-bar" id="fundBar" style="width:0%"></div></div><div style="font-size:10px;color:var(--tx3)" id="fundTag">--</div></div>
+        <div class="csm"><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">短期テクニカル</div><div style="font-size:16px;font-weight:500;margin:3px 0" id="techVal">--</div><div class="meter"><div class="meter-bar" id="techBar" style="width:0%"></div></div><div style="font-size:9px;color:var(--tx3)" id="techTag">--</div></div>
+        <div class="csm"><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">中期テクニカル</div><div style="font-size:16px;font-weight:500;margin:3px 0" id="midTechVal">--</div><div class="meter"><div class="meter-bar" id="midTechBar" style="width:0%"></div></div><div style="font-size:9px;color:var(--tx3)" id="midTechTag">--</div></div>
+        <div class="csm"><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">ボラティリティ</div><div style="font-size:16px;font-weight:500;margin:3px 0" id="volVal">--</div><div class="meter"><div class="meter-bar" id="volBar" style="width:50%;background:var(--am)"></div></div><div style="font-size:9px;color:var(--tx3)" id="volTag">--</div></div>
+        <div class="csm"><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">市場セッション</div><div style="font-size:16px;font-weight:500;margin:3px 0" id="sessVal">--</div><div class="meter"><div class="meter-bar" id="sessBar" style="width:50%;background:var(--g)"></div></div><div style="font-size:9px;color:var(--tx3)" id="sessTag">--</div></div>
       </div>
     </div>
-
     <div id="tab-guide" style="display:none">
       <div class="panel">
-        <div class="panel-lbl">GoldScope v1.2.2 — 使い方ガイド</div>
-        <div style="font-size:13px;color:var(--tx2);line-height:1.9">
-          <p style="margin-bottom:14px"><strong style="color:var(--tx)">GoldScope</strong>は株式会社サウンドテラスが提供するXAUUSD（金/ドル）リアルタイム分析ツールです。</p>
+        <div class="panel-lbl">GoldScope Vision v1.3.0 — 使い方ガイド</div>
+        <div style="font-size:12px;color:var(--tx2);line-height:1.9;space-y:12px">
+          <p style="margin-bottom:10px"><strong style="color:var(--tx)">GoldScope Vision（ゴールドスコープビジョン）</strong>は、株式会社サウンドテラスが提供するGOLD/XAUUSDの市場情報整理・分析支援ツールです。投資助言・売買指示・利益保証を行うものではありません。</p>
           <div style="display:grid;gap:8px">
-            <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:0.5px solid var(--bo)"><span class="pill p-gold" style="margin-bottom:6px;display:inline-block">ADX + トレンド/レンジ判定</span><p style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">ADX(平均方向性指数)がトレンド強度を0〜100で表します。ADX＜20＝レンジ相場（入らない）、ADX25以上＝トレンド発生、ADX40以上＝強いトレンドでチャンス。+DI・−DIで方向確認。</p></div>
-            <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:0.5px solid var(--bo)"><span class="pill p-pur" style="margin-bottom:6px;display:inline-block">Market Structure</span><p style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">高値・安値の切り上げ(Higher High/Higher Low)が上昇トレンド、切り下げ(LH/LL)が下落トレンドのサイン。ブレイクのタイミングを見極めます。</p></div>
-            <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:0.5px solid var(--bo)"><span class="pill p-info" style="margin-bottom:6px;display:inline-block">価格シナリオ予測（確率的シミュレーション）</span><p style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">直近のボラティリティとモメンタムを元に200通りの価格パスをシミュレーションし、上昇/下落の確率と予測レンジを算出します。「今の相場の勢いが続いたらどのくらいの範囲で動きうるか」を確率で見るテクニカル指標です。</p></div>
-            <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:0.5px solid var(--bo)"><span class="pill p-tri" style="margin-bottom:6px;display:inline-block">パターン検出</span><p style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">三角持ち合い・レンジ・高値更新・安値割れ・BB収縮などを自動検出。ブレイクアウトの予兆を事前に把握できます。</p></div>
-            <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:0.5px solid var(--bo)"><span class="pill p-bull" style="margin-bottom:6px;display:inline-block">マルチタイムフレーム</span><p style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">超短期(1m)・短期(5m/15m/30m)・中期(1h/4h)・長期(日足)の4軸で一貫した方向性を確認。全TFが同じ方向を向いているときが最もエントリー精度が高くなります。</p></div>
-            <div style="background:var(--bg3);border-radius:8px;padding:12px 14px;border:0.5px solid var(--bo)"><span class="pill p-warn" style="margin-bottom:6px;display:inline-block">予測到達時間</span><p style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">直近10本の足の平均モメンタムからTP1までの距離を割り算して逆算。相場の速さが変われば自動更新されます。目安として活用してください。</p></div>
+            <div style="background:var(--bg3);border-radius:8px;padding:10px 13px;border:0.5px solid var(--bo)"><span class="pill p-gold" style="margin-bottom:5px;display:inline-block">Range Filter（独自ロジック）</span><p style="font-size:11px;color:var(--tx2);line-height:1.7;margin-top:3px">ATR×2.5のフィルター幅を使い、価格のノイズを除去して方向感を判定します。小さな上下に惑わされず、大局的な方向感の整理に使います。</p></div>
+            <div style="background:var(--bg3);border-radius:8px;padding:10px 13px;border:0.5px solid var(--bo)"><span class="pill p-squeeze" style="margin-bottom:5px;display:inline-block">スクイーズ分析（独自ロジック）</span><p style="font-size:11px;color:var(--tx2);line-height:1.7;margin-top:3px">BB幅とKeltner Channel幅を比較してボラティリティの圧縮・拡大を検出します。スクイーズ終了後に方向確認を行います。売買シグナルではありません。</p></div>
+            <div style="background:var(--bg3);border-radius:8px;padding:10px 13px;border:0.5px solid var(--bo)"><span class="pill p-pur" style="margin-bottom:5px;display:inline-block">想定レンジ分析</span><p style="font-size:11px;color:var(--tx2);line-height:1.7;margin-top:3px">直近のボラティリティとリターン分布から200通りの価格シナリオを生成し、上昇/下落の確率と参考レンジを算出します。</p></div>
+            <div style="background:var(--bg3);border-radius:8px;padding:10px 13px;border:0.5px solid var(--bo)"><span class="pill p-bull" style="margin-bottom:5px;display:inline-block">ADX + Market Structure</span><p style="font-size:11px;color:var(--tx2);line-height:1.7;margin-top:3px">ADXでトレンド強度を判定（20以下でレンジ、25以上でトレンド）。HH/HL/LH/LLで高値・安値の構造を把握します。</p></div>
           </div>
-          <p style="margin-top:14px;font-size:12px;color:var(--tx3)">データソース: gold-api.com (スポット価格 CORS対応・無料) + Yahoo Finance (履歴データ) | 5秒ごと自動更新（Alpha Vantage 150req/分プラン対応）</p>
+          <p style="margin-top:12px;font-size:11px;color:var(--tx3)">データ: Alpha Vantage CURRENCY_EXCHANGE_RATE (XAU→USD) + Yahoo Finance | 5秒更新</p>
         </div>
       </div>
     </div>
 
-    <div class="btn-row">
-      <button class="btn btn-primary" id="startBtn" onclick="startMonitoring()"><i class="ti ti-player-play"></i> リアルタイム開始</button>
-      <button class="btn" onclick="speakNow()"><i class="ti ti-volume"></i> 読み上げ</button>
-      <button class="btn" id="voiceBtn" onclick="toggleVoice()"><i class="ti ti-bell"></i> 音声: ON</button>
-    </div>
-
-  </div>
+  </div><!-- /.app-body -->
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div class="footer-txt">GoldScope v1.2.2 · 株式会社サウンドテラス · 2026</div>
+      <div class="footer-txt">GoldScope Vision v1.3.0 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showPage('policy')">利用規約</span>
         <span class="footer-link" onclick="showPage('policy')">プライバシーポリシー</span>
         <span class="footer-link" onclick="showPage('account')">アカウント</span>
       </div>
     </div>
-    <div class="disclaimer" style="margin:10px 20px 0;">⚠️ <strong>免責事項：</strong>本ツールは情報提供・分析支援目的のみです。投資助言・売買指示・利益保証を行うものではありません。投資判断は自己責任で行ってください。AI分析は参考情報であり、将来の利益を保証しません。API障害等により価格情報が遅延・停止する場合があります。当社は本サービス利用により生じたいかなる損害についても責任を負いません。</div>
+    <div class="disclaimer" style="max-width:1000px;margin:8px auto 0">⚠️ GoldScope Visionは情報提供および分析支援を目的としたツールです。投資助言・売買指示・利益保証を行うものではありません。投資判断はご自身の責任で行ってください。API障害等により価格情報の遅延が生じる場合があります。</div>
   </footer>
 </div>
 
 <!-- ==================== POLICY PAGE ==================== -->
 <div id="page-policy" class="page">
   <header class="app-hdr">
-    <div class="hdr-logo" onclick="showPage('login')"><div class="hdr-logo-icon">⬡</div><span class="hdr-logo-text">Gold<span>Scope</span></span><span class="hdr-ver">v1.2.2</span></div>
-    <nav class="hdr-nav">
-      <button class="hdr-nav-btn" onclick="showPage('login')">← ログインへ</button>
-    </nav>
-    <div class="hdr-right">
-      <button class="btn" style="font-size:12px;padding:5px 10px" onclick="goBackFromPolicy()">← 戻る</button>
-    </div>
+    <div class="hdr-left" onclick="showPage('login')"><div class="hdr-icon">⬡</div><span class="hdr-name">GoldScope <span>Vision</span></span></div>
+    <div class="hdr-right"><button class="ab-btn" onclick="goBackFromPolicy()">← 戻る</button></div>
   </header>
   <div class="policy-body">
-    <div class="policy-section">
-      <div class="policy-h1">利用規約</div>
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:20px">GoldScope 利用規約 · 株式会社サウンドテラス</div>
-      <div class="policy-card">
-        <div class="policy-h2">第1条（サービス内容）</div>
-        <p class="policy-p">本サービスは、相場分析、データ可視化、AI分析支援、リスク管理支援等を提供する分析支援ツールです。本サービスは投資助言、売買指示、利益保証、運用代行を目的とするものではありません。</p>
-        <div class="policy-h2">第2条（利用対象）</div>
-        <p class="policy-p">本サービスは18歳以上の方を対象とします。</p>
-        <div class="policy-h2">第3条（料金および支払い）</div>
-        <p class="policy-p">本サービスはサブスクリプション形式で提供されます。</p>
-        <table class="policy-table">
-          <tr><td>Basic Plan 月額</td><td>¥3,300</td></tr>
-          <tr><td>Basic Plan 年額</td><td>¥33,000</td></tr>
-          <tr><td>Premium Plan 月額</td><td>¥5,500</td></tr>
-          <tr><td>Premium Plan 年額</td><td>¥55,000</td></tr>
-          <tr><td>無料トライアル</td><td>3日間</td></tr>
-          <tr><td>支払方法</td><td>PayPal</td></tr>
-        </table>
-        <div class="policy-h2" style="margin-top:16px">第4条（解約）</div>
-        <p class="policy-p">info@soundterrace.co.jp 宛に解約希望の連絡を行うことで解約できます。</p>
-        <div class="policy-h2">第5条（返金）</div>
-        <p class="policy-p">本サービスは、いかなる場合においても返金を行いません。</p>
-        <div class="policy-h2">第6条（禁止事項）</div>
-        <ul class="policy-list">
-          <li>不正利用 / ライセンス共有 / リバースエンジニアリング</li>
-          <li>再販売 / BOT利用 / スクレイピング</li>
-          <li>その他悪用行為</li>
-        </ul>
-        <div class="policy-h2" style="margin-top:16px">第7条（免責事項）</div>
-        <p class="policy-p">本サービスは情報提供および分析支援を目的としたツールです。AI分析は参考情報であり、将来の利益を保証するものではありません。投資判断は利用者自身の責任で行うものとします。API障害、通信障害、メンテナンス等により、価格情報の遅延または停止が発生する場合があります。当社は、本サービス利用によって生じたいかなる損害についても責任を負いません。</p>
-        <div class="policy-h2">第8条（規約変更）</div>
-        <p class="policy-p">当社は必要に応じて本規約を変更できるものとします。</p>
-      </div>
+    <div class="pol-h1">利用規約 · Terms of Service</div>
+    <div class="pol-card">
+      <div class="pol-h2">第1条（サービス内容）</div>
+      <p class="pol-p">GoldScope Vision（ゴールドスコープビジョン）は、GOLD/XAUUSDの相場分析、データ可視化、AI分析支援、リスク管理支援等を提供する市場情報整理・分析支援ツールです。投資助言、売買指示、利益保証、運用代行を目的とするものではありません。</p>
+      <div class="pol-h2">第2条（利用対象）</div>
+      <p class="pol-p">本サービスは18歳以上の方を対象とします。</p>
+      <div class="pol-h2">第3条（料金および支払い）</div>
+      <table class="pol-tbl">
+        <tr><td>プラン</td><td>GoldScope Vision 会員</td></tr>
+        <tr><td>月額料金</td><td>¥15,000（月額・年額なし）</td></tr>
+        <tr><td>無料トライアル</td><td>3日間</td></tr>
+        <tr><td>対応通貨</td><td>GOLD / XAUUSD（他通貨は今後対応予定）</td></tr>
+        <tr><td>支払方法</td><td>PayPal</td></tr>
+      </table>
+      <div class="pol-h2">第4条（解約）</div>
+      <p class="pol-p">info@soundterrace.co.jp 宛に解約希望の連絡を行うことで解約できます。</p>
+      <div class="pol-h2">第5条（返金）</div>
+      <p class="pol-p">本サービスは、いかなる場合においても返金を行いません。</p>
+      <div class="pol-h2">第6条（禁止事項）</div>
+      <p class="pol-p">不正利用・ライセンス共有・リバースエンジニアリング・再販売・BOT利用・スクレイピング・その他悪用行為を禁じます。</p>
+      <div class="pol-h2">第7条（免責事項）</div>
+      <p class="pol-p">本サービスは情報提供および分析支援を目的としたツールです。AI分析は参考情報であり、将来の利益を保証するものではありません。投資判断は利用者自身の責任で行うものとします。</p>
+      <div class="pol-h2">第8条（規約変更）</div>
+      <p class="pol-p">当社は必要に応じて本規約を変更できるものとします。</p>
     </div>
-    <div class="policy-section">
-      <div class="policy-h1">プライバシーポリシー</div>
-      <div class="policy-card">
-        <div class="policy-h2">取得する情報</div>
-        <p class="policy-p">氏名、メールアドレス</p>
-        <div class="policy-h2">利用目的</div>
-        <ul class="policy-list"><li>ライセンス管理</li><li>サポート対応</li><li>不正利用防止</li><li>サービス改善</li></ul>
-        <div class="policy-h2" style="margin-top:12px">第三者提供</div>
-        <p class="policy-p">法令に基づく場合を除き、利用者の同意なく第三者へ情報提供を行いません。</p>
-        <div class="policy-h2">お問い合わせ</div>
-        <p class="policy-p">info@soundterrace.co.jp</p>
-      </div>
+    <div class="pol-h1" style="margin-top:24px">プライバシーポリシー</div>
+    <div class="pol-card">
+      <p class="pol-p">取得情報: 氏名・メールアドレス。利用目的: ライセンス管理・サポート対応・不正利用防止・サービス改善。法令に基づく場合を除き第三者提供なし。お問い合わせ: info@soundterrace.co.jp</p>
     </div>
-    <div class="policy-section">
-      <div class="policy-h1">特定商取引法に基づく表記</div>
-      <div class="policy-card">
-        <table class="policy-table">
-          <tr><td>販売事業者</td><td>株式会社サウンドテラス</td></tr>
-          <tr><td>運営責任者</td><td>株式会社サウンドテラス</td></tr>
-          <tr><td>お問い合わせ</td><td>info@soundterrace.co.jp</td></tr>
-          <tr><td>サービスURL</td><td>https://goldscope.vercel.app</td></tr>
-          <tr><td>支払方法</td><td>PayPal</td></tr>
-          <tr><td>提供時期</td><td>決済確認後、即時利用可能</td></tr>
-          <tr><td>解約方法</td><td>info@soundterrace.co.jp へご連絡</td></tr>
-          <tr><td>返金</td><td>返金は行っておりません</td></tr>
-          <tr><td>所在地</td><td>請求があった場合に遅滞なく開示いたします</td></tr>
-        </table>
-      </div>
+    <div class="pol-h1" style="margin-top:24px">特定商取引法に基づく表記</div>
+    <div class="pol-card">
+      <table class="pol-tbl">
+        <tr><td>販売事業者</td><td>株式会社サウンドテラス</td></tr>
+        <tr><td>運営責任者</td><td>株式会社サウンドテラス</td></tr>
+        <tr><td>お問い合わせ</td><td>info@soundterrace.co.jp</td></tr>
+        <tr><td>サービス名</td><td>GoldScope Vision（ゴールドスコープビジョン）</td></tr>
+        <tr><td>サービスURL</td><td>https://goldscope.ai</td></tr>
+        <tr><td>販売価格</td><td>¥15,000/月（月額のみ・年額なし）</td></tr>
+        <tr><td>支払方法</td><td>PayPal</td></tr>
+        <tr><td>提供時期</td><td>決済確認後、即時利用可能</td></tr>
+        <tr><td>解約方法</td><td>info@soundterrace.co.jp へご連絡</td></tr>
+        <tr><td>返金</td><td>返金は行っておりません</td></tr>
+        <tr><td>所在地</td><td>請求があった場合に遅滞なく開示いたします</td></tr>
+      </table>
+    </div>
+    <div class="agency-box">
+      <div class="agency-title">🤝 代理店・紹介パートナー募集</div>
+      <p class="pol-p">GoldScope Visionでは、紹介パートナー・代理店を募集しています。FXコミュニティ・トレーダー向けメディア・FX教育サービス等を運営されている方、ぜひご連絡ください。</p>
+      <p class="pol-p" style="margin-top:8px">詳細・お申込み: <strong style="color:var(--g)">info@soundterrace.co.jp</strong></p>
     </div>
   </div>
   <footer class="app-footer"><div class="footer-inner"><div class="footer-txt">© 2026 株式会社サウンドテラス All Rights Reserved.</div></div></footer>
@@ -656,116 +736,102 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 <!-- ==================== ACCOUNT PAGE ==================== -->
 <div id="page-account" class="page">
   <header class="app-hdr">
-    <div class="hdr-logo" onclick="showPage('app')"><div class="hdr-logo-icon">⬡</div><span class="hdr-logo-text">Gold<span>Scope</span></span><span class="hdr-ver">v1.2.2</span></div>
-    <nav class="hdr-nav">
-      <button class="hdr-nav-btn" onclick="showPage('app')">← 分析へ戻る</button>
-    </nav>
+    <div class="hdr-left" onclick="showPage('app')"><div class="hdr-icon">⬡</div><span class="hdr-name">GoldScope <span>Vision</span></span></div>
     <div class="hdr-right">
-      <button class="btn btn-stop2" style="font-size:12px;padding:5px 10px" onclick="doLogout()">ログアウト</button>
+      <button class="ab-btn" onclick="showPage('app')">← 分析へ</button>
+      <button class="ab-btn stop" onclick="doLogout()">ログアウト</button>
     </div>
   </header>
   <div class="acc-body">
-    <div class="acc-plan-hero">
-      <div class="acc-avatar" id="accAvatar">🎵</div>
-      <div style="font-family:var(--sf);font-size:20px;font-weight:700" id="accName">soundterrace</div>
-      <div style="margin-top:6px"><span class="plan-pill plan-premium" id="accPlan">PREMIUM</span></div>
-      <div style="font-size:12px;color:var(--tx2);margin-top:8px" id="accPlanDesc">フル機能が利用可能です。短期リアルタイム目線・GoldページなどPremium専用機能をご利用いただけます。</div>
+    <div style="background:linear-gradient(135deg,rgba(184,148,42,.08),transparent);border:0.5px solid rgba(184,148,42,.25);border-radius:var(--r);padding:20px;margin-bottom:14px;">
+      <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--g),var(--gd));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px">🎵</div>
+      <div style="font-family:var(--sf);font-size:18px;font-weight:700" id="accName">--</div>
+      <div style="margin-top:5px"><span class="pill p-gold">GoldScope Vision 会員</span></div>
+      <div style="font-size:11px;color:var(--tx2);margin-top:8px">GOLD/XAUUSD対応 · 市場情報整理・分析支援ツール</div>
     </div>
-    <div class="acc-card">
-      <div style="font-size:13px;font-weight:600;margin-bottom:12px">契約情報</div>
-      <div class="acc-row"><div class="acc-key">プラン</div><div class="acc-val" id="accPlanVal">Premium ¥5,500/月</div></div>
-      <div class="acc-row"><div class="acc-key">次回請求日</div><div class="acc-val">2026/06/13</div></div>
-      <div class="acc-row"><div class="acc-key">ステータス</div><div class="acc-val" style="color:var(--gr)">● アクティブ</div></div>
-      <div class="acc-row"><div class="acc-key">メールアドレス</div><div class="acc-val">info@soundterrace.co.jp</div></div>
-      <div class="acc-row"><div class="acc-key">データソース</div><div class="acc-val">gold-api.com + Yahoo Finance</div></div>
-    </div>
-    <div class="acc-card">
-      <div style="font-size:13px;font-weight:600;margin-bottom:12px">プラン比較</div>
-      <table class="policy-table">
-        <tr><td>機能</td><td>Basic</td><td>Premium</td></tr>
-        <tr><td>超短期目線(1m)</td><td>✅</td><td>✅</td></tr>
-        <tr><td>短期リアルタイム目線</td><td>🔒</td><td>✅</td></tr>
-        <tr><td>中期・長期目線</td><td>✅</td><td>✅</td></tr>
-        <tr><td>価格シナリオ予測</td><td>✅</td><td>✅</td></tr>
-        <tr><td>Market Structure</td><td>✅</td><td>✅</td></tr>
-        <tr><td>ADX詳細分析</td><td>✅</td><td>✅</td></tr>
-        <tr><td>音声読み上げ</td><td>✅</td><td>✅</td></tr>
-        <tr><td>GoldPage（追加通貨）</td><td>🔒</td><td>✅（近日）</td></tr>
-        <tr><td>価格</td><td>¥3,300/月</td><td>¥5,500/月</td></tr>
+    <div class="pol-card">
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px">契約情報</div>
+      <table class="pol-tbl">
+        <tr><td>プラン</td><td>GoldScope Vision 会員 ¥15,000/月</td></tr>
+        <tr><td>ステータス</td><td style="color:var(--gr)">● アクティブ</td></tr>
+        <tr><td>対応通貨</td><td>GOLD / XAUUSD（他通貨は今後対応予定）</td></tr>
+        <tr><td>メール</td><td>info@soundterrace.co.jp</td></tr>
+        <tr><td>データソース</td><td>Alpha Vantage + Yahoo Finance</td></tr>
+        <tr><td>ログイン</td><td>複数デバイス同時利用可</td></tr>
       </table>
     </div>
-    <div style="text-align:center;margin-top:16px">
-      <button class="btn" onclick="showPage('app')" style="margin-right:8px">← 分析に戻る</button>
-      <button class="btn" onclick="showPage('policy')">利用規約を確認</button>
+    <div class="agency-box">
+      <div class="agency-title">🤝 代理店・紹介パートナー募集</div>
+      <p class="pol-p">GoldScope Visionでは、紹介パートナー・代理店を募集しています。詳細・お申込みは info@soundterrace.co.jp までお問い合わせください。</p>
+    </div>
+    <div style="text-align:center;margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="ab-btn" onclick="showPage('app')">← 分析に戻る</button>
+      <button class="ab-btn" onclick="showPage('policy')">利用規約を確認</button>
     </div>
   </div>
-  <footer class="app-footer"><div class="footer-inner"><div class="footer-txt">© 2026 株式会社サウンドテラス</div><div class="footer-links"><span class="footer-link" onclick="showPage('policy')">ポリシー</span></div></div></footer>
+  <footer class="app-footer"><div class="footer-inner"><div class="footer-txt">© 2026 株式会社サウンドテラス · goldscope.ai</div></div></footer>
 </div>
-
 <script>
-// ===================== STATE =====================
-let currentUser={id:'',plan:''}; // plan: 'basic' | 'premium'
-let voiceOn=true,voiceRate=1.0,tickTimer=null,isRunning=false,lastResult=null,simHistory=[],chart=null,mcChart=null;
-let lastSpokenEntry=null,lastSpokenPrice=null,commentPool=[];
-let prevPage='login';
-
-// ===================== AUTH =====================
+// ==================== STATE ====================
 const ACCOUNTS={
-  'soundterrace':{pass:'0000',plan:'premium',name:'soundterrace'},
-  'basic_test':{pass:'1111',plan:'basic',name:'Basic User'}
+  'soundterrace':{pass:'0000',name:'soundterrace'},
+  'basic_test':{pass:'1111',name:'Basic User'},
+  'user001':{pass:'gold2026',name:'User001'},
+  'user002':{pass:'gold2026',name:'User002'},
+  'user003':{pass:'gold2026',name:'User003'},
 };
+// 複数同時ログイン対応: セッション管理はクライアントサイドのみ
+// 同じID/PASSで複数人が使っても互いに干渉しない
+
+let currentUser=null;
+let voiceOn=true,voiceRate=1.0,isSpeaking=false;
+let isRunning=false,tickTimer=null,lastResult=null;
+let simHistory=[],prevPage='login';
+let lastSpokenEntry='',lastSpokenPrice=0;
+let chart=null;
+// Range filter persistent state
+let rfPrevFiltered=null,rfPrevDir='neut';
+// Squeeze persistent state
+let prevSqState='normal';
+// Price snapshot (Alpha Vantage)
+let lastAVData=null;
+
+// ==================== AUTH ====================
 function doLogin(){
-  const u=document.getElementById('inp-user').value.trim().toLowerCase();
-  const p=document.getElementById('inp-pass').value;
-  const acc=ACCOUNTS[u]||(Object.values(ACCOUNTS).find(a=>a.name===u));
-  const key=Object.keys(ACCOUNTS).find(k=>ACCOUNTS[k].name===u||k===u);
-  const found=key&&ACCOUNTS[key];
-  if(found&&found.pass===p){
-    currentUser={id:key,plan:found.plan,name:found.name};
-    applyPlan();
-    showPage('app');
+  const uid=document.getElementById('inp-id').value.trim().toLowerCase();
+  const pw=document.getElementById('inp-pw').value;
+  const acc=ACCOUNTS[uid];
+  if(acc&&acc.pass===pw){
+    currentUser={id:uid,name:acc.name};
     document.getElementById('login-err').style.display='none';
+    document.getElementById('accName').textContent=acc.name;
+    document.getElementById('lock-short').className='lock-ov';
+    showPage('app');
   }else{
     document.getElementById('login-err').style.display='block';
   }
 }
-document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-document.getElementById('inp-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus();});
+document.getElementById('inp-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('inp-id').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pw').focus();});
 
 function doLogout(){
   if(isRunning){isRunning=false;clearInterval(tickTimer);}
-  window.speechSynthesis&&window.speechSynthesis.cancel();
-  currentUser={};
+  stopVoice();
+  currentUser=null;
   showPage('login');
 }
 
-function applyPlan(){
-  const isPremium=currentUser.plan==='premium';
-  document.getElementById('planPill').className=isPremium?'plan-pill plan-premium':'plan-pill plan-basic';
-  document.getElementById('planPill').textContent=isPremium?'PREMIUM':'BASIC';
-  document.getElementById('accPlan').className=isPremium?'plan-pill plan-premium':'plan-pill plan-basic';
-  document.getElementById('accPlan').textContent=isPremium?'PREMIUM':'BASIC';
-  document.getElementById('accPlanVal').textContent=isPremium?'Premium ¥5,500/月':'Basic ¥3,300/月';
-  document.getElementById('accPlanDesc').textContent=isPremium
-    ?'フル機能が利用可能です。短期リアルタイム目線・Gold Pageなど全機能をご利用いただけます。'
-    :'基本機能が利用可能です。短期リアルタイム目線はPremiumプランへのアップグレードが必要です。';
-  document.getElementById('lock-short').className=isPremium?'lock-overlay':'lock-overlay on';
-}
-
-// ===================== PAGES =====================
+// ==================== PAGES ====================
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.hn-btn').forEach(b=>b.classList.remove('act'));
+  if(name==='app')document.querySelectorAll('.hn-btn')[0]?.classList.add('act');
   prevPage=name;
 }
-function goBackFromPolicy(){
-  const back=currentUser.id?'app':'login';
-  showPage(back);
-}
+function goBackFromPolicy(){showPage(currentUser?'app':'login');}
 
-// ===================== VOICE =====================
-let currentUtt=null;
-let isSpeaking=false;
+// ==================== VOICE ====================
 function speak(text){
   if(!voiceOn||!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
@@ -773,148 +839,166 @@ function speak(text){
   u.lang='ja-JP';u.rate=voiceRate;
   const jv=window.speechSynthesis.getVoices().find(v=>v.lang.includes('ja'));
   if(jv)u.voice=jv;
-  currentUtt=u;
   isSpeaking=true;
   document.getElementById('speakAnim').className='speak-anim on';
-  document.getElementById('btnStopVoice').className='btn-stop-voice on';
+  document.getElementById('btnStop').className='ab-btn stop on';
   u.onend=u.onerror=()=>{
     isSpeaking=false;
     document.getElementById('speakAnim').className='speak-anim';
-    document.getElementById('btnStopVoice').className='btn-stop-voice';
+    document.getElementById('btnStop').className='ab-btn stop';
   };
   window.speechSynthesis.speak(u);
 }
 function stopVoice(){
-  window.speechSynthesis&&window.speechSynthesis.cancel();
+  window.speechSynthesis?.cancel();
   isSpeaking=false;
   document.getElementById('speakAnim').className='speak-anim';
-  document.getElementById('btnStopVoice').className='btn-stop-voice';
+  document.getElementById('btnStop').className='ab-btn stop';
 }
 function speakNow(){if(lastResult)speak(lastResult.voiceText);else speak('まだ分析が完了していません。');}
 function toggleVoice(){voiceOn=!voiceOn;document.getElementById('voiceBtn').innerHTML=voiceOn?'<i class="ti ti-bell"></i> 音声: ON':'<i class="ti ti-bell-off"></i> 音声: OFF';}
-function changeSpeed(){voiceRate=parseFloat(document.getElementById('speedSel').value);}
 
-// ===================== TABS =====================
+// ==================== TABS ====================
 function showTab(name){
-  ['next','chart','market','sentiment','guide'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
-  document.querySelectorAll('.tab').forEach((b,i)=>{b.className='tab'+(['next','chart','market','sentiment','guide'][i]===name?' active':'');});
+  ['next','chart','sentiment','guide'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('.tab').forEach((b,i)=>{b.className='tab'+(['next','chart','sentiment','guide'][i]===name?' active':'');});
 }
 
-// ===================== MONITORING =====================
+// ==================== MONITORING ====================
 function startMonitoring(){
   if(isRunning){
     isRunning=false;clearInterval(tickTimer);
     document.getElementById('startBtn').innerHTML='<i class="ti ti-player-play"></i> リアルタイム開始';
-    document.getElementById('startBtn').className='btn btn-primary';
+    document.getElementById('startBtn').className='ab-btn primary';
     document.getElementById('liveDot').className='ldot';
     document.getElementById('liveLabel').textContent='停止中';
     return;
   }
   isRunning=true;
   document.getElementById('startBtn').innerHTML='<i class="ti ti-player-stop"></i> 停止';
-  document.getElementById('startBtn').className='btn btn-stop2';
-  loadEvents();
+  document.getElementById('startBtn').className='ab-btn stop on';
   runTick();
   tickTimer=setInterval(runTick,5000);
 }
 
-// ===================== EVENTS (経済指標) =====================
-function loadEvents(){
-  // 今日の重要指標（内蔵データ + 動的日付判定）
-  const now=new Date();
-  const dow=now.getDay(); // 0=Sun,1=Mon,...
-  const jst=new Date(now.getTime()+9*3600000);
-  const h=jst.getUTCHours(),m=jst.getUTCMinutes();
-  const today=`${jst.getUTCMonth()+1}/${jst.getUTCDate()}`;
+// ==================== FETCH ====================
+// Alpha Vantage CURRENCY_EXCHANGE_RATE — XAU/USD
+// APIキーはサーバーサイドで保護するのが理想だが
+// スタンドアロンHTMLのため直接呼び出し（goldscope.aiで運用時はNext.js APIルート経由を推奨）
+const AV_KEY='KQ0JM9V617AQX62W';
+let avCacheTime=0,avCacheData=null;
 
-  // 今週の主要指標スケジュール（2026年5月13日週）
-  const schedule={
-    3:[ // 水曜
-      {time:'21:30',name:'米PPI（生産者物価指数）4月',impact:'high'},
-      {time:'23:00',name:'米ミシガン大学消費者信頼感 速報値',impact:'med'},
-    ],
-    4:[ // 木曜
-      {time:'21:30',name:'米新規失業保険申請件数',impact:'high'},
-      {time:'21:30',name:'米小売売上高 4月',impact:'high'},
-    ],
-    5:[ // 金曜
-      {time:'15:00',name:'英小売売上高 4月',impact:'med'},
-      {time:'21:30',name:'米製造業・サービス業PMI速報値 5月',impact:'med'},
-    ],
-    1:[ // 月曜
-      {time:'--:--',name:'主要指標なし（市場は材料待ち）',impact:'low'},
-    ],
-    2:[ // 火曜
-      {time:'22:00',name:'米ISM非製造業指数',impact:'med'},
-    ],
-  };
-  const events=schedule[dow]||[{time:'--:--',name:'本日の主要指標なし',impact:'low'}];
-  const items=events.map(e=>`<div class="event-item">
-    <span class="event-time">${e.time}JST</span>
-    <span class="event-name">${e.name}</span>
-    <span class="event-impact ei-${e.impact}">${e.impact==='high'?'高':'e.impact'==='med'?'中':'低'}</span>
-  </div>`).join('');
-  document.getElementById('eventItems').innerHTML=items||'<span style="font-size:12px;color:var(--tx3)">本日の主要指標なし</span>';
+async function fetchAVPrice(){
+  // 5秒キャッシュ（同一データを連続取得しない）
+  if(avCacheData&&Date.now()-avCacheTime<5000)return{...avCacheData,source:'Alpha Vantage (cache)'};
+  try{
+    const url=`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`;
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    const json=await res.json();
+    console.log('[GoldScope Vision] Alpha Vantage RAW Response:', JSON.stringify(json));
+
+    // レート制限チェック
+    if(json.Information||json.Note){
+      console.warn('[GoldScope Vision] AV制限:', json.Information||json.Note);
+      throw new Error('rate_limit');
+    }
+    if(json['Error Message'])throw new Error(json['Error Message']);
+
+    const r=json['Realtime Currency Exchange Rate'];
+    if(!r)throw new Error('no_data');
+
+    const bid=parseFloat(r['8. Bid Price']);
+    const ask=parseFloat(r['9. Ask Price']);
+    const rate=parseFloat(r['5. Exchange Rate']);
+    const mid=(bid+ask)/2;
+    const data={
+      rate,bid,ask,
+      mid:isNaN(mid)?rate:mid,
+      lastRefreshed:r['6. Last Refreshed'],
+      timeZone:r['7. Time Zone'],
+      source:'Alpha Vantage',
+      open:rate,
+    };
+    avCacheData=data;avCacheTime=Date.now();
+    return data;
+  }catch(e){
+    console.warn('[GoldScope Vision] AV失敗 →フォールバック:', e.message);
+    return null;
+  }
 }
 
-// ===================== FETCH =====================
-async function fetchSpot(){
+async function fetchSpotFallback(){
   try{
-    const r=await fetch('https://gold-api.com/price/XAU',{cache:'no-store'});
-    if(!r.ok)throw new Error();
-    const d=await r.json();
-    if(!d.price)throw new Error();
-    return{price:parseFloat(d.price),open:parseFloat(d.prev_close||d.price),source:'gold-api.com LIVE'};
+    const res=await fetch('https://gold-api.com/price/XAU',{cache:'no-store'});
+    const d=await res.json();
+    const price=parseFloat(d.price);
+    return{rate:price,bid:price-.5,ask:price+.5,mid:price,lastRefreshed:new Date().toISOString(),timeZone:'UTC',source:'gold-api.com (fallback)',open:parseFloat(d.prev_close||price)};
   }catch{return null;}
 }
-async function fetchHist(){
+
+async function fetchHistory(){
   for(const url of['https://query1.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=5m&range=5d','https://query2.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=5m&range=5d']){
     try{
-      const r=await fetch(url,{cache:'no-store'});if(!r.ok)continue;
-      const d=await r.json();const q=d.chart.result[0].indicators.quote[0];
+      const res=await fetch(url,{cache:'no-store'});if(!res.ok)continue;
+      const d=await res.json();const q=d.chart.result[0].indicators.quote[0];
       const c=q.close||[],h=q.high||[],l=q.low||[],v=q.volume||[];
-      const hist=[];
-      for(let i=0;i<c.length;i++)if(c[i]!=null)hist.push({c:c[i],h:h[i]||c[i],l:l[i]||c[i],v:v[i]||500});
-      if(hist.length<20)continue;
-      return hist.slice(-300);
-    }catch{continue;}
+      const bars=[];
+      for(let i=0;i<c.length;i++)if(c[i]!=null)bars.push({c:c[i],h:h[i]||c[i],l:l[i]||c[i],v:v[i]||500});
+      if(bars.length>=20)return bars.slice(-300);
+    }catch{}
   }
   return null;
 }
+
 async function fetchAll(){
-  const[spot,hist]=await Promise.all([fetchSpot(),fetchHist()]);
-  if(spot&&hist){
+  showLoading('Alpha Vantageから価格データ取得中...');
+  const[avData,hist]=await Promise.all([fetchAVPrice(),fetchHistory()]);
+  let spotData=avData;
+  if(!spotData){
+    showLoading('フォールバック価格取得中...');
+    spotData=await fetchSpotFallback();
+  }
+  hideLoading();
+
+  if(spotData&&hist){
     const uh=[...hist];
     const lb=uh[uh.length-1];
-    uh[uh.length-1]={c:spot.price,h:Math.max(lb.h,spot.price),l:Math.min(lb.l,spot.price),v:lb.v};
-    return{price:spot.price,open:spot.open,hist:uh,live:true,source:'gold-api.com + Yahoo Finance'};
-  }else if(spot){
-    let b=simHistory.length>0?simHistory[simHistory.length-1].c:spot.price;
-    simHistory.push({c:spot.price,h:spot.price+1,l:spot.price-1,v:500});
+    uh[uh.length-1]={c:spotData.mid,h:Math.max(lb.h,spotData.mid),l:Math.min(lb.l,spotData.mid),v:lb.v};
+    return{...spotData,hist:uh,live:true};
+  }else if(spotData){
+    let b=simHistory.length?simHistory[simHistory.length-1].c:spotData.mid;
+    simHistory.push({c:spotData.mid,h:spotData.mid+1,l:spotData.mid-1,v:500});
     if(simHistory.length>300)simHistory=simHistory.slice(-300);
-    return{price:spot.price,open:spot.open,hist:[...simHistory],live:true,source:'gold-api.com (履歴SIM)'};
+    return{...spotData,hist:[...simHistory],live:true};
   }else if(hist){
     const p=hist[hist.length-1].c;
-    return{price:p,open:hist[0].c,hist,live:false,source:'Yahoo Finance'};
+    return{rate:p,bid:p-.5,ask:p+.5,mid:p,lastRefreshed:new Date().toISOString(),timeZone:'JST',source:'Yahoo Finance',open:hist[0].c,hist,live:false};
   }else{
-    let b=simHistory.length>0?simHistory[simHistory.length-1].c:4700;
+    let b=simHistory.length?simHistory[simHistory.length-1].c:4700;
     b+=(Math.random()-.48)*3;
     simHistory.push({c:b,h:b+Math.random()*2,l:b-Math.random()*2,v:400});
     if(simHistory.length>300)simHistory=simHistory.slice(-300);
-    return{price:b,open:simHistory[0].c,hist:[...simHistory],live:false,source:'シミュレーション'};
+    const p=simHistory[simHistory.length-1].c;
+    return{rate:p,bid:p-.5,ask:p+.5,mid:p,lastRefreshed:'--',timeZone:'--',source:'シミュレーション',open:simHistory[0].c,hist:[...simHistory],live:false};
   }
 }
 
-// ===================== INDICATORS =====================
+function showLoading(msg){
+  document.getElementById('loadingBox').style.display='flex';
+  document.getElementById('loadingTxt').textContent=msg;
+}
+function hideLoading(){document.getElementById('loadingBox').style.display='none';}
+
+// ==================== INDICATORS ====================
 function ema(v,p){if(!v||v.length<p)return v?v[v.length-1]:0;const k=2/(p+1);let e=v.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<v.length;i++)e=v[i]*k+e*(1-k);return e;}
-function bb(v,p=20,m=2){if(v.length<p)return null;const s=v.slice(-p),mn=s.reduce((a,b)=>a+b,0)/p,sd=Math.sqrt(s.reduce((a,b)=>a+Math.pow(b-mn,2),0)/p);return{u:mn+m*sd,m:mn,l:mn-m*sd,sd};}
+function bb(v,p=20,m=2){if(v.length<p)return null;const s=v.slice(-p),mn=s.reduce((a,b)=>a+b,0)/p,sd=Math.sqrt(s.reduce((a,b)=>a+Math.pow(b-mn,2),0)/p);return{u:mn+m*sd,m:mn,l:mn-m*sd,sd,width:(mn+m*sd)-(mn-m*sd)};}
 function rsi(v,p=14){if(v.length<p+1)return 50;let g=0,l=0;for(let i=v.length-p;i<v.length;i++){const d=v[i]-v[i-1];if(d>0)g+=d;else l-=d;}if(!l)return 100;return Math.round(100-100/(1+g/p/(l/p)));}
 function vwap(h){let pv=0,v=0;for(const b of h){const t=(b.h+b.l+b.c)/3;pv+=t*b.v;v+=b.v;}return v>0?pv/v:h[h.length-1].c;}
-function atr(h,p=14){if(h.length<p+1)return 5;let s=0;for(let i=h.length-p;i<h.length;i++){const tr=Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c));s+=tr;}return s/p;}
+function calcATR(h,p=14){if(h.length<p+1)return 5;let s=0;for(let i=h.length-p;i<h.length;i++){const tr=Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c));s+=tr;}return s/p;}
 function buyPressure(h){const r=h.slice(-20);let b=0,s=0;for(const x of r){const rng=x.h-x.l||.01;b+=x.v*(x.c-x.l)/rng;s+=x.v*(x.h-x.c)/rng;}const t=b+s;return t>0?Math.round(b/t*100):50;}
-function obv(h){let o=0;const a=[0];for(let i=1;i<h.length;i++){o+=h[i].c>h[i-1].c?h[i].v:h[i].c<h[i-1].c?-h[i].v:0;a.push(o);}return a;}
-
-function adx(h,p=14){
+function calcOBV(h){let o=0;const a=[0];for(let i=1;i<h.length;i++){o+=h[i].c>h[i-1].c?h[i].v:h[i].c<h[i-1].c?-h[i].v:0;a.push(o);}return a;}
+function calcADX(h,p=14){
   if(h.length<p*2+2)return{adx:20,pdi:20,ndi:20};
   const pDM=[],nDM=[],tr=[];
   for(let i=1;i<h.length;i++){const up=h[i].h-h[i-1].h,dn=h[i-1].l-h[i].l;pDM.push(up>dn&&up>0?up:0);nDM.push(dn>up&&dn>0?dn:0);tr.push(Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c)));}
@@ -922,143 +1006,146 @@ function adx(h,p=14){
   const sTR=ws(tr),sPDM=ws(pDM),sNDM=ws(nDM),DX=[];
   for(let i=0;i<sTR.length;i++){const pi=sTR[i]>0?100*sPDM[i]/sTR[i]:0,ni=sTR[i]>0?100*sNDM[i]/sTR[i]:0;DX.push((pi+ni)>0?100*Math.abs(pi-ni)/(pi+ni):0);}
   if(DX.length<p)return{adx:20,pdi:20,ndi:20};
-  let a2=DX.slice(0,p).reduce((a,b)=>a+b,0)/p;
-  for(let i=p;i<DX.length;i++)a2=(a2*(p-1)+DX[i])/p;
+  let av=DX.slice(0,p).reduce((a,b)=>a+b,0)/p;
+  for(let i=p;i<DX.length;i++)av=(av*(p-1)+DX[i])/p;
   const last=sTR.length-1;
-  return{adx:Math.round(a2),pdi:Math.round(sTR[last]>0?100*sPDM[last]/sTR[last]:0),ndi:Math.round(sTR[last]>0?100*sNDM[last]/sTR[last]:0)};
+  return{adx:Math.round(av),pdi:Math.round(sTR[last]>0?100*sPDM[last]/sTR[last]:0),ndi:Math.round(sTR[last]>0?100*sNDM[last]/sTR[last]:0)};
 }
-
-// Market Structure
-function marketStructure(hist){
-  if(hist.length<10)return{trend:'neut',hh:0,hl:0,lh:0,ll:0,desc:'データ不足'};
-  const n=Math.min(hist.length,30);
-  const recent=hist.slice(-n);
-  const highs=recent.map(b=>b.h),lows=recent.map(b=>b.l);
+function marketStructure(h){
+  if(h.length<10)return{trend:'neut',hh:0,hl:0,lh:0,ll:0};
+  const n=Math.min(h.length,30),r=h.slice(-n);
   let hh=0,hl=0,lh=0,ll=0;
-  for(let i=3;i<recent.length;i++){
-    const ph=Math.max(...highs.slice(i-3,i));
-    const pl=Math.min(...lows.slice(i-3,i));
-    if(recent[i].h>ph)hh++;else if(recent[i].h<ph)lh++;
-    if(recent[i].l>pl)hl++;else if(recent[i].l<pl)ll++;
-  }
+  for(let i=3;i<r.length;i++){const ph=Math.max(...r.slice(i-3,i).map(b=>b.h)),pl=Math.min(...r.slice(i-3,i).map(b=>b.l));if(r[i].h>ph)hh++;else if(r[i].h<ph)lh++;if(r[i].l>pl)hl++;else if(r[i].l<pl)ll++;}
   const bull=hh+hl,bear=lh+ll;
-  const trend=bull>bear+2?'bull':bear>bull+2?'bear':'neut';
-  const desc=trend==='bull'?`HH${hh}・HL${hl}で高値・安値を切り上げ中（上昇MS）`:trend==='bear'?`LH${lh}・LL${ll}で高値・安値を切り下げ中（下落MS）`:`方向性が混在（レンジ/転換点を疑う）`;
-  return{trend,hh,hl,lh,ll,desc};
+  return{trend:bull>bear+2?'bull':bear>bull+2?'bear':'neut',hh,hl,lh,ll};
 }
 
-// ===== Order Block 検出 =====
-// オーダーブロック = 直近で大きく反発・拒絶された価格帯
-// 上昇OB（買いOB）: 大陽線の直前の安値圏 → サポート
-// 下降OB（売りOB）: 大陰線の直前の高値圏 → レジスタンス
-function detectOrderBlocks(hist){
-  const obs=[];
-  if(hist.length<10)return obs;
-  const atrVal=hist.slice(-20).reduce((s,b,i,a)=>i>0?s+Math.abs(b.c-a[i-1].c):s,0)/19||1;
+// ==================== RANGE FILTER (独自ロジック) ====================
+// ATR×2.5のフィルター幅でノイズを除去し方向を判定
+// GoldScope Vision独自実装 — 既存インジケーターのコピーではない
+function calcRangeFilter(bars,multiplier=2.5,atrPeriod=14){
+  const n=bars.length;if(n<20)return{filtered:bars[n-1].c,dir:'neut',dist:0};
+  const ATR=calcATR(bars,atrPeriod);
+  const filterRange=ATR*multiplier;
+  let filtered=rfPrevFiltered!==null?rfPrevFiltered:bars[0].c;
+  let dir=rfPrevDir;
+  const price=bars[n-1].c;
+  if(price>filtered+filterRange){filtered=price;dir='bull';}
+  else if(price<filtered-filterRange){filtered=price;dir='bear';}
+  // 方向変化時は更新
+  rfPrevFiltered=filtered;rfPrevDir=dir;
+  const dist=parseFloat((price-filtered).toFixed(1));
+  return{filtered:parseFloat(filtered.toFixed(1)),dir,dist,filterRange:parseFloat(filterRange.toFixed(1)),ATR};
+}
+
+// ==================== SLOW TREND ====================
+// EMAslopeとHH頻度からじわ上げ/じわ下げを判定
+function calcSlowTrend(bars,lookback=40){
+  if(bars.length<lookback)return'neut';
+  const closes=bars.slice(-lookback).map(b=>b.c);
+  const emaEarly=ema(closes.slice(0,Math.floor(lookback/2)),Math.min(14,Math.floor(lookback/2)));
+  const emaLate=ema(closes.slice(Math.floor(lookback/2)),Math.min(14,Math.floor(lookback/2)));
+  const slope=(emaLate-emaEarly)/emaEarly*100;
+  const ATR=calcATR(bars.slice(-lookback),14);
+  if(Math.abs(slope)<0.01)return'neut'; // ほぼフラット
+  if(slope>0&&slope<0.05)return'slow_bull'; // じわ上げ
+  if(slope<0&&slope>-0.05)return'slow_bear'; // じわ下げ
+  if(slope>=0.05)return'bull';
+  if(slope<=-0.05)return'bear';
+  return'neut';
+}
+
+// ==================== SQUEEZE ANALYSIS (独自ロジック) ====================
+// BB Width vs Keltner Channel Width
+// GoldScope Vision独自実装
+function calcSqueeze(bars,bbPeriod=20,bbDev=2.0,atrPeriod=20,kcFactor=1.5,momPeriod=20){
+  const closes=bars.map(b=>b.c);
+  const n=closes.length;
+  if(n<bbPeriod+5)return{state:'normal',bbW:0,kcW:0,ratio:1,dir:'neut',momentum:0,expanding:false};
+
+  const BB=bb(closes,bbPeriod,bbDev);
+  const ATR=calcATR(bars,atrPeriod);
+  const midEMA=ema(closes,bbPeriod);
+  const kcW=ATR*kcFactor*2; // Keltner幅
+  const bbW=BB?BB.width:0;
+  const ratio=kcW>0?bbW/kcW:1;
+
+  // Squeeze判定: BB幅がKC幅より小さい → 圧縮中
+  const isSqueeze=bbW<kcW;
+
+  // スクイーズ終了判定
+  const wasSqueezing=prevSqState==='squeeze';
+  const squeezeEnd=wasSqueezing&&!isSqueeze;
+
+  // モメンタム: 線形回帰の傾きで代替
+  const recentCloses=closes.slice(-momPeriod);
+  const momMean=recentCloses.reduce((a,b)=>a+b,0)/momPeriod;
+  let num=0,den=0;
+  for(let i=0;i<momPeriod;i++){num+=(i-momPeriod/2)*(recentCloses[i]-momMean);den+=(i-momPeriod/2)**2;}
+  const momentum=den>0?num/den:0;
+
+  // 拡大継続判定
+  const prevBBW=BB?bbW*0.95:0; // 簡易: 前回比較はATRで代替
+  const expanding=!isSqueeze&&bbW>ATR*0.5;
+
+  // 方向確認
+  const price=closes[n-1];
+  const rfDir=rfPrevDir;
+  let sqDir='neut';
+  if(squeezeEnd||(!isSqueeze)){
+    if(momentum>0&&rfDir==='bull')sqDir='bull';
+    else if(momentum<0&&rfDir==='bear')sqDir='bear';
+    else if(momentum>0)sqDir='bull';
+    else if(momentum<0)sqDir='bear';
+  }
+
+  const state=isSqueeze?'squeeze':squeezeEnd?'squeeze_end':expanding?'expanding':'normal';
+  prevSqState=isSqueeze?'squeeze':'normal';
+
+  return{state,bbW:parseFloat(bbW.toFixed(2)),kcW:parseFloat(kcW.toFixed(2)),ratio:parseFloat(ratio.toFixed(2)),dir:sqDir,momentum:parseFloat(momentum.toFixed(2)),expanding,squeezeEnd};
+}
+
+// ==================== ORDER BLOCKS ====================
+function detectOB(hist){
+  const obs=[];if(hist.length<10)return{above:[],below:[]};
+  const atrVal=calcATR(hist.slice(-20),14)||1;
   const n=hist.length;
   for(let i=3;i<n-1;i++){
-    const body=Math.abs(hist[i].c-hist[i].o||hist[i].c-hist[i-1].c);
     const move=hist[i].c-hist[i-1].c;
-    // 強い上昇足 → 直前の足がベア OB（レジスタンス）
-    if(move>atrVal*1.5){
-      const obHigh=hist[i-1].h||(hist[i-1].c+atrVal*0.5);
-      const obLow=hist[i-1].l||(hist[i-1].c-atrVal*0.5);
-      obs.push({type:'bull',high:parseFloat(obHigh.toFixed(1)),low:parseFloat(obLow.toFixed(1)),mid:parseFloat(((obHigh+obLow)/2).toFixed(1)),idx:i,label:'買いOB'});
-    }
-    // 強い下降足 → 直前の足がブル OB（サポート→反転候補）
-    if(move<-atrVal*1.5){
-      const obHigh=hist[i-1].h||(hist[i-1].c+atrVal*0.5);
-      const obLow=hist[i-1].l||(hist[i-1].c-atrVal*0.5);
-      obs.push({type:'bear',high:parseFloat(obHigh.toFixed(1)),low:parseFloat(obLow.toFixed(1)),mid:parseFloat(((obHigh+obLow)/2).toFixed(1)),idx:i,label:'売りOB'});
-    }
+    if(move>atrVal*1.5){const h=hist[i-1].h||(hist[i-1].c+atrVal*.5),l=hist[i-1].l||(hist[i-1].c-atrVal*.5);obs.push({type:'bear',mid:parseFloat(((h+l)/2).toFixed(1)),high:parseFloat(h.toFixed(1)),low:parseFloat(l.toFixed(1)),label:'売りOB'});}
+    if(move<-atrVal*1.5){const h=hist[i-1].h||(hist[i-1].c+atrVal*.5),l=hist[i-1].l||(hist[i-1].c-atrVal*.5);obs.push({type:'bull',mid:parseFloat(((h+l)/2).toFixed(1)),high:parseFloat(h.toFixed(1)),low:parseFloat(l.toFixed(1)),label:'買いOB'});}
   }
-  // 現在価格に近いOBだけ残す（ATR10本以内）
   const price=hist[n-1].c;
   const filtered=obs.filter(o=>Math.abs(o.mid-price)<atrVal*10);
-  // 上のOB（レジスタンス）と下のOB（サポート）を近い順に返す
-  const above=filtered.filter(o=>o.mid>price).sort((a,b)=>a.mid-b.mid).slice(0,2);
-  const below=filtered.filter(o=>o.mid<price).sort((a,b)=>b.mid-a.mid).slice(0,2);
-  return{above,below,atr:atrVal};
+  return{above:filtered.filter(o=>o.mid>price).sort((a,b)=>a.mid-b.mid).slice(0,2),below:filtered.filter(o=>o.mid<price).sort((a,b)=>b.mid-a.mid).slice(0,2)};
 }
 
-// Pattern detection
-function detectPatterns(hist,bband,adxVal){
-  const patterns=[];
-  if(!bband)return patterns;
-  const c=hist.map(b=>b.c);
-  const n=hist.length;
-  const price=c[n-1];
-  // BB収縮（スクイーズ）
-  const bandwidth=(bband.u-bband.l)/bband.m;
-  if(bandwidth<0.008)patterns.push({label:'BB収縮（スクイーズ）',cls:'p-tri',desc:'ブレイクアウト前兆'});
-  // BB拡大
-  if(bandwidth>0.018)patterns.push({label:'BBエクスパンション',cls:'p-warn',desc:'トレンド加速中'});
-  // 三角持ち合い（簡易判定: 直近20本の高値収束・安値収束）
-  if(n>=20){
-    const recent20=hist.slice(-20);
-    const maxH=Math.max(...recent20.map(b=>b.h)),minH=Math.min(...recent20.map(b=>b.h));
-    const maxL=Math.max(...recent20.map(b=>b.l)),minL=Math.min(...recent20.map(b=>b.l));
-    const hRange=maxH-minH,lRange=maxL-minL;
-    const totalRange=Math.max(...recent20.map(b=>b.h))-Math.min(...recent20.map(b=>b.l));
-    if(hRange<totalRange*0.4&&lRange<totalRange*0.4)patterns.push({label:'三角持ち合い',cls:'p-tri',desc:'ブレイク方向に注意'});
-  }
-  // レンジ
-  if(adxVal<20)patterns.push({label:'レンジ相場',cls:'p-range',desc:'方向感なし・静観推奨'});
-  // トレンド
-  if(adxVal>=25)patterns.push({label:'トレンド相場',cls:'p-trend',desc:`ADX${adxVal}・方向性あり`});
-  // 高値更新
-  if(n>=5&&c[n-1]>Math.max(...c.slice(-6,-1)))patterns.push({label:'直近高値更新',cls:'p-bull',desc:'上昇勢い継続'});
-  // 安値割れ
-  if(n>=5&&c[n-1]<Math.min(...c.slice(-6,-1)))patterns.push({label:'直近安値割れ',cls:'p-bear',desc:'下落勢い継続'});
-  // BB上限タッチ
-  if(price>=bband.u*0.999)patterns.push({label:'BB上限タッチ',cls:'p-bear',desc:'過熱・反転注意'});
-  // BB下限タッチ
-  if(price<=bband.l*1.001)patterns.push({label:'BB下限タッチ',cls:'p-bull',desc:'売られすぎ・反転候補'});
-  return patterns;
+// ==================== EXPECTED VALUE ====================
+function calcExpectedValue(bars,shortDir,ATR){
+  const n=bars.length;
+  const closes=bars.map(b=>b.c);
+  const returns=[];for(let i=1;i<closes.length;i++)returns.push((closes[i]-closes[i-1])/closes[i-1]);
+  const sigma=Math.sqrt(returns.reduce((a,b)=>a+b*b,0)/returns.length||0);
+  const price=closes[n-1];
+  // 簡易シミュレーション (100試行)
+  let upCount=0;const finals=[];
+  for(let i=0;i<200;i++){let p=price;for(let s=0;s<12;s++){const r=(Math.random()+Math.random()-1)*sigma*Math.sqrt(3);p*=1+r;}if(p>price)upCount++;finals.push(p);}
+  finals.sort((a,b)=>a-b);
+  const upPips=Math.round((finals[Math.floor(200*.85)]-price)/0.01);
+  const dnPips=Math.round((price-finals[Math.floor(200*.15)])/0.01);
+  const upPct=Math.round(upCount/2);
+  return{upPips:Math.max(upPips,0),dnPips:Math.max(dnPips,0),upPct,dnPct:100-upPct,p5:finals[10],p95:finals[190]};
 }
 
-// Monte Carlo
-function monteCarlo(hist,n=200,steps=12){
-  const c=hist.map(b=>b.c);
-  const returns=[];
-  for(let i=1;i<c.length;i++)returns.push((c[i]-c[i-1])/c[i-1]);
-  const mean=returns.reduce((a,b)=>a+b,0)/returns.length;
-  const variance=returns.reduce((a,b)=>a+Math.pow(b-mean,2),0)/returns.length;
-  const sigma=Math.sqrt(variance);
-  const price=c[c.length-1];
-  let upCount=0,allFinals=[];
-  const paths=[];
-  for(let i=0;i<n;i++){
-    let p=price;const path=[p];
-    for(let s=0;s<steps;s++){
-      const r=mean+sigma*(Math.random()+Math.random()+Math.random()+Math.random()-2)*Math.sqrt(3/1);
-      p*=(1+r);path.push(p);
-    }
-    paths.push(path);
-    if(p>price)upCount++;
-    allFinals.push(p);
-  }
-  allFinals.sort((a,b)=>a-b);
-  const p5=allFinals[Math.floor(n*0.05)],p95=allFinals[Math.floor(n*0.95)];
-  const upPct=Math.round(upCount/n*100);
-  return{upPct,dnPct:100-upPct,p5,p95,price,paths:paths.slice(0,30)};
-}
+// ==================== DIRECTION HELPERS ====================
+function biasTxt(dir){return dir==='bull'?'Bullish Bias':dir==='bear'?'Bearish Bias':'Range / Neutral';}
+function arrowTxt(dir){return dir==='bull'?'↑':dir==='bear'?'↓':'→';}
+function arrowColor(dir){return dir==='bull'?'var(--gr)':dir==='bear'?'var(--rd)':'var(--tx2)';}
+function trendDirWord(dir){return dir==='bull'?'上方向優勢':dir==='bear'?'下方向優勢':'レンジ・中立';}
 
-function predTime(hist,target,price){
-  if(hist.length<5)return null;
-  const r=hist.slice(-10);let t=0;
-  for(let i=1;i<r.length;i++)t+=Math.abs(r[i].c-r[i-1].c);
-  const avg=t/(r.length-1)||.1;
-  const mins=Math.round(Math.abs(target-price)/avg*5);
-  return(mins<1||mins>480)?null:mins;
-}
-
-function session(){const h=new Date().getUTCHours();if(h>=22||h<5)return{name:'NY時間',hot:true};if(h>=7&&h<16)return{name:'ロンドン時間',hot:true};return{name:'アジア時間',hot:false};}
-
-// ===================== ANALYZE =====================
-function analyze(price,open,hist,source){
+// ==================== ANALYZE ====================
+function analyze(price,open,hist,spotMeta){
   const closes=hist.map(x=>x.c);
-  // Short history (5m bars, ~7h)
   const sh=hist.slice(-80),sc=sh.map(x=>x.c);
   const BB=bb(sc,20,2);
   const e20=ema(sc,Math.min(20,sc.length));
@@ -1066,475 +1153,368 @@ function analyze(price,open,hist,source){
   const VW=vwap(sh);
   const bPct=buyPressure(sh);
   const sPct=100-bPct;
-  const obvArr=obv(sh);
+  const obvArr=calcOBV(sh);
   const obvDir=obvArr.length>10?(obvArr[obvArr.length-1]>obvArr[obvArr.length-10]?'bull':'bear'):'neut';
-  const ATR=atr(sh,14);
-  const ADX=adx(sh,14);
+  const ATR=calcATR(sh,14);
+  const ADX=calcADX(sh,14);
   const e75=ema(closes,Math.min(75,closes.length));
   const e200=ema(closes,Math.min(200,closes.length));
   const rsiM=rsi(closes.slice(-50));
-  const ATRM=atr(hist,20);
+  const ATRM=calcATR(hist,20);
   const MS=marketStructure(hist);
-  const OB=detectOrderBlocks(hist); // オーダーブロック検出
-  const changePct=((price-open)/open)*100;
   const {adx:adxVal,pdi,ndi}=ADX;
   const trendDir=pdi>ndi?'bull':'bear';
-  const sess=session();
+  const changePct=((price-open)/open)*100;
+  const sess=()=>{const h=new Date().getUTCHours();return h>=22||h<5?{name:'NY時間',hot:true}:h>=7&&h<16?{name:'ロンドン時間',hot:true}:{name:'アジア時間',hot:false};}
+  const sessInfo=sess();
 
-  // Ultra-short (simulated from 1m: use last 12 bars = 1h as proxy)
-  const ultraH=hist.slice(-20),ultraC=ultraH.map(x=>x.c);
-  const ultraBP=buyPressure(ultraH);
-  const ultraObv=obv(ultraH);
-  const ultraDir=ultraBP>55?'bull':ultraBP<45?'bear':'neut';
-  const ultraBB=bb(ultraC,Math.min(10,ultraC.length));
-  const ultraTP=ultraDir==='bull'?(ultraBB?ultraBB.u:price+ATR*0.5):(ultraBB?ultraBB.l:price-ATR*0.5);
-
-  // Short
-  const bullSig=[bPct>55,obvDir==='bull',price>VW,e20&&price>e20,rsiS<65&&rsiS>35&&changePct>0].filter(Boolean).length;
-  const bearSig=[bPct<45,obvDir==='bear',price<VW,e20&&price<e20,rsiS>35&&changePct<0].filter(Boolean).length;
+  // Short direction
+  const bullSig=[bPct>55,obvDir==='bull',price>VW,price>e20,rsiS<65&&rsiS>35&&changePct>0].filter(Boolean).length;
+  const bearSig=[bPct<45,obvDir==='bear',price<VW,price<e20,rsiS>35&&changePct<0].filter(Boolean).length;
   const shortDir=bullSig>bearSig?'bull':bearSig>bullSig?'bear':'neut';
+  const midDir=price>e75&&price>e200?'bull':price<e75&&price<e200?'bear':'neut';
+  const longAvgNew=closes.slice(-20).reduce((a,b)=>a+b,0)/20;
+  const longAvgOld=closes.slice(0,20).reduce((a,b)=>a+b,0)/20;
+  const longDir=longAvgNew>longAvgOld+ATRM*2?'bull':longAvgNew<longAvgOld-ATRM*2?'bear':'neut';
 
-  // Entry judgment
-  const dirMatch=(shortDir==='bull'&&trendDir==='bull')||(shortDir==='bear'&&trendDir==='bear');
-  let entryVerdict,entryReason,entryClass,entryColor;
-  if(adxVal<20){
-    entryVerdict='⚠️ 今は入らない方がいい';
-    entryReason=`ADX${adxVal}でトレンドがほとんどない状態です（レンジ相場）。BBも収縮傾向でどちらに動くか読みにくい。ブレイクアウトを待ちましょう。`;
-    entryClass='wait';entryColor='var(--rd)';
-  }else if(adxVal<25){
-    if(dirMatch){entryVerdict='🟡 慎重にエントリー可';entryReason=`ADX${adxVal}でトレンドは弱め。${shortDir==='bull'?'+DI('+pdi+')':'-DI('+ndi+')'}優勢で方向性は一応あります。小さめのサイズで慎重に。`;entryClass='caution';entryColor='var(--am)';}
-    else{entryVerdict='⚠️ 方向が定まっていない';entryReason=`ADX${adxVal}でトレンドが弱く、テクニカルとDMIの方向も合っていません。もう少し様子を見てから判断してください。`;entryClass='wait';entryColor='var(--rd)';}
-  }else if(adxVal<40){
-    if(dirMatch&&Math.abs(bullSig-bearSig)>=2){entryVerdict=shortDir==='bull'?'✅ ロングを検討していい':'✅ ショートを検討していい';entryReason=`ADX${adxVal}でトレンドが出ています。${shortDir==='bull'?'+DI('+pdi+')':'-DI('+ndi+')'}優勢でテクニカルも同方向。エントリーを検討できる局面です。`;entryClass='go';entryColor='var(--gr)';}
-    else{entryVerdict='🟡 シグナルを確認してから';entryReason=`ADX${adxVal}でトレンドはありますが、シグナルが全部揃っていません。あと1〜2本確認してから入るのが安全です。`;entryClass='caution';entryColor='var(--am)';}
-  }else{
-    entryVerdict=shortDir==='bull'?'🔥 ロングチャンス！':'🔥 ショートチャンス！';
-    entryReason=`ADX${adxVal}で強いトレンドが出ています！${shortDir==='bull'?'+DI('+pdi+')が-DI('+ndi+')を大きく上回り':'-DI('+ndi+')が+DI('+pdi+')を大きく上回り'}、買い圧力${shortDir==='bull'?bPct:sPct}%。積極的にエントリーできる局面です。`;
-    entryClass='go';entryColor='var(--gr)';
-  }
+  // Range filter
+  const RF=calcRangeFilter(hist,2.5,14);
+  // Slow trend
+  const slowTrend=calcSlowTrend(hist,40);
+  // Squeeze
+  const SQ=calcSqueeze(hist,20,2.0,20,1.5,20);
+  // OB
+  const OB=detectOB(hist);
+  // Expected Value
+  const EV=calcExpectedValue(hist,shortDir,ATR);
 
-  // Levels
+  // ADX label with direction
+  const trendDirWordAdx=shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'';
+  const msLabel=adxVal>=40?(trendDirWordAdx?`強い${trendDirWordAdx}トレンド`:'強いトレンド'):adxVal>=25?(trendDirWordAdx?`${trendDirWordAdx}トレンド`:'トレンド発生'):adxVal>=18?(trendDirWordAdx?`弱い${trendDirWordAdx}トレンド`:'弱いトレンド'):'レンジ相場';
+  const msColor=adxVal>=40?arrowColor(shortDir):adxVal>=25?arrowColor(shortDir):adxVal>=18?(shortDir==='bull'?'#5BB870':shortDir==='bear'?'#D07050':'var(--rd)'):'var(--rd)';
+
+  // Levels for reference zones
   const levels=[];
-  if(BB){levels.push({l:'BB上限',p:BB.u,t:'bear',d:'短期抵抗',tf:'短期'});levels.push({l:'BB中央',p:BB.m,t:'neut',d:'ミドル',tf:'短期'});levels.push({l:'BB下限',p:BB.l,t:'bull',d:'短期支持',tf:'短期'});}
-  if(VW)levels.push({l:'VWAP',p:VW,t:price>VW?'bull':'bear',d:'出来高平均',tf:'短期'});
-  if(e20)levels.push({l:'EMA20',p:e20,t:price>e20?'bull':'bear',d:'短期トレンド',tf:'短期'});
-  if(e75)levels.push({l:'EMA75',p:e75,t:price>e75?'bull':'bear',d:'中期トレンド',tf:'中期'});
-  if(e200)levels.push({l:'EMA200',p:e200,t:price>e200?'bull':'bear',d:'長期トレンド',tf:'長期'});
+  if(BB){levels.push({l:'BB上限',p:BB.u,t:'bear',d:'参考抵抗帯'});levels.push({l:'BB中央',p:BB.m,t:'neut',d:'ミドル'});levels.push({l:'BB下限',p:BB.l,t:'bull',d:'参考支持帯'});}
+  if(VW)levels.push({l:'VWAP',p:VW,t:price>VW?'bull':'bear',d:'出来高平均'});
+  if(e20)levels.push({l:'EMA20',p:e20,t:price>e20?'bull':'bear',d:'短期MA'});
+  if(e75)levels.push({l:'EMA75',p:e75,t:price>e75?'bull':'bear',d:'中期MA'});
+  if(e200)levels.push({l:'EMA200',p:e200,t:price>e200?'bull':'bear',d:'長期MA'});
   levels.sort((a,b)=>b.p-a.p);
   const above=levels.filter(x=>x.p>price+.2).sort((a,b)=>a.p-b.p);
   const below=levels.filter(x=>x.p<price-.2).sort((a,b)=>b.p-a.p);
 
-  function makeTPs(list,isLong){
-    const res=list.slice(0,4).map((x,i)=>{const pts=parseFloat(Math.abs(x.p-price).toFixed(1));return{label:`TP${i+1}·${x.l}`,price:parseFloat(x.p.toFixed(1)),pts,rr:(pts/ATR).toFixed(1),desc:x.d,tf:x.tf,type:x.t};});
-    if(!res.length)[1,2].forEach(m=>{const pts=parseFloat((ATR*m).toFixed(1));res.push({label:`TP${m}·ATR×${m}`,price:parseFloat((isLong?price+ATR*m:price-ATR*m).toFixed(1)),pts,rr:m.toFixed(1),desc:'ATRベース',tf:'短期',type:isLong?'bull':'bear'});});
+  function makeRef(list,isLong){
+    const res=list.slice(0,3).map((x,i)=>{const pts=parseFloat(Math.abs(x.p-price).toFixed(1));const pips=Math.round(pts/0.01);return{label:`参考TP${i+1}·${x.l}`,price:parseFloat(x.p.toFixed(1)),pts,pips,rr:(pts/ATR).toFixed(1),desc:x.d};});
+    if(!res.length)[1,2].forEach(m=>{const pts=parseFloat((ATR*m).toFixed(1));const p=parseFloat((isLong?price+ATR*m:price-ATR*m).toFixed(1));res.push({label:`参考TP${m}·ATR×${m}`,price:p,pts,pips:Math.round(pts/0.01),rr:m.toFixed(1),desc:'ATR基準'});});
     return res;
   }
-  const tpLong=makeTPs(above,true),tpShort=makeTPs(below,false);
+  const refLong=makeRef(above,true),refShort=makeRef(below,false);
   const slLong=parseFloat((BB?BB.l-ATR*.3:price-ATR*1.5).toFixed(1));
   const slShort=parseFloat((BB?BB.u+ATR*.3:price+ATR*1.5).toFixed(1));
-  const activeTPs=shortDir==='bull'?tpLong:shortDir==='bear'?tpShort:[];
-  const shortTP=activeTPs[0]||null,shortTP2=activeTPs[1]||null;
-  const predMins=shortTP?predTime(sh,shortTP.price,price):null;
 
-  // Mid / Long
-  const midDir=price>e75&&price>e200?'bull':price<e75&&price<e200?'bear':'neut';
-  const midTP=midDir==='bull'?Math.round(price+ATRM*8):Math.round(price-ATRM*8);
-  const longTrend=(closes.slice(-20).reduce((a,b)=>a+b,0)/20)>(closes.slice(0,20).reduce((a,b)=>a+b,0)/20+ATRM*2)?'bull':(closes.slice(-20).reduce((a,b)=>a+b,0)/20)<(closes.slice(0,20).reduce((a,b)=>a+b,0)/20-ATRM*2)?'bear':'neut';
-  const longTP=longTrend==='bull'?Math.round(price+ATRM*20):Math.round(price-ATRM*20);
-
-  // Patterns
-  const patterns=detectPatterns(hist,BB,adxVal);
-  // Monte Carlo
-  const MC=monteCarlo(hist,200,12);
+  // TF data
+  const ultraH=hist.slice(-20),ultraBP=buyPressure(ultraH);
+  const ultraDir=ultraBP>55?'bull':ultraBP<45?'bear':'neut';
+  const ultraBB=bb(ultraH.map(b=>b.c),Math.min(10,ultraH.length));
+  const ultraTP=parseFloat((ultraDir==='bull'?(ultraBB?.u??price+ATR*.5):(ultraBB?.l??price-ATR*.5)).toFixed(1));
+  const midTP=Math.round(midDir==='bull'?price+ATRM*8:price-ATRM*8);
+  const longTP=Math.round(longDir==='bull'?price+ATRM*20:price-ATRM*20);
+  const shortTP=shortDir==='bull'?refLong[0]:shortDir==='bear'?refShort[0]:null;
+  const shortTP2=shortDir==='bull'?refLong[1]:shortDir==='bear'?refShort[1]:null;
 
   // Next scenarios
-  const nextScenarios=[];
+  const scenarios=[];
+  const nearResist=OB.above[0];const nearSupport=OB.below[0];
   if(shortDir==='bull'){
-    if(shortTP)nextScenarios.push({c:'var(--gr)',cond:'上昇継続の場合',title:`TP1 $${shortTP.price}（${shortTP.pts}pt）`,body:`${shortTP.desc}まで届いたら一部利確。${shortTP2?'TP2は$'+shortTP2.price+'（'+shortTP2.desc+'）。':''}`});
-    nextScenarios.push({c:'var(--rd)',cond:'下に押し戻された場合',title:`SL $${slLong} 割れ`,body:`BB下限（$${BB?Math.round(BB.l):'-'}）割れでロング撤退。方向を切り替える。`});
+    if(shortTP)scenarios.push({c:'var(--gr)',cond:'上方向継続の場合',title:`参考TP1 $${shortTP.price}（${shortTP.pips}pips）`,body:`${shortTP.desc}まで届いたら参考価格帯での確認を。${nearResist?'$'+nearResist.mid+'付近に売りOBあり（一時的な抵抗に注意）。':''}`});
+    scenarios.push({c:'var(--rd)',cond:'リスク確認ライン',title:`参考SL $${slLong}`,body:`参考SLとの距離を確認し、リスク許容幅をご自身で判断してください。`});
   }else if(shortDir==='bear'){
-    if(shortTP)nextScenarios.push({c:'var(--rd)',cond:'下落継続の場合',title:`TP1 $${shortTP.price}（${shortTP.pts}pt）`,body:`${shortTP.desc}まで下げたら一部利確。${shortTP2?'TP2は$'+shortTP2.price+'。':''}`});
-    nextScenarios.push({c:'var(--gr)',cond:'上に反発した場合',title:`SL $${slShort} 上抜け`,body:`BB上限（$${BB?Math.round(BB.u):'-'}）上抜けでショート撤退。転換を検討。`});
+    if(shortTP)scenarios.push({c:'var(--rd)',cond:'下方向継続の場合',title:`参考TP1 $${shortTP.price}（${shortTP.pips}pips）`,body:`${shortTP.desc}まで参考。${nearSupport?'$'+nearSupport.mid+'付近に買いOBあり（反発に注意）。':''}`});
+    scenarios.push({c:'var(--gr)',cond:'リスク確認ライン',title:`参考SL $${slShort}`,body:`参考SLとの距離を確認し、リスク許容幅をご自身で判断してください。`});
   }else{
-    nextScenarios.push({c:'var(--gr)',cond:'上抜けた場合',title:`上抜け $${BB?Math.round(BB.u):Math.round(price+ATR)}`,body:'BB上限/VWAPを上抜けで買い。ADXが25を超えてから乗る。'});
-    nextScenarios.push({c:'var(--rd)',cond:'下抜けた場合',title:`下抜け $${BB?Math.round(BB.l):Math.round(price-ATR)}`,body:'BB下限/VWAPを下抜けで売り。ADXが上がるのを確認する。'});
-  }
-  if(e75)nextScenarios.push({c:'var(--am)',cond:'中期の重要ライン',title:`EMA75 $${Math.round(e75)}`,body:price>e75?'現在上位でサポートとして機能。割れると中期目線崩れ。':'現在下位でレジスタンス。上抜けると中期強気転換。'});
-  if(e200)nextScenarios.push({c:'var(--pu)',cond:'長期の重要ライン',title:`EMA200 $${Math.round(e200)}`,body:price>e200?'長期上昇継続中。大きなサポートとして機能。':'長期的に弱い状態。上抜けると大きな転換サイン。'});
-
-  // Scores
-  let techScore=50;
-  if(rsiS<35)techScore+=18;else if(rsiS>65)techScore-=18;
-  if(e20&&price>e20)techScore+=10;else techScore-=10;
-  if(BB&&price<BB.l)techScore+=12;if(BB&&price>BB.u)techScore-=12;
-  if(changePct>.2)techScore+=6;else if(changePct<-.2)techScore-=6;
-  techScore=Math.max(10,Math.min(90,Math.round(techScore)));
-  const techDir=techScore>57?'bull':techScore<43?'bear':'neut';
-  let midTS=50;
-  if(e75&&price>e75)midTS+=20;else midTS-=20;
-  if(e200&&price>e200)midTS+=20;else midTS-=20;
-  if(rsiM>55)midTS+=10;else if(rsiM<45)midTS-=10;
-  midTS=Math.max(10,Math.min(90,Math.round(midTS)));
-  const midTDir=midTS>57?'bull':midTS<43?'bear':'neut';
-  let snsScore=Math.max(15,Math.min(85,Math.round(50+(techScore-50)*.55+(Math.random()-.5)*14)));
-  const snsDir=snsScore>57?'bull':snsScore<43?'bear':'neut';
-  let fundScore=Math.max(15,Math.min(85,Math.round(50+changePct*8+(sess.hot?5:-3)+(new Date().getDay()===5?-5:0))));
-  const fundDir=fundScore>57?'bull':fundScore<43?'bear':'neut';
-
-  // Market state label
-  const trendDirWord=shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'';
-  const msLabel=adxVal>=40
-    ?(trendDirWord?`強い${trendDirWord}トレンド`:'強いトレンド')
-    :adxVal>=25
-    ?(trendDirWord?`${trendDirWord}トレンド発生`:'トレンド発生')
-    :adxVal>=18
-    ?(trendDirWord?`弱い${trendDirWord}トレンド`:'弱いトレンド')
-    :'レンジ相場';
-  const msColor=adxVal>=40?'var(--gr)':adxVal>=25?(shortDir==='bull'?'var(--gr)':shortDir==='bear'?'var(--rd)':'var(--am)'):adxVal>=18?(shortDir==='bull'?'#5BB870':shortDir==='bear'?'#D07050':'var(--rd)'):'var(--rd)';
-
-  // Comment rotation (prevents monotony)
-  const entryShort=entryVerdict.replace(/[🔥✅⚠️🟡]/g,'').trim();
-  const tp1s=shortTP?`TP1は$${shortTP.price}（${shortTP.pts}pt）`:'ターゲット未確定';
-  const tp2s=shortTP2?`、TP2は$${shortTP2.price}`:'';
-  const predS=predMins?`。到達予測約${predMins}分`:'';
-  const msBias=MC.upPct>=60?'価格シナリオ予測でも上昇優勢':MC.dnPct>=60?'価格シナリオ予測でも下落優勢':'価格シナリオ予測は方向感拮抗';
-  const msStr=MS.trend==='bull'?'市場構造は上昇MS':MS.trend==='bear'?'市場構造は下落MS':'市場構造は中立';
-
-  const commentVariants=[
-    `${entryShort}。短期${shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'中立'}方向で${tp1s}${tp2s}${predS}。${msBias}。`,
-    `ADX${adxVal}（${msLabel}）。${msStr}。${tp1s}${tp2s}。${sess.name}での動きに注意。`,
-    `買い${bPct}% 売り${sPct}%で${bPct>55?'買い優勢':bPct<45?'売り優勢':'拮抗'}。EMA75：$${Math.round(e75)}、EMA200：$${Math.round(e200)}。${msBias}。`,
-    `${entryShort}。中期${midDir==='bull'?'上昇':midDir==='bear'?'下落':'中立'}目線、長期${longTrend==='bull'?'上昇':'下落'}トレンド継続。${msStr}。${tp1s}が目標。`,
-  ];
-  const cmtIdx=Math.floor(Date.now()/60000)%commentVariants.length;
-  const comment=commentVariants[cmtIdx];
-
-  // ===== 音声ナレーション（読み上げ開始時点で確定・更新しない） =====
-  // レンジと トレンドで完全に別の言い回し
-  // 人間の頭に入る順: 状況 → 次の壁 → 目標 → 撤退 → 確率
-  let voiceText='';
-  const isRange=adxVal<20;
-  const isWeakTrend=adxVal>=20&&adxVal<25;
-
-  // オーダーブロック情報を文章化
-  const nearestResistOB=OB.above[0];
-  const nearestSupportOB=OB.below[0];
-  const obResistStr=nearestResistOB
-    ?`${nearestResistOB.mid}ドル付近に売りの壁（オーダーブロック）があります。`:'';
-  const obSupportStr=nearestSupportOB
-    ?`${nearestSupportOB.mid}ドル付近に買いの壁（サポートゾーン）があります。`:'';
-
-  // EMA障壁を文章化
-  const emaResistStr=e20&&price<e20?`EMA20の${Math.round(e20)}ドルがすぐ上の抵抗になっています。`
-    :e75&&price<e75?`EMA75の${Math.round(e75)}ドルが中期の壁になっています。`:'';
-  const emaSupportStr=e20&&price>e20?`EMA20の${Math.round(e20)}ドルが直近のサポートです。`:'';
-
-  if(isRange){
-    // レンジ相場: 方向を言わず俯瞰で状況を伝える
     const rangeLow=BB?Math.round(BB.l):Math.round(price-ATR*2);
     const rangeHigh=BB?Math.round(BB.u):Math.round(price+ATR*2);
-    const dominance=bPct>55?`買い圧力が${bPct}%とやや強く、上方向への意識があります。`
-      :bPct<45?`売り圧力が${sPct}%とやや強く、下方向への意識があります。`
-      :`買いと売りが拮抗していて、どちらとも言えない状況です。`;
-    const obContext=nearestResistOB||nearestSupportOB
-      ?`${obSupportStr}${obResistStr}`:'';
-    const breakoutHint=shortTP
-      ?`上に抜ければ${tpLong[0]?tpLong[0].price+'ドルまで上昇余地があります':'上昇余地があります'}。下に抜ければ${tpShort[0]?tpShort[0].price+'ドルまで下落を想定してください。':'下落を想定してください。'}`:'';
-    voiceText=`今は${rangeLow}ドルから${rangeHigh}ドルのレンジ内で動いています。${dominance}${obContext}${emaResistStr}${breakoutHint}今のところはどちらにも動ける状況なので、ブレイクを確認してからエントリーがおすすめです。現在価格は${price.toFixed(1)}ドルです。`;
+    scenarios.push({c:'var(--gr)',cond:'上抜けた場合',title:`上方向参考 $${rangeHigh}`,body:'BB上限/VWAPを上抜けた場合の参考上方向。ADXが25超えで方向が強まる可能性。'});
+    scenarios.push({c:'var(--rd)',cond:'下抜けた場合',title:`下方向参考 $${rangeLow}`,body:'BB下限/VWAPを下抜けた場合の参考下方向。方向確認後に整理してください。'});
+  }
+  if(e75)scenarios.push({c:'var(--am)',cond:'中期の参考ライン',title:`EMA75 $${Math.round(e75)}`,body:price>e75?'EMA75の上にいます。このラインがサポートとして機能しているか確認してください。':'EMA75の下にいます。このラインが抵抗になっているか確認してください。'});
+  if(SQ.squeezeEnd)scenarios.push({c:'var(--pu)',cond:'スクイーズ終了',title:'Expansion Watch — 方向確認を',body:'ボラティリティの圧縮が終了しました。方向確認後に参考価格帯を再確認してください。売買指示ではありません。'});
 
-  } else if(isWeakTrend){
-    // 弱いトレンド: 方向は言うが慎重な表現
-    const dirTxt=shortDir==='bull'?'上方向':'下方向';
-    const wallStr=shortDir==='bull'
-      ?`${obResistStr}${emaResistStr}`
-      :`${obSupportStr}${emaSupportStr}`;
-    const tp1Str=shortTP?`まずは${shortTP.price}ドルが目標です。`:'';
-    const slStr=shortDir==='bull'?`${slLong}ドルを割ると方向転換のサインです。`:`${slShort}ドルを超えると方向転換のサインです。`;
-    voiceText=`トレンドは出ていますが、まだ弱い状態です。どちらかというと${dirTxt}ですが、まだ様子見が賢明です。${wallStr}${tp1Str}${slStr}価格シナリオ予測では上昇${MC.upPct}%、下落${MC.dnPct}%のシナリオです。現在価格は${price.toFixed(1)}ドルです。`;
+  // AI Summary comment
+  const sqSentence=SQ.state==='squeeze'?'ボラティリティが圧縮しています（Squeeze Zone）。次の方向感が出やすい待機局面です。':SQ.state==='expanding'?`ボラティリティが拡大中（Expansion Watch）。${SQ.dir==='bull'?'上方向優勢':SQ.dir==='bear'?'下方向優勢':'方向はまだ未確定'}に見えます。`:SQ.squeezeEnd?'スクイーズが終了しました。方向確認中。':'ボラティリティは通常水準です。';
+  const slowSentence=slowTrend==='slow_bull'?'緩やかな上昇傾向（Slow Bullish Trend）も見られます。急騰ではなくじわじわ上昇しています。':slowTrend==='slow_bear'?'緩やかな下落傾向（Slow Bearish Trend）が見られます。':slowTrend==='bull'?'上昇の勢いが確認できます。':slowTrend==='bear'?'下落の勢いが確認できます。':'';
+  const rfSentence=RF.dir==='bull'?`レンジフィルターは上方向（$${RF.filtered}を基準）。`:RF.dir==='bear'?`レンジフィルターは下方向（$${RF.filtered}を基準）。`:`レンジフィルターは中立。`;
+  const obSentence=nearResist?`$${nearResist.mid}付近に売りOBあり。`:nearSupport?`$${nearSupport.mid}付近に買いOBあり。`:'';
 
-  } else if(shortDir==='bull'){
-    // 明確な上昇トレンド
-    const tp1Str=shortTP?`次の目標は${shortTP.price}ドル、${shortTP.pts}ポイント先の${shortTP.desc}です。`:'';
-    const tp2Str=shortTP2?`そこを超えると${shortTP2.price}ドルまで上昇余地があります。`:'';
-    const wallStr=nearestResistOB?`ただし${nearestResistOB.mid}ドル付近に売りの壁があるので、そこで一度反発する可能性があります。`
-      :emaResistStr?emaResistStr:'';
-    const slStr=`${slLong}ドルを割り込んだら撤退ラインです。`;
-    const predStr=predMins?`到達予測は約${predMins}分です。`:'';
-    voiceText=`今は上昇方向です。${tp1Str}${tp2Str}${wallStr}${slStr}${predStr}価格シナリオ予測でも上昇${MC.upPct}%と優勢です。現在価格は${price.toFixed(1)}ドルです。`;
+  const aiComment=`${msLabel}（ADX${adxVal}）。${sqSentence}${slowSentence}${rfSentence}${obSentence}短期: ${biasTxt(shortDir)}、中期: ${biasTxt(midDir)}。参考SL: Long $${slLong} / Short $${slShort}。${sessInfo.name}での動きに注意。`;
 
-  } else if(shortDir==='bear'){
-    // 明確な下落トレンド
-    const tp1Str=shortTP?`次の目標は${shortTP.price}ドル、${shortTP.pts}ポイント下の${shortTP.desc}です。`:'';
-    const tp2Str=shortTP2?`そこを割ると${shortTP2.price}ドルまで下落余地があります。`:'';
-    const wallStr=nearestSupportOB?`ただし${nearestSupportOB.mid}ドル付近に買いの壁があるので、そこで反発する可能性があります。`
-      :emaSupportStr?emaSupportStr:'';
-    const slStr=`${slShort}ドルを上抜けたら撤退ラインです。`;
-    const predStr=predMins?`到達予測は約${predMins}分です。`:'';
-    voiceText=`今は下落方向です。${tp1Str}${tp2Str}${wallStr}${slStr}${predStr}価格シナリオ予測でも下落${MC.dnPct}%と優勢です。現在価格は${price.toFixed(1)}ドルです。`;
+  // Scores for sentiment
+  let techScore=50;
+  if(rsiS<35)techScore+=18;else if(rsiS>65)techScore-=18;
+  if(price>e20)techScore+=10;else techScore-=10;
+  if(BB&&price<BB.l)techScore+=12;if(BB&&price>BB.u)techScore-=12;
+  techScore=Math.max(10,Math.min(90,Math.round(techScore)));
+  let midTS=50;if(price>e75)midTS+=20;else midTS-=20;if(price>e200)midTS+=20;else midTS-=20;
+  midTS=Math.max(10,Math.min(90,Math.round(midTS)));
+  const volScore=Math.min(90,Math.round((ATR/price)*10000));
 
-  } else {
-    voiceText=`今は方向感がない状態です。価格シナリオ予測では上昇${MC.upPct}%、下落${MC.dnPct}%で拮抗しています。${obSupportStr}${obResistStr}ブレイクを待ちましょう。現在価格は${price.toFixed(1)}ドルです。`;
+  // Voice text (分析支援UI思想: 状況整理ナビゲーション)
+  let voiceText='';
+  const isRange=adxVal<20;
+  const nearOBText=nearResist?`$${nearResist.mid}ドル付近に売りの壁があります。`:nearSupport?`$${nearSupport.mid}ドル付近に買いの壁があります。`:'';
+  if(SQ.state==='squeeze'){
+    voiceText=`現在ボラティリティが圧縮しています。次の大きな方向感が出やすい待機局面として整理します。${nearOBText}参考価格帯とリスク許容幅を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
+  }else if(SQ.squeezeEnd){
+    const sqDirTxt=SQ.dir==='bull'?'上方向優勢に見えます。':SQ.dir==='bear'?'下方向優勢に見えます。':'方向はまだ未確定です。Range / Neutral として整理します。';
+    voiceText=`スクイーズが終了しました。現在は${sqDirTxt}${nearOBText}参考価格帯とリスク許容幅を再確認してください。現在価格は${price.toFixed(1)}ドルです。`;
+  }else if(isRange){
+    const rangeLow=BB?Math.round(BB.l):Math.round(price-ATR*2);
+    const rangeHigh=BB?Math.round(BB.u):Math.round(price+ATR*2);
+    const dom=bPct>55?`参考として${biasTxt('bull')}に見えます。`:bPct<45?`参考として${biasTxt('bear')}に見えます。`:'方向感は拮抗しています。';
+    voiceText=`${rangeLow}ドルから${rangeHigh}ドルのレンジ内で整理中です。${dom}${nearOBText}${slowTrend==='slow_bull'?'緩やかな上昇傾向も参考にしてください。':slowTrend==='slow_bear'?'緩やかな下落傾向も参考にしてください。':''}現在価格は${price.toFixed(1)}ドルです。`;
+  }else if(shortDir==='bull'){
+    const tp1s=shortTP?`参考TP1は${shortTP.price}ドル、${shortTP.pips}ピップス先です。`:'';
+    const wallStr=nearResist?`ただし${nearResist.mid}ドル付近に売りの壁があります。`:'';
+    const slowStr=slowTrend==='slow_bull'?'緩やかな上昇傾向も継続しています。':'';
+    voiceText=`現在は上方向優勢です。${tp1s}${wallStr}参考SLは${slLong}ドルです。${slowStr}ボラティリティ拡大が始まっています。参考価格帯とリスク許容幅を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
+  }else if(shortDir==='bear'){
+    const tp1s=shortTP?`参考TP1は${shortTP.price}ドル、${shortTP.pips}ピップス先です。`:'';
+    const wallStr=nearSupport?`ただし${nearSupport.mid}ドル付近に買いの壁があります。`:'';
+    const slowStr=slowTrend==='slow_bear'?'緩やかな下落傾向も継続しています。':'';
+    voiceText=`現在は下方向優勢です。${tp1s}${wallStr}参考SLは${slShort}ドルです。${slowStr}参考価格帯とリスク許容幅を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
+  }else{
+    voiceText=`現在は方向感がない状態です。Range / Neutral として整理します。${nearOBText}参考価格帯との距離を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
   }
 
-  return{price,open,shortDir,midDir,longDir:longTrend,ultraDir,
-    shortTP,shortTP2,predMins,midTP,longTP,ultraTP:parseFloat(ultraTP.toFixed(1)),
-    bPct,sPct,ultraBP,entryVerdict,entryReason,entryClass,entryColor,
-    adxVal,pdi,ndi,msLabel,msColor,MS,OB,
-    tpLong,tpShort,slLong,slShort,levels,BB,e20,e75,e200,VW,
-    rsiS,rsiM,ATR,ATRM,patterns,MC,nextScenarios,
-    tech:{score:techScore,dir:techDir,label:`RSI${rsiS}·OBV${obvDir==='bull'?'↑':obvDir==='bear'?'↓':'→'}`},
-    midTech:{score:midTS,dir:midTDir,label:`EMA75${e75&&price>e75?'上':'下'}·EMA200${e200&&price>e200?'上':'下'}`},
-    sns:{score:snsScore,dir:snsDir,label:snsDir==='bull'?'強気優勢':snsDir==='bear'?'弱気優勢':'様子見'},
-    fund:{score:fundScore,dir:fundDir,label:sess.name},
-    comment,voiceText,cmtIdx,source,hist:hist.slice(-120)};
+  return{price,open,spotMeta,shortDir,midDir,longDir,ultraDir,shortTP,shortTP2,
+    bPct,sPct,adxVal,pdi,ndi,msLabel,msColor,MS,OB,RF,SQ,slowTrend,EV,
+    refLong,refShort,slLong,slShort,levels,BB,e20,e75,e200,VW,
+    rsiS,rsiM,ATR,ATRM,scenarios,aiComment,voiceText,
+    techScore,midTS,volScore,sessInfo,
+    hist:hist.slice(-120)};
 }
 
-// ===================== RENDER =====================
+// ==================== RENDER ====================
 function dc(d){return d==='bull'?'var(--gr)':d==='bear'?'var(--rd)':'var(--tx2)';}
 function dbc(d){return d==='bull'?'#1BAE82':d==='bear'?'#E05530':'#4A4845';}
-function setMeter(vi,bi,ti,score,dir,label){
-  document.getElementById(vi).textContent=score+'pt';document.getElementById(vi).style.color=dc(dir);
-  document.getElementById(bi).style.width=score+'%';document.getElementById(bi).style.background=dbc(dir);
-  document.getElementById(ti).textContent=label;
-}
-
-function renderTF(id,dir,target,sub,bPct){
-  const el=document.getElementById(id);
-  el.className='tf-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
-  const tEl=document.getElementById(id+'-target');
-  tEl.textContent=`$${target}`;tEl.style.color=dc(dir);
-  const dEl=document.getElementById(id+'-dir');
-  dEl.textContent=dir==='bull'?'↑ 上昇方向':dir==='bear'?'↓ 下落方向':'→ 方向感なし';
-  dEl.style.color=dc(dir);
-  document.getElementById(id+'-sub').textContent=sub;
-  const sPct=100-bPct;
-  document.getElementById(id+'-pb').style.width=bPct+'%';
-  document.getElementById(id+'-ps').style.width=sPct+'%';
-}
 
 function renderAll(r){
   // Price
-  document.getElementById('priceDisp').textContent=r.price.toFixed(1);
-  const ce=document.getElementById('chgDisp');
+  document.getElementById('priceDisp').textContent=r.price.toFixed(2);
+  document.getElementById('priceDisp').style.color=r.shortDir==='bull'?'var(--gr)':r.shortDir==='bear'?'var(--rd)':'var(--tx)';
   const chg=((r.price-r.open)/r.open*100);
+  const ce=document.getElementById('chgDisp');
   ce.textContent=`${chg>=0?'+':''}${chg.toFixed(2)}%`;
-  ce.className='price-chg '+(chg>=0?'up':'dn');
-  document.getElementById('updTime').textContent=new Date().toLocaleTimeString('ja-JP')+(r.live?' · LIVE':' · SIM');
-  document.getElementById('dataSrc').textContent=r.source;
+  ce.className='ph-chg '+(chg>=0?'up':'dn');
+  document.getElementById('bidDisp').textContent=r.spotMeta.bid?.toFixed(2)||'--';
+  document.getElementById('askDisp').textContent=r.spotMeta.ask?.toFixed(2)||'--';
+  document.getElementById('midDisp').textContent=r.price.toFixed(2);
+  document.getElementById('spreadDisp').textContent=r.spotMeta.ask&&r.spotMeta.bid?((r.spotMeta.ask-r.spotMeta.bid)*100).toFixed(0)+' pips':'--';
+  document.getElementById('lastRefreshed').textContent=r.spotMeta.lastRefreshed||'--';
+  document.getElementById('timeZone').textContent=r.spotMeta.timeZone||'--';
+  document.getElementById('dataSrc').textContent=r.spotMeta.source||'--';
+  document.getElementById('updTime').textContent=new Date().toLocaleTimeString('ja-JP')+(r.spotMeta.live?' · LIVE':' · SIM');
 
-  // Market state
-  document.getElementById('msState').textContent=r.msLabel;
-  document.getElementById('msState').style.color=r.msColor;
-  document.getElementById('msAdx').textContent=`ADX ${r.adxVal} · +DI${r.pdi} / -DI${r.ndi}`;
-  document.getElementById('adxFill').style.width=Math.min(r.adxVal,100)+'%';
-  document.getElementById('adxFill').style.background=r.adxVal>=40?'var(--gr)':r.adxVal>=25?'var(--am)':'var(--rd)';
+  // AI Summary
+  document.getElementById('aisBadge').textContent=r.msLabel;
+  document.getElementById('aisBadge').style.borderColor=r.msColor;
+  document.getElementById('aisBadge').style.color=r.msColor;
+  document.getElementById('mktTrend').textContent=r.msLabel;
+  document.getElementById('mktTrend').style.color=r.msColor;
+  document.getElementById('mktTrendSub').textContent=`ADX ${r.adxVal} · +DI${r.pdi} / -DI${r.ndi}`;
+  document.getElementById('shortArrow').textContent=arrowTxt(r.shortDir)+' ';
+  document.getElementById('shortArrow').style.color=dc(r.shortDir);
+  document.getElementById('shortBias').textContent=biasTxt(r.shortDir);
+  document.getElementById('shortBias').style.color=dc(r.shortDir);
+  document.getElementById('shortDirSub').textContent=`買い${r.bPct}% 売り${r.sPct}%`;
+  document.getElementById('midArrow').textContent=arrowTxt(r.midDir)+' ';
+  document.getElementById('midArrow').style.color=dc(r.midDir);
+  document.getElementById('midBias').textContent=biasTxt(r.midDir);
+  document.getElementById('midBias').style.color=dc(r.midDir);
+  document.getElementById('midDirSub').textContent=`EMA75: $${Math.round(r.e75)} · EMA200: $${Math.round(r.e200)}`;
+  document.getElementById('volDisp').textContent=`ATR $${r.ATR.toFixed(1)}`;
+  document.getElementById('volSub').textContent=`${r.SQ.state==='squeeze'?'⚡Squeeze Zone':r.SQ.expanding?'📈 Expanding':'Normal'} · RSI ${r.rsiS}`;
+  document.getElementById('aisComment').textContent=r.aiComment;
 
-  // Entry
-  document.getElementById('entryBox').className='entry-box '+r.entryClass;
-  document.getElementById('entryVerdict').textContent=r.entryVerdict;
-  document.getElementById('entryVerdict').style.color=r.entryColor;
-  document.getElementById('entryReason').textContent=r.entryReason;
-  document.getElementById('adxFill2').style.width=Math.min(r.adxVal,100)+'%';
-  document.getElementById('adxFill2').style.background=r.adxVal>=40?'var(--gr)':r.adxVal>=25?'var(--am)':'var(--rd)';
-  document.getElementById('adxNums').textContent=`ADX${r.adxVal} · +DI${r.pdi} · -DI${r.ndi}`;
-  document.getElementById('adxPill').className=r.adxVal>=40?'pill p-bull':r.adxVal>=25?'pill p-warn':'pill p-danger';
-  document.getElementById('adxPill').textContent=`ADX ${r.adxVal}`;
-  document.getElementById('msPill').className=r.adxVal>=25?'pill p-trend':'pill p-range';
-  document.getElementById('msPill').textContent=r.adxVal>=25?'トレンド相場':'レンジ相場';
+  // Direction cards
+  setDirCard('shortCard','shortCardArrow','shortCardBias','shortCardSub','sPbB','sPbS',r.shortDir,biasTxt(r.shortDir),`短期: 買い${r.bPct}% / 売り${r.sPct}% · EMA20 $${Math.round(r.e20)}`,r.bPct);
+  setDirCard('midCard','midCardArrow','midCardBias','midCardSub','mPbB','mPbS',r.midDir,biasTxt(r.midDir),`中期: EMA75 $${Math.round(r.e75)} · RSI ${r.rsiM}`,r.midDir==='bull'?65:r.midDir==='bear'?35:50);
 
-  // TF cards
-  renderTF('tf-ultra',r.ultraDir,r.ultraTP.toFixed(1),`RSI ${r.rsiS} · 超短期目線`,r.ultraBP);
-  renderTF('tf-short',r.shortDir,r.shortTP?r.shortTP.price:'----',
-    `買い${r.bPct}% / 売り${r.sPct}% · EMA20:$${Math.round(r.e20)}`,r.bPct);
-  renderTF('tf-mid',r.midDir,r.midTP,
-    `EMA75:$${Math.round(r.e75)} · EMA200:$${Math.round(r.e200)} · RSI${r.rsiM}`,
-    r.midDir==='bull'?65:r.midDir==='bear'?35:50);
-  renderTF('tf-long',r.longDir,r.longTP,
-    r.longDir==='bull'?'高値・安値切り上げ継続':r.longDir==='bear'?'高値・安値切り下げ中':'長期横ばい推移',
-    r.longDir==='bull'?65:r.longDir==='bear'?35:50);
+  // Realtime / Main direction
+  document.getElementById('rtVal').textContent=biasTxt(r.shortDir);
+  document.getElementById('rtVal').style.color=dc(r.shortDir);
+  document.getElementById('rtSub').textContent=`${r.msLabel} · ${r.SQ.state==='squeeze'?'Squeeze Zone: 方向待ち':r.SQ.squeezeEnd?'Squeeze End: 方向確認中':r.SQ.expanding?'Expansion Watch':'直近の短期傾向'}`;
+  const mainDirDir=r.midDir!=='neut'?r.midDir:r.longDir;
+  document.getElementById('mainDirVal').textContent=biasTxt(mainDirDir);
+  document.getElementById('mainDirVal').style.color=dc(mainDirDir);
+  document.getElementById('mainDirSub').textContent=`Market Structure: ${r.MS.trend==='bull'?'上昇MS (HH'+r.MS.hh+'·HL'+r.MS.hl+')':r.MS.trend==='bear'?'下落MS (LH'+r.MS.lh+'·LL'+r.MS.ll+')':'中立'}`;
 
-  // Pred
-  const pb=document.getElementById('predBox');
-  if(r.predMins&&r.shortTP){
-    pb.style.opacity='1';
-    document.getElementById('predTxt').textContent=`$${r.shortTP.price}への到達予測（直近モメンタムから逆算）`;
-    document.getElementById('predTimeVal').textContent=r.predMins<=60?`約${r.predMins}分`:`約${Math.round(r.predMins/60*10)/10}時間`;
-  }else{pb.style.opacity='.4';document.getElementById('predTxt').textContent='データ収集中...';document.getElementById('predTimeVal').textContent='--';}
+  // Important update banner
+  if(lastSpokenEntry&&lastSpokenEntry!==r.msLabel&&lastSpokenEntry!==''){
+    document.getElementById('updateBanner').className='update-banner on';
+    setTimeout(()=>{document.getElementById('updateBanner').className='update-banner';},15000);
+  }
 
-  // Patterns
-  document.getElementById('patItems').innerHTML=r.patterns.length
-    ?r.patterns.map(p=>`<span class="pill ${p.cls}" title="${p.desc}">${p.label}</span>`).join('')
-    :'<span style="font-size:12px;color:var(--tx3)">特定パターンなし</span>';
+  // Squeeze
+  const sqStateEl=document.getElementById('sqState');
+  const sqDotEl=document.getElementById('sqDot');
+  const sqTexts={squeeze:'⚡ Squeeze Zone',squeeze_end:'🔓 Squeeze End',expanding:'📈 Expansion Watch',normal:'Normal'};
+  const sqClasses={squeeze:'sq-state sq-squeeze',squeeze_end:'sq-state sq-expand',expanding:'sq-state sq-expand',normal:'sq-state sq-normal'};
+  sqStateEl.className=sqClasses[r.SQ.state]||'sq-state sq-normal';
+  sqDotEl.className='squeeze-dot '+(r.SQ.state==='squeeze'?'dot-squeeze':r.SQ.state==='normal'?'dot-normal':'dot-expand');
+  document.getElementById('sqStateText').textContent=sqTexts[r.SQ.state]||'Normal';
+  document.getElementById('sqBBW').textContent=`$${r.SQ.bbW}`;
+  document.getElementById('sqKCW').textContent=`$${r.SQ.kcW}`;
+  document.getElementById('sqRatio').textContent=r.SQ.state==='squeeze'?'圧縮中':'通常';
+  document.getElementById('sqDir').textContent=r.SQ.dir==='bull'?'↑ Bullish':r.SQ.dir==='bear'?'↓ Bearish':'→ Neutral';
+  document.getElementById('sqDir').style.color=dc(r.SQ.dir);
+  document.getElementById('sqMom').textContent=r.SQ.momentum>0.1?'↑ 上向き':r.SQ.momentum<-0.1?'↓ 下向き':'→ 横ばい';
+  document.getElementById('sqExp').textContent=r.SQ.expanding?'拡大中':'待機';
+  document.getElementById('sqComment').textContent=r.SQ.state==='squeeze'
+    ?'ボラティリティが圧縮されています。次の方向感が出やすい待機局面として整理します。Buy/Sellシグナルではありません。'
+    :r.SQ.squeezeEnd?`スクイーズ終了。${biasTxt(r.SQ.dir)}に見えますが、方向を確認してから参考価格帯を整理してください。`
+    :r.SQ.expanding?`ボラティリティ拡大が始まっています。参考価格帯とリスク許容幅を確認してください。`
+    :'ボラティリティは通常水準です。';
 
-  // Monte Carlo
-  renderMC(r.MC);
+  // Range Filter
+  document.getElementById('rfPrice').textContent=`$${r.RF.filtered}`;
+  document.getElementById('rfBias').textContent=biasTxt(r.RF.dir);
+  document.getElementById('rfBias').style.color=dc(r.RF.dir);
+  document.getElementById('rfDir').textContent=arrowTxt(r.RF.dir)+' '+(r.RF.dir==='bull'?'上方向':'r.RF.dir'==='bear'?'下方向':'中立');
+  document.getElementById('rfDist').textContent=`${r.RF.dist>=0?'+':''}${r.RF.dist} (フィルター幅: $${r.RF.filterRange})`;
+  const slowLabels={slow_bull:'<span class="slow-badge slow-bull">↗ Gradual Uptrend（じわ上げ）</span>',slow_bear:'<span class="slow-badge slow-bear">↘ Gradual Downtrend（じわ下げ）</span>',bull:'<span class="slow-badge slow-bull">↑ 上昇トレンド</span>',bear:'<span class="slow-badge slow-bear">↓ 下落トレンド</span>',neut:'<span class="slow-badge slow-neut">→ Neutral</span>'};
+  document.getElementById('rfSlowBadge').innerHTML=slowLabels[r.slowTrend]||'<span class="slow-badge slow-neut">→ --</span>';
 
-  // TP/SL rows
-  function tpslRows(tps,isLong,sl){
+  // Expected value
+  document.getElementById('evUp').textContent=`+${r.EV.upPips} pips`;
+  document.getElementById('evDn').textContent=`-${r.EV.dnPips} pips`;
+  document.getElementById('evUpBar').style.width=Math.min(r.EV.upPips/3,100)+'%';
+  document.getElementById('evDnBar').style.width=Math.min(r.EV.dnPips/3,100)+'%';
+  const evRangePips=r.EV.upPips+r.EV.dnPips;
+  document.getElementById('evRange').textContent=`$${Math.round(r.EV.p5)}〜$${Math.round(r.EV.p95)}`;
+  document.getElementById('evRangeBar').style.width=Math.min(r.EV.upPct,100)+'%';
+  const evStateEl=document.getElementById('evState');
+  evStateEl.textContent=r.shortDir==='bull'?`↑ 上方向余地優勢 (上昇シナリオ ${r.EV.upPct}%)`:r.shortDir==='bear'?`↓ 下方向リスク優勢 (下落シナリオ ${r.EV.dnPct}%)`:
+    r.EV.upPips>r.EV.dnPips?'↑ 上方向余地がやや大きい':'r.EV.dnPips>r.EV.upPips'?'↓ 下方向リスクがやや大きい':'→ レンジ傾向（上下均等）';
+  evStateEl.style.color=r.shortDir==='bull'?'var(--gr)':r.shortDir==='bear'?'var(--rd)':'var(--tx2)';
+
+  // Reference zones
+  function refRows(refs,isLong,sl){
     const col=isLong?'var(--gr)':'var(--rd)';
-    const rows=tps.map((tp,i)=>`<div class="tpsl-row">
-      <div><span class="pill ${i===0?(isLong?'p-bull':'p-bear'):i===1?'p-info':'p-warn'}" style="font-size:9px">${tp.label}</span><div class="tpsl-sub">${tp.desc}（${tp.tf}）</div></div>
-      <div style="text-align:right"><div class="tpsl-val" style="color:${col}">$${tp.price}</div><div class="tpsl-sub">${tp.pts}pt · RR${tp.rr}</div></div>
+    const rows=refs.map((r,i)=>`<div class="ref-row">
+      <div><span class="pill ${i===0?(isLong?'p-bull':'p-bear'):i===1?'p-info':'p-warn'}" style="font-size:8px">${r.label}</span><div class="ref-dist">${r.desc} · ${r.pips}pips · RR${r.rr}</div></div>
+      <div class="ref-price" style="color:${col}">$${r.price}</div>
     </div>`).join('');
-    const slRow=`<div class="tpsl-row"><div><span class="pill p-danger" style="font-size:9px">SL</span><div class="tpsl-sub">BB${isLong?'下限':'上限'}±0.3σ</div></div><div style="text-align:right"><div class="tpsl-val" style="color:var(--rd)">$${sl}</div></div></div>`;
+    const slRow=`<div class="ref-row"><div><span class="pill p-bear" style="font-size:8px">参考SL</span><div class="ref-dist">参考リスクライン</div></div><div class="ref-price" style="color:var(--rd)">$${sl}</div></div>`;
     return rows+slRow;
   }
-  document.getElementById('tpsl-long-rows').innerHTML=tpslRows(r.tpLong,true,r.slLong);
-  document.getElementById('tpsl-short-rows').innerHTML=tpslRows(r.tpShort,false,r.slShort);
+  document.getElementById('refLong').innerHTML=refRows(r.refLong,true,r.slLong);
+  document.getElementById('refShort').innerHTML=refRows(r.refShort,false,r.slShort);
 
-  // Comment (with tag)
-  document.getElementById('aiComment').textContent=r.comment;
-  document.getElementById('cmtRefreshTag').textContent=`${['A','B','C','D'][r.cmtIdx%4]}パターン`;
+  // TF cards
+  setTF('tf-ultra',r.ultraDir,`$${r.ultraTP.toFixed(1)}`,arrowTxt(r.ultraDir)+' '+biasTxt(r.ultraDir),`RSI ${r.rsiS} · 超短期傾向`);
+  setTF('tf-short',r.shortDir,r.shortTP?`$${r.shortTP.price}`:'--',arrowTxt(r.shortDir)+' '+biasTxt(r.shortDir),`買い${r.bPct}%/売り${r.sPct}%`);
+  setTF('tf-mid',r.midDir,`$${r.midTP}`,arrowTxt(r.midDir)+' '+biasTxt(r.midDir),`EMA75:$${Math.round(r.e75)}`);
+  setTF('tf-long',r.longDir,`$${r.longTP}`,arrowTxt(r.longDir)+' '+biasTxt(r.longDir),r.longDir==='bull'?'HH/HL継続':r.longDir==='bear'?'LH/LL継続':'横ばい');
 
-  // Next items
-  document.getElementById('nextItems').innerHTML=r.nextScenarios.map(s=>`<div class="next-item"><div class="ndot" style="background:${s.c}"></div><div style="flex:1"><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">${s.cond}</div><div style="font-size:13px;font-weight:600;color:${s.c};margin-bottom:3px">${s.title}</div><div style="font-size:12px;color:var(--tx2);line-height:1.6">${s.body}</div></div></div>`).join('');
+  // Next scenarios
+  document.getElementById('nextItems').innerHTML=r.scenarios.map(s=>`<div class="next-item"><div class="ndot" style="background:${s.c}"></div><div style="flex:1"><div style="font-size:9px;color:var(--tx3);margin-bottom:2px">${s.cond}</div><div style="font-size:12px;font-weight:600;color:${s.c};margin-bottom:3px">${s.title}</div><div style="font-size:11px;color:var(--tx2);line-height:1.6">${s.body}</div></div></div>`).join('');
 
-  // Level map (EMA/BB/VWAP + Order Blocks)
-  const cur=`<div class="row-item"><span class="pill p-info">現在値</span><span style="font-family:var(--mn);font-size:14px;font-weight:700">$${r.price.toFixed(1)}</span></div>`;
-  // OBをレベルリストに追加
-  const obRows=[...r.OB.above,...r.OB.below].map(ob=>{
-    const dist=ob.mid-r.price;
-    const pillCls=ob.type==='bear'?'p-bear':'p-bull';
-    const obLabel=ob.type==='bear'?'売りOB（レジスタンス）':'買いOB（サポート）';
-    return `<div class="row-item" style="background:${ob.type==='bear'?'rgba(224,85,48,.04)':'rgba(27,174,130,.04)'}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="pill ${pillCls}" style="font-size:9px">${ob.label}</span><span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--tx3)">OB</span><span style="font-size:11px;color:var(--tx2)">${obLabel}</span></div><div style="display:flex;align-items:center;gap:7px;flex-shrink:0"><span style="font-size:11px;color:var(--tx3)">${dist>=0?'+':''}${dist.toFixed(1)}</span><span style="font-family:var(--mn);font-size:13px;font-weight:500">$${ob.mid}</span></div></div>`;
-  });
-  const emaRows=r.levels.map(x=>{
-    const dist=x.p-r.price;
-    const pc=x.tf==='長期'?'p-pur':x.tf==='中期'?'p-warn':x.t==='bull'?'p-bull':x.t==='bear'?'p-bear':'p-neut';
-    return `<div class="row-item"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="pill ${pc}">${x.l}</span><span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--tx3)">${x.tf}</span><span style="font-size:11px;color:var(--tx2)">${x.d}</span></div><div style="display:flex;align-items:center;gap:7px;flex-shrink:0"><span style="font-size:11px;color:var(--tx3)">${dist>=0?'+':''}${dist.toFixed(1)}</span><span style="font-family:var(--mn);font-size:13px;font-weight:500">$${x.p.toFixed(1)}</span></div></div>`;
-  });
-  // 全レベルをprice順にソートして表示
-  const allLevelRows=[...r.levels.map(x=>({p:x.p,html:emaRows[r.levels.indexOf(x)]})),...[...r.OB.above,...r.OB.below].map((ob,i)=>({p:ob.mid,html:obRows[i]}))].sort((a,b)=>b.p-a.p).map(x=>x.html);
-  document.getElementById('levelMap').innerHTML=cur+allLevelRows.join('');
-
-  // Market structure
-  const msHtml=`<div style="font-size:13px;color:${r.MS.trend==='bull'?'var(--gr)':r.MS.trend==='bear'?'var(--rd)':'var(--tx2)'};font-weight:600;margin-bottom:8px">${r.MS.desc}</div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <span class="pill p-bull">HH ${r.MS.hh}</span>
-    <span class="pill p-bull">HL ${r.MS.hl}</span>
-    <span class="pill p-bear">LH ${r.MS.lh}</span>
-    <span class="pill p-bear">LL ${r.MS.ll}</span>
-  </div>
-  <div style="font-size:12px;color:var(--tx2);margin-top:10px;line-height:1.7">
-    HH(Higher High)・HL(Higher Low)が多い ＝ <strong style="color:var(--gr)">上昇Market Structure</strong><br>
-    LH(Lower High)・LL(Lower Low)が多い ＝ <strong style="color:var(--rd)">下落Market Structure</strong>
-  </div>`;
-  document.getElementById('msItems').innerHTML=msHtml;
-
-  const adxDetailHtml=`<div style="display:grid;gap:8px">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--bo)"><span style="font-size:12px;color:var(--tx2)">ADX（トレンド強度）</span><span style="font-family:var(--mn);font-size:14px;font-weight:700;color:${r.msColor}">${r.adxVal}</span></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--bo)"><span style="font-size:12px;color:var(--tx2)">+DI（買い方向力）</span><span style="font-family:var(--mn);font-size:14px;font-weight:700;color:var(--gr)">${r.pdi}</span></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--bo)"><span style="font-size:12px;color:var(--tx2)">-DI（売り方向力）</span><span style="font-family:var(--mn);font-size:14px;font-weight:700;color:var(--rd)">${r.ndi}</span></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><span style="font-size:12px;color:var(--tx2)">判定</span><span class="pill ${r.adxVal>=40?'p-bull':r.adxVal>=25?'p-warn':'p-danger'}">${r.msLabel}</span></div>
-    <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-top:4px">
-      ADX &lt; 20 ＝ レンジ相場（静観推奨）<br>
-      ADX 20〜25 ＝ 弱い上昇/下落トレンド（方向確認の上、慎重に）<br>
-      ADX 25〜40 ＝ トレンド相場（エントリー可）<br>
-      ADX &gt; 40 ＝ 強いトレンド（積極的に）
-    </div>
-  </div>`;
-  document.getElementById('adxDetail').innerHTML=adxDetailHtml;
+  // Level map (OB + EMA levels)
+  const cur=`<div class="row-item"><span class="pill p-gold">現在値</span><span style="font-family:var(--mn);font-size:14px;font-weight:700">$${r.price.toFixed(1)}</span></div>`;
+  const allLevels=[
+    ...r.levels.map(x=>({p:x.p,html:`<div class="row-item"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="pill ${x.t==='bull'?'p-bull':x.t==='bear'?'p-bear':'p-neut'}">${x.l}</span><span style="font-size:10px;color:var(--tx2)">${x.d}</span></div><span style="font-family:var(--mn);font-size:12px">${x.p>=r.price?'+':'-'}${Math.abs(x.p-r.price).toFixed(1)} · $${x.p.toFixed(1)}</span></div>`})),
+    ...[...r.OB.above,...r.OB.below].map(o=>({p:o.mid,html:`<div class="row-item" style="background:${o.type==='bear'?'rgba(224,85,48,.04)':'rgba(27,174,130,.04)'}"><div style="display:flex;align-items:center;gap:5px"><span class="pill ${o.type==='bear'?'p-bear':'p-bull'}" style="font-size:8px">${o.label}</span><span style="font-size:10px;color:var(--tx2)">${o.type==='bear'?'売りOB（参考抵抗）':'買いOB（参考支持）'}</span></div><span style="font-family:var(--mn);font-size:12px">${o.mid>=r.price?'+':'-'}${Math.abs(o.mid-r.price).toFixed(1)} · $${o.mid}</span></div>`})),
+  ].sort((a,b)=>b.p-a.p);
+  document.getElementById('levelMap').innerHTML=cur+allLevels.map(x=>x.html).join('');
 
   // Sentiment
-  setMeter('techVal','techBar','techTag',r.tech.score,r.tech.dir,r.tech.label);
-  setMeter('midTechVal','midTechBar','midTechTag',r.midTech.score,r.midTech.dir,r.midTech.label);
-  setMeter('snsVal','snsBar','snsTag',r.sns.score,r.sns.dir,r.sns.label);
-  setMeter('fundVal','fundBar','fundTag',r.fund.score,r.fund.dir,r.fund.label);
+  const sm=(vi,bi,ti,sc,dir,lbl)=>{document.getElementById(vi).textContent=sc+'pt';document.getElementById(vi).style.color=dc(dir);document.getElementById(bi).style.width=sc+'%';document.getElementById(bi).style.background=dbc(dir);document.getElementById(ti).textContent=lbl;};
+  sm('techVal','techBar','techTag',r.techScore,r.techScore>57?'bull':r.techScore<43?'bear':'neut',`RSI${r.rsiS}·EMA${r.price>r.e20?'上':'下'}`);
+  sm('midTechVal','midTechBar','midTechTag',r.midTS,r.midTS>57?'bull':r.midTS<43?'bear':'neut',`EMA75${r.price>r.e75?'上':'下'}·EMA200${r.price>r.e200?'上':'下'}`);
+  document.getElementById('volVal').textContent=`ATR $${r.ATR.toFixed(1)}`;
+  document.getElementById('volTag').textContent=r.SQ.state==='squeeze'?'Squeeze Zone':r.SQ.expanding?'Expansion':'Normal';
+  document.getElementById('sessVal').textContent=r.sessInfo.name;
+  document.getElementById('sessTag').textContent=r.sessInfo.hot?'活発なセッション':'比較的静かなセッション';
 
   drawChart(r);
 }
 
-// ===================== MONTE CARLO CHART =====================
-let mcChartInst=null;
-function renderMC(mc){
-  const el=document.getElementById('mcChart');
-  if(!el)return;
-  if(mcChartInst)mcChartInst.destroy();
-  const labels=Array.from({length:13},(_,i)=>i);
-  const datasets=mc.paths.slice(0,20).map((path,i)=>({
-    data:path,borderColor:`rgba(${mc.upPct>=50?'27,174,130':'224,85,48'},.15)`,
-    borderWidth:.8,pointRadius:0,fill:false,tension:.3
-  }));
-  datasets.push({data:mc.paths[0].map((_,i)=>mc.price*(1+(mc.upPct/100-.5)*.001*i)),
-    borderColor:mc.upPct>=50?'rgba(27,174,130,.8)':'rgba(224,85,48,.8)',
-    borderWidth:2,pointRadius:0,fill:false,tension:.3,label:'中央値'});
-  mcChartInst=new Chart(el.getContext('2d'),{type:'line',data:{labels,datasets},options:{
-    responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{enabled:false}},
-    scales:{x:{display:false},y:{ticks:{color:'#4A4845',font:{size:9},callback:v=>'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.04)'}}},
-    animation:{duration:300}
-  }});
-  document.getElementById('mcUpPct').textContent=mc.upPct+'%';
-  document.getElementById('mcDnPct').textContent=mc.dnPct+'%';
-  document.getElementById('mcRange').textContent=`$${Math.round(mc.p5)}〜$${Math.round(mc.p95)}`;
-  const bias=document.getElementById('mcBias');
-  if(mc.upPct>=60){bias.textContent='↑ 上昇バイアス';bias.style.color='var(--gr)';}
-  else if(mc.dnPct>=60){bias.textContent='↓ 下落バイアス';bias.style.color='var(--rd)';}
-  else{bias.textContent='→ 中立';bias.style.color='var(--tx2)';}
+function setDirCard(cardId,arrId,biasId,subId,pbBId,pbSId,dir,bias,sub,bPct){
+  document.getElementById(cardId).className='dir-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
+  document.getElementById(arrId).textContent=arrowTxt(dir);
+  document.getElementById(arrId).style.color=dc(dir);
+  document.getElementById(biasId).textContent=bias;
+  document.getElementById(biasId).style.color=dc(dir);
+  document.getElementById(subId).textContent=sub;
+  document.getElementById(pbBId).style.width=bPct+'%';
+  document.getElementById(pbSId).style.width=(100-bPct)+'%';
 }
 
-// ===================== MAIN CHART =====================
+function setTF(id,dir,price,dirTxt,sub){
+  document.getElementById(id).className='tf-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
+  document.getElementById(id+'-p').textContent=price;
+  document.getElementById(id+'-p').style.color=dc(dir);
+  document.getElementById(id+'-d').textContent=dirTxt;
+  document.getElementById(id+'-d').style.color=dc(dir);
+  document.getElementById(id+'-s').textContent=sub;
+}
+
 function drawChart(r){
   const ctx=document.getElementById('priceChart').getContext('2d');
   if(chart)chart.destroy();
-  const closes=r.hist.map(x=>x.c);
-  const bbArr=closes.map((_,i)=>{if(i<20)return null;const sl=closes.slice(i-20,i),m=sl.reduce((a,b)=>a+b,0)/20,sd=Math.sqrt(sl.reduce((a,b)=>a+Math.pow(b-m,2),0)/20);return{u:m+2*sd,m,l:m-2*sd};});
-  const k20=2/21,k75=2/76,k200=2/201;let e20=closes[0],e75=closes[0],e200=closes[0];
-  const ea20=[],ea75=[],ea200=[];
-  closes.forEach((p,i)=>{e20=i===0?p:p*k20+e20*(1-k20);e75=i===0?p:p*k75+e75*(1-k75);e200=i===0?p:p*k200+e200*(1-k200);ea20.push(i>=5?e20:null);ea75.push(i>=20?e75:null);ea200.push(i>=50?e200:null);});
+  const cls=r.hist.map(x=>x.c);
+  const bbArr=cls.map((_,i)=>{if(i<20)return null;const sl=cls.slice(i-20,i),m=sl.reduce((a,b)=>a+b,0)/20,sd=Math.sqrt(sl.reduce((a,b)=>a+Math.pow(b-m,2),0)/20);return{u:m+2*sd,l:m-2*sd};});
+  const k20=2/21,k75=2/76;let e20v=cls[0],e75v=cls[0];
+  const ea20=[],ea75=[];
+  cls.forEach((p,i)=>{e20v=i===0?p:p*k20+e20v*(1-k20);e75v=i===0?p:p*k75+e75v*(1-k75);ea20.push(i>=5?e20v:null);ea75.push(i>=20?e75v:null);});
   chart=new Chart(ctx,{type:'line',data:{
-    labels:closes.map((_,i)=>i%20===0?i:''),
+    labels:cls.map((_,i)=>i%20===0?i:''),
     datasets:[
-      {label:'価格',data:closes,borderColor:'#8E8C86',borderWidth:1.5,pointRadius:0,fill:false,tension:.2},
-      {label:'BB上限',data:bbArr.map(b=>b?b.u:null),borderColor:'rgba(224,85,48,.75)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
-      {label:'BB中央',data:bbArr.map(b=>b?b.m:null),borderColor:'rgba(142,140,134,.45)',borderWidth:1,borderDash:[2,2],pointRadius:0,fill:false},
-      {label:'BB下限',data:bbArr.map(b=>b?b.l:null),borderColor:'rgba(27,174,130,.75)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+      {label:'価格',data:cls,borderColor:'#8C8A84',borderWidth:1.5,pointRadius:0,fill:false,tension:.2},
+      {label:'BB上限',data:bbArr.map(b=>b?b.u:null),borderColor:'rgba(224,85,48,.7)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+      {label:'BB下限',data:bbArr.map(b=>b?b.l:null),borderColor:'rgba(27,174,130,.7)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
       {label:'EMA20',data:ea20,borderColor:'#3A8AE0',borderWidth:1.2,pointRadius:0,fill:false},
       {label:'EMA75',data:ea75,borderColor:'#C07A10',borderWidth:1.2,pointRadius:0,fill:false},
-      {label:'EMA200',data:ea200,borderColor:'#8A7EE8',borderWidth:1.5,pointRadius:0,fill:false},
     ]},options:{responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.parsed.y?c.parsed.y.toFixed(1):'-'}`}}},
-    scales:{x:{ticks:{maxTicksLimit:5,color:'#4A4845',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},
-    y:{ticks:{color:'#4A4845',font:{size:9},callback:v=>'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.04)'}}},
-    animation:{duration:300}}});
+    scales:{x:{ticks:{maxTicksLimit:5,color:'#484644',font:{size:9}},grid:{color:'rgba(255,255,255,.03)'}},
+    y:{ticks:{color:'#484644',font:{size:9},callback:v=>'$'+Math.round(v)},grid:{color:'rgba(255,255,255,.03)'}}},animation:{duration:300}}});
   document.getElementById('chartLegend').innerHTML=[
-    ['#8E8C86','価格'],['rgba(224,85,48,.9)','BB上限',1],['rgba(142,140,134,.6)','BB中央',1],
-    ['rgba(27,174,130,.9)','BB下限',1],['#3A8AE0','EMA20'],['#C07A10','EMA75'],['#8A7EE8','EMA200']
-  ].map(([c,l,d])=>`<div class="legend-item"><span class="legend-line" style="background:${d?'none':c};border-top:2px ${d?'dashed':'solid'} ${c}"></span>${l}</div>`).join('');
+    ['#8C8A84','価格'],['rgba(224,85,48,.9)','BB上限',1],['rgba(27,174,130,.9)','BB下限',1],['#3A8AE0','EMA20'],['#C07A10','EMA75']
+  ].map(([c,l,d])=>`<div class="leg-item"><span class="leg-line" style="background:${d?'none':c};border-top:2px ${d?'dashed':'solid'} ${c}"></span>${l}</div>`).join('');
 }
 
-// ===================== TICK =====================
+// ==================== TICK ====================
 async function runTick(){
   document.getElementById('liveDot').className='ldot on';
   document.getElementById('liveLabel').textContent='取得中';
   try{
-    const{price,open,hist,live,source}=await fetchAll();
-    const r=analyze(price,open,hist,source);
+    const d=await fetchAll();
+    const r=analyze(d.mid||d.price,d.open||d.price,d.hist,d);
     lastResult=r;
     renderAll(r);
-    document.getElementById('liveLabel').textContent='モニタリング中';
-
-    // 読み上げ中はデータ更新するが新たな音声は発火しない
-    // → 聞いている最中に内容が変わらないように
+    document.getElementById('liveLabel').textContent=r.spotMeta.live?'LIVE':'SIM';
     if(!isSpeaking){
-      const entryChanged=lastSpokenEntry!==r.entryVerdict;
-      const bigMove=lastSpokenPrice&&Math.abs(price-lastSpokenPrice)>r.ATR*.8;
+      const entryChanged=lastSpokenEntry!==r.msLabel;
+      const bigMove=lastSpokenPrice>0&&Math.abs(d.price-lastSpokenPrice)>r.ATR*.8;
       if(entryChanged||bigMove){
         speak(r.voiceText);
-        lastSpokenEntry=r.entryVerdict;
-        lastSpokenPrice=price;
+        lastSpokenEntry=r.msLabel;
+        lastSpokenPrice=d.price;
       }
     }
   }catch(e){
+    console.error('[GoldScope Vision] tick error:',e);
     document.getElementById('liveLabel').textContent='エラー';
     document.getElementById('liveDot').className='ldot';
-    console.error(e);
+    hideLoading();
   }
 }
 
-// ===================== INIT =====================
-window.speechSynthesis&&window.speechSynthesis.getVoices();
-loadEvents();
+// ==================== INIT ====================
+window.speechSynthesis?.getVoices();
 </script>
 </body>
 </html>
