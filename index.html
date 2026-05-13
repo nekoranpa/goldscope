@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldScope v1.0 — XAUUSD リアルタイム分析</title>
+<meta name="description" content="ADX・ボリンジャーバンド・EMA・売買圧力を使ったXAUUSDリアルタイム分析ツール。エントリー判定・TP/SL・短中長期目線を自動計算。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --gold-dark: #8B6914;
+  --green: #1D9E75;
+  --green-light: rgba(29,158,117,0.12);
+  --red: #D85A30;
+  --red-light: rgba(216,90,48,0.10);
+  --amber: #BA7517;
+  --amber-light: rgba(186,117,23,0.10);
+  --purple: #7F77DD;
+  --blue: #378ADD;
+  --bg: #0D0E10;
+  --bg2: #13151A;
+  --bg3: #1A1D24;
+  --bg4: #22262F;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #F0EEE8;
+  --text2: #9A9890;
+  --text3: #5A5855;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== HEADER ===== */
+.site-header {
+  border-bottom: 0.5px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13,14,16,0.92);
+  backdrop-filter: blur(12px);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.logo-text { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+.logo-text span { color: var(--gold); }
+.version-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 0.5px solid var(--gold-dark);
+  color: var(--gold);
+  font-family: var(--mono);
+  margin-left: 6px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+.live-dot.active {
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ===== HERO SECTION ===== */
+.hero-section {
+  background: linear-gradient(180deg, rgba(201,168,76,0.04) 0%, transparent 100%);
+  border-bottom: 0.5px solid var(--border);
+  padding: 32px 24px 28px;
+}
+.hero-grid {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: start;
+}
+.price-block {}
+.price-label {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.price-main {
+  font-family: var(--mono);
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+.price-change {
+  font-size: 14px;
+  font-family: var(--mono);
+  margin-top: 6px;
+}
+.price-change.up { color: var(--green); }
+.price-change.down { color: var(--red); }
+.time-block {
+  text-align: right;
+}
+.last-update {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-bottom: 4px;
+}
+.src-label {
+  font-size: 10px;
+  color: var(--text3);
+}
+.speak-anim {
+  display: none;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+}
+.speak-anim.on { display: inline-flex; }
+.sb { width: 3px; background: var(--green); border-radius: 2px; animation: sbA .5s ease-in-out infinite alternate; }
+.sb:nth-child(1){height:5px;animation-delay:0s}
+.sb:nth-child(2){height:11px;animation-delay:.15s}
+.sb:nth-child(3){height:7px;animation-delay:.3s}
+@keyframes sbA{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+
+/* ===== MAIN LAYOUT ===== */
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ===== ENTRY BOX ===== */
+.entry-box {
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border: 1.5px solid var(--border2);
+  transition: all .4s;
+}
+.entry-box.go { border-color: var(--green); background: var(--green-light); }
+.entry-box.wait { border-color: var(--red); background: var(--red-light); }
+.entry-box.caution { border-color: var(--amber); background: var(--amber-light); }
+.entry-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.entry-verdict {
+  font-size: 22px;
+  font-weight: 600;
+}
+.entry-reason {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+.adx-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adx-label { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.adx-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.adx-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .8s ease;
+}
+.adx-val { font-size: 12px; font-family: var(--mono); color: var(--text2); white-space: nowrap; }
+
+/* ===== PILL ===== */
+.pill {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-family: var(--mono);
+  white-space: nowrap;
+  display: inline-block;
+}
+.pill-bull { background: rgba(29,158,117,0.2); color: #5DCAA5; border: 0.5px solid rgba(29,158,117,0.4); }
+.pill-bear { background: rgba(216,90,48,0.2); color: #F0997B; border: 0.5px solid rgba(216,90,48,0.4); }
+.pill-warn { background: rgba(186,117,23,0.2); color: #EF9F27; border: 0.5px solid rgba(186,117,23,0.4); }
+.pill-info { background: rgba(55,138,221,0.2); color: #85B7EB; border: 0.5px solid rgba(55,138,221,0.4); }
+.pill-purple { background: rgba(127,119,221,0.2); color: #AFA9EC; border: 0.5px solid rgba(127,119,221,0.4); }
+.pill-neut { background: rgba(255,255,255,0.06); color: var(--text2); border: 0.5px solid var(--border2); }
+.pill-gold { background: rgba(201,168,76,0.2); color: var(--gold-light); border: 0.5px solid rgba(201,168,76,0.4); }
+.pill-danger { background: rgba(216,90,48,0.25); color: #F0997B; border: 0.5px solid rgba(216,90,48,0.5); }
+
+/* ===== SHORT TARGET HERO ===== */
+.short-hero {
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border: 0.5px solid var(--border2);
+  transition: all .4s;
+  background: var(--bg2);
+}
+.short-hero.bull { border-color: rgba(29,158,117,0.5); background: var(--green-light); }
+.short-hero.bear { border-color: rgba(216,90,48,0.5); background: var(--red-light); }
+.sh-label { font-size: 11px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.sh-price { font-family: var(--mono); font-size: 36px; font-weight: 700; line-height: 1; }
+.sh-dir { font-size: 14px; font-weight: 500; margin-top: 4px; }
+.sh-reason { font-size: 13px; color: var(--text2); line-height: 1.8; margin: 8px 0; }
+.pbar-wrap { height: 7px; border-radius: 4px; overflow: hidden; display: flex; margin: 4px 0; }
+.pbar-b { background: var(--green); transition: width .8s ease; }
+.pbar-s { background: var(--red); transition: width .8s ease; }
+.pbar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); }
+
+/* ===== PREDICTION TIME ===== */
+.pred-bar {
+  background: var(--bg3);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-top: 10px;
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pred-icon { font-size: 16px; color: var(--gold); }
+.pred-text { font-size: 13px; color: var(--text2); flex: 1; }
+.pred-time { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+
+/* ===== HORIZON GRID ===== */
+.horizon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.horizon-card {
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 0.5px solid var(--border2);
+  background: var(--bg2);
+  transition: all .4s;
+}
+.horizon-card.bull { border-color: rgba(29,158,117,0.4); background: var(--green-light); }
+.horizon-card.bear { border-color: rgba(216,90,48,0.4); background: var(--red-light); }
+.hc-label { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.hc-price { font-family: var(--mono); font-size: 24px; font-weight: 700; }
+.hc-dir { font-size: 12px; font-weight: 500; margin-top: 3px; }
+.hc-sub { font-size: 11px; color: var(--text2); line-height: 1.5; margin-top: 6px; }
+
+/* ===== COMMENT BOX ===== */
+.comment-box {
+  background: var(--bg2);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 0.5px solid var(--border);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.85;
+}
+
+/* ===== TABS ===== */
+.tab-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.tab {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.tab:hover { background: var(--bg3); color: var(--text); }
+.tab.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
+
+/* ===== CARDS ===== */
+.panel {
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.panel-label {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.tp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.tp-row:last-child { border-bottom: none; }
+.next-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.next-item:last-child { border-bottom: none; padding-bottom: 0; }
+.next-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+/* ===== METER ===== */
+.meter-wrap {
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+.meter-bar { height: 100%; border-radius: 2px; transition: width .9s ease; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.card-sm {
+  background: var(--bg3);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  border: 0.5px solid var(--border);
+}
+
+/* ===== FOOTER ===== */
+.app-footer {
+  border-top: 0.5px solid var(--border);
+  padding: 20px 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.footer-about {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.8;
+}
+.footer-disclaimer {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text3);
+  padding: 10px 14px;
+  background: var(--bg2);
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  line-height: 1.7;
+}
+
+/* ===== BUTTONS ===== */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+.btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.btn:hover { background: var(--bg4); border-color: var(--border2); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
+.btn-primary:hover { opacity: .88; background: var(--text); }
+.btn-stop { background: var(--red); border-color: var(--red); color: white; }
+.btn-stop:hover { opacity: .85; background: var(--red); }
+
+/* ===== CHART ===== */
+.chart-wrap {
+  position: relative;
+  height: 240px;
+  margin-bottom: 10px;
+  background: var(--bg3);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 0.5px solid var(--border);
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px 2px 12px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .horizon-grid { grid-template-columns: 1fr; }
+  .price-main { font-size: 38px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+  .site-header { padding: 0 16px; }
+  .hero-section { padding: 20px 16px; }
+}
+
+/* ===== SPIN ===== */
+.spin { animation: spin .8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-icon">⬡</div>
+    <div>
+      <span class="logo-text">Gold<span>Scope</span></span>
+      <span class="version-badge">v1.0</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-indicator">
+      <div class="live-dot" id="liveDot"></div>
+      <span id="liveLabel">待機中</span>
+      <div class="speak-anim" id="speakAnim">
+        <div class="sb"></div><div class="sb"></div><div class="sb"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="hero-section">
+  <div class="hero-grid">
+    <div class="price-block">
+      <div class="price-label">XAU / USD · Gold Spot</div>
+      <div class="price-main" id="priceDisp">----.-</div>
+      <div class="price-change" id="chgDisp">変動率 --</div>
+    </div>
+    <div class="time-block">
+      <div class="last-update" id="updTime">--:--:--</div>
+      <div class="src-label" id="srcLabel">--</div>
+    </div>
+  </div>
+</section>
+
+<main class="main">
+
+  <!-- エントリー判定 -->
+  <div id="entryBox" class="entry-box caution">
+    <div class="entry-header">
+      <div class="entry-verdict" id="entryVerdict">-- 分析待ち</div>
+      <span class="pill pill-neut" id="adxPill">ADX --</span>
+    </div>
+    <div class="entry-reason" id="entryReason">「リアルタイム開始」を押してください。</div>
+    <div class="adx-row">
+      <span class="adx-label">ADX強度</span>
+      <div class="adx-track"><div class="adx-fill" id="adxFill" style="width:0%;background:#5A5855"></div></div>
+      <span class="adx-val" id="adxVal">--</span>
+      <span class="adx-label">/ 100</span>
+    </div>
+  </div>
+
+  <!-- 短期ターゲット -->
+  <div id="heroBox" class="short-hero">
+    <div class="sh-label">短期ターゲット（5〜15分）</div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+      <div class="sh-price" id="heroTarget">----</div>
+      <div>
+        <div class="sh-dir" id="heroDir">分析待ち</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px" id="heroPips">--</div>
+      </div>
+    </div>
+    <div class="sh-reason" id="heroReason">分析後に表示</div>
+    <div class="pbar-labels">
+      <span>買い <strong id="buyPct" style="color:var(--green)">--%</strong></span>
+      <span>売り <strong id="sellPct" style="color:var(--red)">--%</strong></span>
+    </div>
+    <div class="pbar-wrap" style="margin-top:4px">
+      <div class="pbar-b" id="pbarB" style="width:50%"></div>
+      <div class="pbar-s" id="pbarS" style="width:50%"></div>
+    </div>
+
+    <!-- 予測到達時間 -->
+    <div class="pred-bar" id="predBar" style="display:none">
+      <i class="ti ti-clock pred-icon"></i>
+      <div class="pred-text" id="predText">到達予測を計算中...</div>
+      <div class="pred-time" id="predTime">--分</div>
+    </div>
+  </div>
+
+  <!-- 中期・長期 -->
+  <div class="horizon-grid">
+    <div class="horizon-card" id="midCard">
+      <div class="hc-label">中期目線（1〜4時間）</div>
+      <div class="hc-price" id="midTarget">----</div>
+      <div class="hc-dir" id="midDir">--</div>
+      <div class="hc-sub" id="midReason">--</div>
+    </div>
+    <div class="horizon-card" id="longCard">
+      <div class="hc-label">長期目線（日足）</div>
+      <div class="hc-price" id="longTarget">----</div>
+      <div class="hc-dir" id="longDir">--</div>
+      <div class="hc-sub" id="longReason">--</div>
+    </div>
+  </div>
+
+  <!-- コメント -->
+  <div class="comment-box" id="aiComment">待機中...</div>
+
+  <!-- タブ -->
+  <div class="tab-row">
+    <button class="tab active" onclick="showTab('next')">次の目線</button>
+    <button class="tab" onclick="showTab('tp')">TP / SL</button>
+    <button class="tab" onclick="showTab('chart')">チャート</button>
+    <button class="tab" onclick="showTab('sentiment')">センチメント</button>
+    <button class="tab" onclick="showTab('about')">使い方</button>
+  </div>
+
+  <div id="tab-next">
+    <div class="panel">
+      <div class="panel-label">次に見るべきポイント（シナリオ別）</div>
+      <div id="nextItems"><div style="color:var(--text3);font-size:13px">分析後に表示</div></div>
+    </div>
+    <div class="panel" style="background:var(--bg3)">
+      <div class="panel-label">障壁マップ（現在値との距離）</div>
+      <div id="levelMap"><div style="color:var(--text3);font-size:13px">分析後に表示</div></div>
+    </div>
+  </div>
+
+  <div id="tab-tp" style="display:none">
+    <div class="panel">
+      <div class="panel-label">TP候補（ロング）</div>
+      <div id="tpLong"><div style="color:var(--text3);font-size:13px">分析後に表示</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">TP候補（ショート）</div>
+      <div id="tpShort"><div style="color:var(--text3);font-size:13px">分析後に表示</div></div>
+    </div>
+    <div class="panel" style="background:var(--bg3)">
+      <div class="panel-label">SL目安</div>
+      <div id="slInfo" style="font-size:13px;color:var(--text2);line-height:1.8">--</div>
+    </div>
+  </div>
+
+  <div id="tab-chart" style="display:none">
+    <div class="chart-wrap">
+      <canvas id="priceChart" role="img" aria-label="XAUUSD価格チャート with BB・EMA"></canvas>
+    </div>
+    <div class="chart-legend" id="chartLegend"></div>
+  </div>
+
+  <div id="tab-sentiment" style="display:none">
+    <div class="grid2">
+      <div class="card-sm">
+        <div class="panel-label" style="margin-bottom:6px">短期テクニカル</div>
+        <div style="font-size:18px;font-weight:500;margin:4px 0" id="techVal">--</div>
+        <div class="meter-wrap"><div class="meter-bar" id="techBar" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text3)" id="techTag">RSI · BB · EMA</div>
+      </div>
+      <div class="card-sm">
+        <div class="panel-label" style="margin-bottom:6px">中期テクニカル</div>
+        <div style="font-size:18px;font-weight:500;margin:4px 0" id="midTechVal">--</div>
+        <div class="meter-wrap"><div class="meter-bar" id="midTechBar" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text3)" id="midTechTag">EMA75 · EMA200</div>
+      </div>
+      <div class="card-sm">
+        <div class="panel-label" style="margin-bottom:6px">SNS / X 推定</div>
+        <div style="font-size:18px;font-weight:500;margin:4px 0" id="snsVal">--</div>
+        <div class="meter-wrap"><div class="meter-bar" id="snsBar" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text3)" id="snsTag">--</div>
+      </div>
+      <div class="card-sm">
+        <div class="panel-label" style="margin-bottom:6px">ファンダメンタル</div>
+        <div style="font-size:18px;font-weight:500;margin:4px 0" id="fundVal">--</div>
+        <div class="meter-wrap"><div class="meter-bar" id="fundBar" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text3)" id="fundTag">--</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-about" style="display:none">
+    <div class="panel">
+      <div class="panel-label">GoldScope とは</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.9">
+        <p style="margin-bottom:12px"><strong style="color:var(--text)">GoldScope</strong>はXAUUSD（金/ドル）のリアルタイム分析ツールです。プロのトレーダーが使うテクニカル指標を自動計算し、今エントリーすべきかどうかを日本語で教えてくれます。</p>
+        <p style="margin-bottom:8px;color:var(--text);font-weight:500">使っている指標</p>
+        <div style="display:grid;gap:8px;margin-bottom:14px">
+          <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;border:0.5px solid var(--border)">
+            <span class="pill pill-gold" style="margin-bottom:4px">ADX（平均方向性指数）</span>
+            <p style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7">トレンドの<strong style="color:var(--text)">強さ</strong>を0〜100で表します。ADX&lt;20はレンジ相場（入らない方が無難）、ADX&gt;25でトレンドが出てきた合図、ADX&gt;40は強いトレンドでチャンスです。</p>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;border:0.5px solid var(--border)">
+            <span class="pill pill-info" style="margin-bottom:4px">ボリンジャーバンド (BB)</span>
+            <p style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7">価格の標準偏差から引いた3本のライン。上限タッチ＝売られすぎ警戒、下限タッチ＝買われすぎ警戒。中央線（ミドル）が短期トレンドの基準です。</p>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;border:0.5px solid var(--border)">
+            <span class="pill pill-warn" style="margin-bottom:4px">EMA 20 / 75 / 200</span>
+            <p style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7">指数平滑移動平均線。EMA20は短期、EMA75は中期、EMA200は長期トレンドの基準。価格がEMAの上にいるほど上昇トレンド。複数が重なる部分が強い障壁になります。</p>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;border:0.5px solid var(--border)">
+            <span class="pill pill-bull" style="margin-bottom:4px">VWAP · 売買圧力 · OBV</span>
+            <p style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7">VWAPは出来高加重平均価格で機関投資家の基準値。売買圧力は各ローソク足の高値・安値・終値から買い/売りの比率を計算。OBVは出来高の方向から資金の流れを判定します。</p>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px 14px;border:0.5px solid var(--border)">
+            <span class="pill pill-purple" style="margin-bottom:4px">予測到達時間</span>
+            <p style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.7">直近の平均モメンタム（速度）からTP1までの距離を割り算して到達予測時間を逆算します。相場の速さが変わると自動更新されます。あくまで目安です。</p>
+          </div>
+        </div>
+        <p style="margin-bottom:6px;color:var(--text);font-weight:500">更新周期</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px">15秒ごとにYahoo Finance（XAUUSD=X スポット価格）からデータを取得します。ブラウザのCORS制限でブロックされた場合は$4,700帯のシミュレーションモードに自動切換えします。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="startBtn" onclick="startMonitoring()">
+      <i class="ti ti-player-play"></i> リアルタイム開始
+    </button>
+    <button class="btn" onclick="speakNow()">
+      <i class="ti ti-volume"></i> 読み上げ
+    </button>
+    <button class="btn" id="voiceBtn" onclick="toggleVoice()">
+      <i class="ti ti-bell"></i> 音声: ON
+    </button>
+  </div>
+
+</main>
+
+<footer>
+  <div class="app-footer">
+    <div class="footer-disclaimer">
+      ⚠️ <strong>免責事項：</strong>本ツールは教育・情報提供目的のみです。表示される分析・シグナルは投資アドバイスではありません。実際のトレードは自己責任で行ってください。過去のパターンが将来の結果を保証するものではありません。
+    </div>
+    <div class="footer-about" style="margin-top:12px">
+      GoldScope v1.0 · Built for XAUUSD traders · 2026
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== STATE =====
+let voiceOn=true, tickTimer=null, isRunning=false, lastResult=null, simHistory=[], chart=null;
+let lastSpokenEntry=null, lastSpokenPrice=null;
+
+// ===== UTILS =====
+function nowStr(){return new Date().toLocaleTimeString('ja-JP');}
+function f1(n){return typeof n==='number'?n.toFixed(1):'-';}
+function fr(n){return typeof n==='number'?Math.round(n):'-';}
+
+function speak(text){
+  if(!voiceOn||!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ja-JP'; u.rate=1.5;
+  const jv=window.speechSynthesis.getVoices().find(v=>v.lang.includes('ja'));
+  if(jv)u.voice=jv;
+  const sa=document.getElementById('speakAnim');
+  sa.className='speak-anim on';
+  u.onend=u.onerror=()=>{sa.className='speak-anim';};
+  window.speechSynthesis.speak(u);
+}
+function speakNow(){if(lastResult)speak(lastResult.voiceText);else speak('まだ分析が完了していません。');}
+function toggleVoice(){
+  voiceOn=!voiceOn;
+  document.getElementById('voiceBtn').innerHTML=voiceOn
+    ?'<i class="ti ti-bell"></i> 音声: ON'
+    :'<i class="ti ti-bell-off"></i> 音声: OFF';
+}
+function showTab(name){
+  ['next','tp','chart','sentiment','about'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach((b,i)=>{
+    b.className='tab'+(['next','tp','chart','sentiment','about'][i]===name?' active':'');
+  });
+}
+
+// ===== MONITORING =====
+function startMonitoring(){
+  if(isRunning){
+    isRunning=false; clearInterval(tickTimer);
+    document.getElementById('startBtn').innerHTML='<i class="ti ti-player-play"></i> リアルタイム開始';
+    document.getElementById('startBtn').className='btn btn-primary';
+    document.getElementById('liveDot').className='live-dot';
+    document.getElementById('liveLabel').textContent='停止中';
+    return;
+  }
+  isRunning=true;
+  document.getElementById('startBtn').innerHTML='<i class="ti ti-player-stop"></i> 停止';
+  document.getElementById('startBtn').className='btn btn-stop';
+  runTick();
+  tickTimer=setInterval(runTick,15000);
+}
+
+// ===== DATA FETCH =====
+async function fetchPrice(){
+  const urls=[
+    'https://query1.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=5m&range=5d',
+    'https://query2.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=5m&range=5d',
+  ];
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{cache:'no-store'});
+      if(!r.ok)continue;
+      const d=await r.json();
+      const res=d.chart.result[0];
+      const meta=res.meta,q=res.indicators.quote[0];
+      const closes=q.close||[],highs=q.high||[],lows=q.low||[],vols=q.volume||[];
+      const hist=[];
+      for(let i=0;i<closes.length;i++){
+        if(closes[i]!=null)hist.push({c:closes[i],h:highs[i]||closes[i],l:lows[i]||closes[i],v:vols[i]||500});
+      }
+      if(hist.length<20)continue;
+      return{price:meta.regularMarketPrice,open:meta.chartPreviousClose||meta.regularMarketPrice,hist:hist.slice(-300),live:true,source:'XAUUSD スポット (Yahoo Finance)'};
+    }catch{continue;}
+  }
+  // Sim
+  let base=simHistory.length>0?simHistory[simHistory.length-1].c:4700;
+  base+=(Math.random()-0.48)*3;
+  simHistory.push({c:base,h:base+Math.random()*2,l:base-Math.random()*2,v:Math.round(Math.random()*600+300)});
+  if(simHistory.length>300)simHistory=simHistory.slice(-300);
+  return{price:base,open:simHistory[0].c,hist:[...simHistory],live:false,source:'シミュレーション ($4700帯)'};
+}
+
+// ===== INDICATORS =====
+function calcEMA(v,p){if(!v||v.length<p)return v?v[v.length-1]:0;const k=2/(p+1);let e=v.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<v.length;i++)e=v[i]*k+e*(1-k);return e;}
+function calcBB(v,p=20,m=2){if(v.length<p)return null;const s=v.slice(-p),mn=s.reduce((a,b)=>a+b,0)/p,sd=Math.sqrt(s.reduce((a,b)=>a+Math.pow(b-mn,2),0)/p);return{upper:mn+m*sd,mid:mn,lower:mn-m*sd,std:sd};}
+function calcRSI(v,p=14){if(v.length<p+1)return 50;let g=0,l=0;for(let i=v.length-p;i<v.length;i++){const d=v[i]-v[i-1];if(d>0)g+=d;else l-=d;}if(!l)return 100;return Math.round(100-100/(1+g/p/(l/p)));}
+function calcVWAP(h){let pv=0,v=0;for(const b of h){const t=(b.h+b.l+b.c)/3;pv+=t*b.v;v+=b.v;}return v>0?pv/v:h[h.length-1].c;}
+function calcATR(h,p=14){if(h.length<p+1)return 5;let s=0;for(let i=h.length-p;i<h.length;i++){const tr=Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c));s+=tr;}return s/p;}
+function calcBuyPressure(h){const r=h.slice(-20);let b=0,s=0;for(const x of r){const rng=x.h-x.l||0.01;b+=x.v*(x.c-x.l)/rng;s+=x.v*(x.h-x.c)/rng;}const t=b+s;return t>0?Math.round(b/t*100):50;}
+function calcOBV(h){let o=0;const a=[0];for(let i=1;i<h.length;i++){o+=h[i].c>h[i-1].c?h[i].v:h[i].c<h[i-1].c?-h[i].v:0;a.push(o);}return a;}
+function calcADX(h,p=14){
+  if(h.length<p*2+1)return{adx:20,pdi:20,ndi:20};
+  const pDM=[],nDM=[],tr=[];
+  for(let i=1;i<h.length;i++){
+    const up=h[i].h-h[i-1].h,dn=h[i-1].l-h[i].l;
+    pDM.push(up>dn&&up>0?up:0);nDM.push(dn>up&&dn>0?dn:0);
+    tr.push(Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c)));
+  }
+  function ws(arr){let s=arr.slice(0,p).reduce((a,b)=>a+b,0);const res=[s];for(let i=p;i<arr.length;i++){s=s-s/p+arr[i];res.push(s);}return res;}
+  const sTR=ws(tr),sPDM=ws(pDM),sNDM=ws(nDM),DX=[];
+  for(let i=0;i<sTR.length;i++){const pi=sTR[i]>0?100*sPDM[i]/sTR[i]:0,ni=sTR[i]>0?100*sNDM[i]/sTR[i]:0,diff=Math.abs(pi-ni),sum=pi+ni;DX.push(sum>0?100*diff/sum:0);}
+  if(DX.length<p)return{adx:20,pdi:20,ndi:20};
+  let adx=DX.slice(0,p).reduce((a,b)=>a+b,0)/p;
+  for(let i=p;i<DX.length;i++)adx=(adx*(p-1)+DX[i])/p;
+  const last=sTR.length-1;
+  return{adx:Math.round(adx),pdi:Math.round(sTR[last]>0?100*sPDM[last]/sTR[last]:0),ndi:Math.round(sTR[last]>0?100*sNDM[last]/sTR[last]:0)};
+}
+
+// ===== 予測到達時間 =====
+function calcPredTime(hist, targetPrice, price){
+  if(hist.length<5)return null;
+  // 直近10本の平均モメンタム（5分足なら1本=5分）
+  const recent=hist.slice(-10);
+  let totalMove=0;
+  for(let i=1;i<recent.length;i++) totalMove+=Math.abs(recent[i].c-recent[i-1].c);
+  const avgMovePerBar=totalMove/(recent.length-1)||0.1;
+  const barsNeeded=Math.abs(targetPrice-price)/avgMovePerBar;
+  const minutesPerBar=5; // 5分足
+  const minutes=Math.round(barsNeeded*minutesPerBar);
+  if(minutes<1||minutes>480)return null;
+  return minutes;
+}
+
+function sessionInfo(){const h=new Date().getUTCHours();if(h>=22||h<5)return{name:'NY時間',hot:true};if(h>=7&&h<16)return{name:'ロンドン時間',hot:true};return{name:'アジア時間',hot:false};}
+
+// ===== ANALYZE =====
+function analyze(price,open,hist,source){
+  const closes=hist.map(x=>x.c);
+  const sh=hist.slice(-80),sc=sh.map(x=>x.c);
+  const bb=calcBB(sc,20,2);
+  const ema20=calcEMA(sc,Math.min(20,sc.length));
+  const rsiS=calcRSI(sc);
+  const vwap=calcVWAP(sh);
+  const buyPct=calcBuyPressure(sh);
+  const sellPct=100-buyPct;
+  const obvArr=calcOBV(sh);
+  const obvDir=obvArr.length>10?(obvArr[obvArr.length-1]>obvArr[obvArr.length-10]?'bull':'bear'):'neut';
+  const atrS=calcATR(sh,14);
+  const adx=calcADX(sh,14);
+  const ema75=calcEMA(closes,Math.min(75,closes.length));
+  const ema200=calcEMA(closes,Math.min(200,closes.length));
+  const rsiM=calcRSI(closes.slice(-50));
+  const atrM=calcATR(hist,20);
+  const longStart=closes.slice(0,20).reduce((a,b)=>a+b,0)/20;
+  const longEnd=closes.slice(-20).reduce((a,b)=>a+b,0)/20;
+  const longTrend=longEnd>longStart+atrM*2?'bull':longEnd<longStart-atrM*2?'bear':'neut';
+  const session=sessionInfo();
+  const changePct=((price-open)/open)*100;
+  const {adx:adxVal,pdi,ndi}=adx;
+  const trendDir=pdi>ndi?'bull':'bear';
+  const bullSig=[buyPct>55,obvDir==='bull',price>vwap,ema20&&price>ema20,rsiS<65&&rsiS>35&&changePct>0].filter(Boolean).length;
+  const bearSig=[buyPct<45,obvDir==='bear',price<vwap,ema20&&price<ema20,rsiS>35&&changePct<0].filter(Boolean).length;
+  const shortDir=bullSig>bearSig?'bull':bearSig>bullSig?'bear':'neut';
+  const dirMatch=(shortDir==='bull'&&trendDir==='bull')||(shortDir==='bear'&&trendDir==='bear');
+
+  let entryVerdict,entryReason,entryClass,entryColor;
+  if(adxVal<20){
+    entryVerdict='⚠️ 今は入らない方がいい';
+    entryReason=`ADX${adxVal}でトレンドがほとんどない状態です。BBの幅が狭くレンジ相場。どちらに動くか読みにくいので、ブレイクアウトを待ちましょう。`;
+    entryClass='wait';entryColor='var(--red)';
+  }else if(adxVal<25){
+    if(dirMatch){
+      entryVerdict='🟡 慎重にエントリー可';
+      entryReason=`ADX${adxVal}でトレンドは弱め。ただし${shortDir==='bull'?'+DI('+pdi+')':'-DI('+ndi+')'}優勢で方向性は一応あります。小さめで慎重に。`;
+      entryClass='caution';entryColor='var(--amber)';
+    }else{
+      entryVerdict='⚠️ 方向が定まっていない';
+      entryReason=`ADX${adxVal}でトレンドが弱く、テクニカルと+DI/-DIの方向も合っていません。もう少し待ってから判断した方が安全です。`;
+      entryClass='wait';entryColor='var(--red)';
+    }
+  }else if(adxVal<40){
+    if(dirMatch&&Math.abs(bullSig-bearSig)>=2){
+      entryVerdict=shortDir==='bull'?'✅ ロングを検討していい':'✅ ショートを検討していい';
+      entryReason=`ADX${adxVal}でトレンドが出ています。${shortDir==='bull'?'+DI('+pdi+')':'-DI('+ndi+')'}優勢でテクニカルも同方向。エントリーを検討できる局面です。`;
+      entryClass='go';entryColor='var(--green)';
+    }else{
+      entryVerdict='🟡 シグナルを確認してから';
+      entryReason=`ADX${adxVal}でトレンドはありますが、シグナルが全部揃っていません。あと1〜2本の足で方向を確認してからの方が安全です。`;
+      entryClass='caution';entryColor='var(--amber)';
+    }
+  }else{
+    entryVerdict=shortDir==='bull'?'🔥 ロングチャンス！':'🔥 ショートチャンス！';
+    entryReason=`ADX${adxVal}で強いトレンドが出ています！${shortDir==='bull'?'+DI('+pdi+')が-DI('+ndi+')を大きく上回り':'-DI('+ndi+')が+DI('+pdi+')を大きく上回り'}、買い圧力${shortDir==='bull'?buyPct:sellPct}%。積極的にエントリーできる局面です。`;
+    entryClass='go';entryColor='var(--green)';
+  }
+
+  const levels=[];
+  if(bb){
+    levels.push({label:'BB上限',price:bb.upper,type:'bear',desc:'短期抵抗帯',tf:'短期'});
+    levels.push({label:'BB中央',price:bb.mid,type:'neut',desc:'ミドルライン',tf:'短期'});
+    levels.push({label:'BB下限',price:bb.lower,type:'bull',desc:'短期支持帯',tf:'短期'});
+  }
+  if(vwap)levels.push({label:'VWAP',price:vwap,type:price>vwap?'bull':'bear',desc:'出来高加重平均',tf:'短期'});
+  if(ema20)levels.push({label:'EMA20',price:ema20,type:price>ema20?'bull':'bear',desc:'短期トレンド',tf:'短期'});
+  if(ema75)levels.push({label:'EMA75',price:ema75,type:price>ema75?'bull':'bear',desc:'中期トレンド',tf:'中期'});
+  if(ema200)levels.push({label:'EMA200',price:ema200,type:price>ema200?'bull':'bear',desc:'長期トレンド',tf:'長期'});
+  levels.sort((a,b)=>b.price-a.price);
+
+  const above=levels.filter(l=>l.price>price+0.2).sort((a,b)=>a.price-b.price);
+  const below=levels.filter(l=>l.price<price-0.2).sort((a,b)=>b.price-a.price);
+
+  function makeTPs(list,isLong){
+    const res=list.slice(0,4).map((l,i)=>{
+      const pts=parseFloat(Math.abs(l.price-price).toFixed(1));
+      return{label:`TP${i+1} · ${l.label}`,price:parseFloat(l.price.toFixed(1)),pts,rr:(pts/atrS).toFixed(1),desc:l.desc,tf:l.tf,type:l.type};
+    });
+    if(!res.length){[1,2].forEach(m=>{const pts=parseFloat((atrS*m).toFixed(1));res.push({label:`TP${m} · ATR×${m}`,price:parseFloat((isLong?price+atrS*m:price-atrS*m).toFixed(1)),pts,rr:m.toFixed(1),desc:'ATRベース',tf:'短期',type:isLong?'bull':'bear'});});}
+    return res;
+  }
+  const tpLong=makeTPs(above,true);
+  const tpShort=makeTPs(below,false);
+  const slLong=parseFloat((bb?bb.lower-atrS*0.3:price-atrS*1.5).toFixed(1));
+  const slShort=parseFloat((bb?bb.upper+atrS*0.3:price+atrS*1.5).toFixed(1));
+  const activeTPs=shortDir==='bull'?tpLong:shortDir==='bear'?tpShort:[];
+  const shortTP=activeTPs[0]||null;
+  const shortTP2=activeTPs[1]||null;
+
+  // 予測到達時間
+  const predMins=shortTP?calcPredTime(sh,shortTP.price,price):null;
+
+  const midDir=price>ema75&&price>ema200?'bull':price<ema75&&price<ema200?'bear':'neut';
+  const midTargetPrice=midDir==='bull'?Math.round(price+atrM*8):Math.round(price-atrM*8);
+  const longDir=longTrend;
+  const longTargetPrice=longDir==='bull'?Math.round(price+atrM*20):Math.round(price-atrM*20);
+
+  const nextScenarios=[];
+  if(shortDir==='bull'){
+    if(shortTP)nextScenarios.push({color:'var(--green)',cond:'このまま上昇継続の場合',title:`TP1到達 $${shortTP.price}（${shortTP.pts}pt）`,body:`${shortTP.desc}まで届いたら一部利確。${shortTP2?'その先は$'+shortTP2.price+'（'+shortTP2.desc+'）が次のターゲット。':''}`});
+    nextScenarios.push({color:'var(--red)',cond:'下に押し戻された場合',title:`反転SL $${slLong} 割れ`,body:`BB下限（$${bb?Math.round(bb.lower):'-'}）を割ったらロング撤退。短期目線を切り替える。`});
+  }else if(shortDir==='bear'){
+    if(shortTP)nextScenarios.push({color:'var(--red)',cond:'このまま下落継続の場合',title:`TP1到達 $${shortTP.price}（${shortTP.pts}pt）`,body:`${shortTP.desc}まで下げたら一部利確。${shortTP2?'その先は$'+shortTP2.price+'（'+shortTP2.desc+'）まで視野に。':''}`});
+    nextScenarios.push({color:'var(--green)',cond:'上に反発した場合',title:`反転SL $${slShort} 上抜け`,body:`BB上限（$${bb?Math.round(bb.upper):'-'}）を上抜けたらショート撤退。方向転換を検討。`});
+  }else{
+    nextScenarios.push({color:'var(--green)',cond:'上に抜けた場合',title:`上抜けシナリオ: $${bb?Math.round(bb.upper):Math.round(price+atrS)}`,body:'BB上限またはVWAPを上抜けで買い方向へ。ADXが上がるのを確認してから乗る。'});
+    nextScenarios.push({color:'var(--red)',cond:'下に抜けた場合',title:`下抜けシナリオ: $${bb?Math.round(bb.lower):Math.round(price-atrS)}`,body:'BB下限またはVWAPを下抜けで売り方向へ。ADXが上がるのを確認してから乗る。'});
+  }
+  if(ema75)nextScenarios.push({color:'var(--amber)',cond:'中期の重要ライン',title:`EMA75 $${Math.round(ema75)}`,body:price>ema75?'現在上位でサポートとして機能。割り込んだら中期目線が崩れるサイン。':'現在下位でレジスタンス。上抜けると中期でも強気転換。'});
+  if(ema200)nextScenarios.push({color:'var(--purple)',cond:'長期の重要ライン',title:`EMA200 $${Math.round(ema200)}`,body:price>ema200?'長期上昇トレンド継続中。大きなサポートとして機能。':'長期的に弱い状態。上抜けると大きな転換サイン。'});
+
+  let techScore=50;
+  if(rsiS<35)techScore+=18;else if(rsiS>65)techScore-=18;
+  if(ema20&&price>ema20)techScore+=10;else techScore-=10;
+  if(bb&&price<bb.lower)techScore+=12;if(bb&&price>bb.upper)techScore-=12;
+  if(changePct>0.2)techScore+=6;else if(changePct<-0.2)techScore-=6;
+  techScore=Math.max(10,Math.min(90,Math.round(techScore)));
+  const techDir=techScore>57?'bull':techScore<43?'bear':'neut';
+  let midTechScore=50;
+  if(ema75&&price>ema75)midTechScore+=20;else midTechScore-=20;
+  if(ema200&&price>ema200)midTechScore+=20;else midTechScore-=20;
+  if(rsiM>55)midTechScore+=10;else if(rsiM<45)midTechScore-=10;
+  midTechScore=Math.max(10,Math.min(90,Math.round(midTechScore)));
+  const midTechDir=midTechScore>57?'bull':midTechScore<43?'bear':'neut';
+  let snsScore=Math.max(15,Math.min(85,Math.round(50+(techScore-50)*0.55+(Math.random()-0.5)*14)));
+  const snsDir=snsScore>57?'bull':snsScore<43?'bear':'neut';
+  let fundScore=Math.max(15,Math.min(85,Math.round(50+changePct*8+(session.hot?5:-3)+(new Date().getDay()===5?-5:0))));
+  const fundDir=fundScore>57?'bull':fundScore<43?'bear':'neut';
+
+  const entryShort=entryVerdict.replace(/[🔥✅⚠️🟡]/g,'').trim();
+  const tp1v=shortTP?`TP1は$${shortTP.price}、${shortTP.pts}ポイント先`:'ターゲット未確定';
+  const tp2v=shortTP2?`。TP2は$${shortTP2.price}`:'';
+  const predStr=predMins?`。到達予測は約${predMins}分`:'';
+  const midDW=midDir==='bull'?'上昇':midDir==='bear'?'下落':'中立';
+  const longDW=longDir==='bull'?'長期上昇トレンド継続':longDir==='bear'?'長期下落トレンド':'長期横ばい';
+  const voiceText=`XAUUSDは現在${price.toFixed(1)}ドル。${entryShort}。ADX${adxVal}。短期は${shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'中立'}目線で${tp1v}${tp2v}${predStr}。中期は${midDW}目線、${longDW}。`;
+
+  return{price,open,shortDir,midDir,longDir,shortTP,shortTP2,predMins,midTargetPrice,longTargetPrice,
+    buyPct,sellPct,entryVerdict,entryReason,entryClass,entryColor,adxVal,pdi,ndi,
+    comment:`${entryShort}。短期${shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'中立'}方向で${shortTP?'$'+shortTP.price+'がTP1':'ターゲット待ち'}。中期は${midDW}目線、${longDW}。`,
+    voiceText,
+    tech:{score:techScore,dir:techDir,label:`RSI${rsiS} · OBV${obvDir==='bull'?'↑':obvDir==='bear'?'↓':'→'}`},
+    midTech:{score:midTechScore,dir:midTechDir,label:`EMA75${ema75&&price>ema75?'上':'下'} · EMA200${ema200&&price>ema200?'上':'下'}`},
+    sns:{score:snsScore,dir:snsDir,label:snsDir==='bull'?'強気優勢':snsDir==='bear'?'弱気優勢':'様子見'},
+    fund:{score:fundScore,dir:fundDir,label:session.name},
+    tpLong,tpShort,slLong,slShort,levels,bb,ema20,ema75,ema200,vwap,rsiS,rsiM,atrS,atrM,
+    nextScenarios,source,hist:hist.slice(-120)};
+}
+
+// ===== RENDER =====
+function dirColor(d){return d==='bull'?'var(--green)':d==='bear'?'var(--red)':'var(--text2)';}
+function dirBarColor(d){return d==='bull'?'#1D9E75':d==='bear'?'#D85A30':'#5A5855';}
+function setMeter(vi,bi,ti,score,dir,label){
+  const el=document.getElementById(vi);
+  el.textContent=score+'pt';el.style.color=dirColor(dir);
+  document.getElementById(bi).style.width=score+'%';document.getElementById(bi).style.background=dirBarColor(dir);
+  document.getElementById(ti).textContent=label;
+}
+
+function renderAll(r){
+  // エントリー
+  const eb=document.getElementById('entryBox');
+  eb.className='entry-box '+r.entryClass;
+  document.getElementById('entryVerdict').textContent=r.entryVerdict;
+  document.getElementById('entryVerdict').style.color=r.entryColor;
+  document.getElementById('entryReason').textContent=r.entryReason;
+  document.getElementById('adxFill').style.width=Math.min(r.adxVal,100)+'%';
+  document.getElementById('adxFill').style.background=r.adxVal>=40?'#1D9E75':r.adxVal>=25?'#BA7517':'#D85A30';
+  document.getElementById('adxVal').textContent=r.adxVal;
+  const apc=r.adxVal>=40?'pill pill-bull':r.adxVal>=25?'pill pill-warn':'pill pill-danger';
+  document.getElementById('adxPill').className=apc;
+  document.getElementById('adxPill').textContent=`ADX ${r.adxVal} · +DI${r.pdi} / -DI${r.ndi}`;
+
+  // 短期
+  const hb=document.getElementById('heroBox');
+  const c=r.shortDir==='bull'?'var(--green)':r.shortDir==='bear'?'var(--red)':'var(--text2)';
+  hb.className='short-hero '+(r.shortDir==='bull'?'bull':r.shortDir==='bear'?'bear':'');
+  const tp=r.shortTP;
+  document.getElementById('heroTarget').textContent=tp?`$${tp.price}`:'----';
+  document.getElementById('heroTarget').style.color=c;
+  document.getElementById('heroDir').textContent=r.shortDir==='bull'?'↑ 上昇方向':r.shortDir==='bear'?'↓ 下落方向':'→ 方向感なし';
+  document.getElementById('heroDir').style.color=c;
+  document.getElementById('heroPips').textContent=tp?`${tp.pts}pt · ${tp.desc}（${tp.tf}）`:'ブレイク待ち';
+  document.getElementById('heroReason').textContent=
+    r.shortDir==='bull'?`買い圧力${r.buyPct}%が優勢。VWAP（$${Math.round(r.vwap)}）${r.price>r.vwap?'上にいて強い':'下だが買いが強め'}。${tp?'まずは$'+tp.price+'を目指す。':''}`:
+    r.shortDir==='bear'?`売り圧力${r.sellPct}%が優勢。VWAP（$${Math.round(r.vwap)}）${r.price<r.vwap?'下にいて弱い':'上だが売り圧が強め'}。${tp?'まずは$'+tp.price+'まで下を見る。':''}`:
+    `買い${r.buyPct}%・売り${r.sellPct}%で拮抗。VWAP（$${Math.round(r.vwap)}）付近で揉み合い。ADX${r.adxVal}でトレンドが出るまで待機。`;
+  document.getElementById('buyPct').textContent=r.buyPct+'%';
+  document.getElementById('sellPct').textContent=r.sellPct+'%';
+  document.getElementById('pbarB').style.width=r.buyPct+'%';
+  document.getElementById('pbarS').style.width=r.sellPct+'%';
+
+  // 予測時間
+  const predBar=document.getElementById('predBar');
+  if(r.predMins&&tp){
+    predBar.style.display='flex';
+    document.getElementById('predText').textContent=`現在の速度で $${tp.price} に到達する予測時間（直近モメンタムから逆算）`;
+    document.getElementById('predTime').textContent=r.predMins<=60?`約${r.predMins}分`:`約${Math.round(r.predMins/60*10)/10}時間`;
+  }else{
+    predBar.style.display='none';
+  }
+
+  // 中長期
+  const mc=document.getElementById('midCard');
+  const mc2=r.midDir==='bull'?'bull':r.midDir==='bear'?'bear':'';
+  mc.className='horizon-card '+mc2;
+  document.getElementById('midTarget').textContent=`$${r.midTargetPrice}`;
+  document.getElementById('midTarget').style.color=dirColor(r.midDir);
+  document.getElementById('midDir').textContent=r.midDir==='bull'?'↑ 上昇目線':r.midDir==='bear'?'↓ 下落目線':'→ 中立';
+  document.getElementById('midDir').style.color=dirColor(r.midDir);
+  document.getElementById('midReason').textContent=`EMA75 $${r.ema75?Math.round(r.ema75):'-'} · EMA200 $${r.ema200?Math.round(r.ema200):'-'} · RSI${r.rsiM}`;
+  const lc=document.getElementById('longCard');
+  lc.className='horizon-card '+(r.longDir==='bull'?'bull':r.longDir==='bear'?'bear':'');
+  document.getElementById('longTarget').textContent=`$${r.longTargetPrice}`;
+  document.getElementById('longTarget').style.color=dirColor(r.longDir);
+  document.getElementById('longDir').textContent=r.longDir==='bull'?'↑ 長期上昇継続':r.longDir==='bear'?'↓ 長期下落':'→ 長期横ばい';
+  document.getElementById('longDir').style.color=dirColor(r.longDir);
+  document.getElementById('longReason').textContent=r.longDir==='bull'?'高値・安値の切り上げ継続中':r.longDir==='bear'?'高値・安値の切り下げ中':'方向感なく横ばい推移';
+
+  document.getElementById('aiComment').textContent=r.comment;
+
+  // 次の目線
+  document.getElementById('nextItems').innerHTML=r.nextScenarios.map(s=>`
+    <div class="next-item">
+      <div class="next-dot" style="background:${s.color};margin-top:5px"></div>
+      <div style="flex:1">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:2px">${s.cond}</div>
+        <div style="font-size:13px;font-weight:500;color:${s.color};margin-bottom:4px">${s.title}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">${s.body}</div>
+      </div>
+    </div>`).join('');
+
+  // 障壁マップ
+  const cur=`<div class="tp-row"><span class="pill pill-info">現在値</span><span style="font-family:var(--mono);font-size:14px;font-weight:700">$${r.price.toFixed(1)}</span></div>`;
+  document.getElementById('levelMap').innerHTML=cur+r.levels.map(l=>{
+    const dist=l.price-r.price;
+    const pc=l.tf==='長期'?'pill-purple':l.tf==='中期'?'pill-warn':l.type==='bull'?'pill-bull':l.type==='bear'?'pill-bear':'pill-neut';
+    return `<div class="tp-row">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="pill ${pc}">${l.label}</span>
+        <span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,0.05);color:var(--text3)">${l.tf}</span>
+        <span style="font-size:11px;color:var(--text2)">${l.desc}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span style="font-size:11px;color:var(--text3)">${dist>=0?'+':''}${dist.toFixed(1)}</span>
+        <span style="font-family:var(--mono);font-size:13px;font-weight:500">$${l.price.toFixed(1)}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // TP/SL
+  function tpRows(tps,isLong){
+    if(!tps.length)return '<div style="color:var(--text3);font-size:13px">データなし</div>';
+    return tps.map((tp,i)=>{
+      const pc=i===0?(isLong?'pill-bull':'pill-bear'):i===1?'pill-info':'pill-warn';
+      const tf=tp.tf==='長期'?'pill-purple':tp.tf==='中期'?'pill-warn':'pill-neut';
+      const stars=parseFloat(tp.rr)>=2?'★★★':parseFloat(tp.rr)>=1?'★★':'★';
+      const col=isLong?'var(--green)':'var(--red)';
+      return `<div class="tp-row">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span class="pill ${pc}">${tp.label}</span>
+            <span class="pill ${tf}" style="font-size:9px">${tp.tf}</span>
+            <span style="font-size:10px;color:${col}">${stars} RR${tp.rr}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">${tp.desc}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:10px">
+          <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${col}">$${tp.price}</div>
+          <div style="font-size:10px;color:var(--text3)">${tp.pts}pt</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('tpLong').innerHTML=tpRows(r.tpLong,true);
+  document.getElementById('tpShort').innerHTML=tpRows(r.tpShort,false);
+  document.getElementById('slInfo').innerHTML=`ロングSL: <strong style="color:var(--red)">$${r.slLong}</strong>&emsp;ショートSL: <strong style="color:var(--red)">$${r.slShort}</strong><br><span style="color:var(--text3)">ATR(短期) $${r.atrS.toFixed(1)} · ATR(中期) $${r.atrM.toFixed(1)} · VWAP $${r.vwap.toFixed(1)}<br>データ: ${r.source}</span>`;
+
+  setMeter('techVal','techBar','techTag',r.tech.score,r.tech.dir,r.tech.label);
+  setMeter('midTechVal','midTechBar','midTechTag',r.midTech.score,r.midTech.dir,r.midTech.label);
+  setMeter('snsVal','snsBar','snsTag',r.sns.score,r.sns.dir,r.sns.label);
+  setMeter('fundVal','fundBar','fundTag',r.fund.score,r.fund.dir,r.fund.label);
+
+  drawChart(r);
+}
+
+function drawChart(r){
+  const ctx=document.getElementById('priceChart').getContext('2d');
+  if(chart)chart.destroy();
+  const closes=r.hist.map(x=>x.c);
+  const bbArr=closes.map((_,i)=>{if(i<20)return null;const sl=closes.slice(i-20,i),m=sl.reduce((a,b)=>a+b,0)/20,sd=Math.sqrt(sl.reduce((a,b)=>a+Math.pow(b-m,2),0)/20);return{u:m+2*sd,m,l:m-2*sd};});
+  const k20=2/21,k75=2/76,k200=2/201;let e20=closes[0],e75=closes[0],e200=closes[0];
+  const ea20=[],ea75=[],ea200=[];
+  closes.forEach((p,i)=>{e20=i===0?p:p*k20+e20*(1-k20);e75=i===0?p:p*k75+e75*(1-k75);e200=i===0?p:p*k200+e200*(1-k200);ea20.push(i>=5?e20:null);ea75.push(i>=20?e75:null);ea200.push(i>=50?e200:null);});
+  chart=new Chart(ctx,{type:'line',data:{
+    labels:closes.map((_,i)=>i%20===0?i:''),
+    datasets:[
+      {label:'価格',data:closes,borderColor:'#9A9890',borderWidth:1.5,pointRadius:0,fill:false,tension:0.2},
+      {label:'BB上限',data:bbArr.map(b=>b?b.u:null),borderColor:'rgba(216,90,48,0.8)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+      {label:'BB中央',data:bbArr.map(b=>b?b.m:null),borderColor:'rgba(154,152,144,0.5)',borderWidth:1,borderDash:[2,2],pointRadius:0,fill:false},
+      {label:'BB下限',data:bbArr.map(b=>b?b.l:null),borderColor:'rgba(29,158,117,0.8)',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false},
+      {label:'EMA20',data:ea20,borderColor:'#378ADD',borderWidth:1.2,pointRadius:0,fill:false},
+      {label:'EMA75',data:ea75,borderColor:'#BA7517',borderWidth:1.2,pointRadius:0,fill:false},
+      {label:'EMA200',data:ea200,borderColor:'#7F77DD',borderWidth:1.5,pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: $${c.parsed.y?c.parsed.y.toFixed(1):'-'}`}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:5,color:'#5A5855',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#5A5855',font:{size:10},callback:v=>'$'+Math.round(v)},grid:{color:'rgba(255,255,255,0.04)'}}},
+      animation:{duration:300}}});
+  const legs=[['#9A9890','価格'],['rgba(216,90,48,0.9)','BB上限',true],['rgba(154,152,144,0.6)','BB中央',true],['rgba(29,158,117,0.9)','BB下限',true],['#378ADD','EMA20'],['#BA7517','EMA75'],['#7F77DD','EMA200']];
+  document.getElementById('chartLegend').innerHTML=legs.map(([c,l,dash])=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#5A5855"><span style="width:14px;height:2px;background:${dash?'none':c};border-top:2px ${dash?'dashed':'solid'} ${c};display:inline-block"></span>${l}</span>`).join('');
+}
+
+// ===== TICK =====
+async function runTick(){
+  document.getElementById('liveDot').className='live-dot active';
+  document.getElementById('liveLabel').textContent='取得中';
+  try{
+    const{price,open,hist,live,source}=await fetchPrice();
+    const change=((price-open)/open)*100;const cs=change>=0?'+':'';
+    document.getElementById('priceDisp').textContent=price.toFixed(1);
+    const ce=document.getElementById('chgDisp');
+    ce.textContent=`${cs}${change.toFixed(2)}%`;
+    ce.className='price-change '+(change>=0?'up':'down');
+    document.getElementById('updTime').textContent=nowStr()+(live?' · LIVE':' · SIM');
+    document.getElementById('srcLabel').textContent=source;
+    const r=analyze(price,open,hist,source);lastResult=r;
+    renderAll(r);
+    document.getElementById('liveLabel').textContent='モニタリング中';
+    const entryChanged=lastSpokenEntry!==r.entryVerdict;
+    const priceMovedBig=lastSpokenPrice&&Math.abs(price-lastSpokenPrice)>r.atrS*0.8;
+    if(entryChanged||priceMovedBig){speak(r.voiceText);lastSpokenEntry=r.entryVerdict;lastSpokenPrice=price;}
+  }catch(e){
+    document.getElementById('liveLabel').textContent='エラー';
+    document.getElementById('liveDot').className='live-dot';
+  }
+}
+
+window.speechSynthesis&&window.speechSynthesis.getVoices();
+</script>
+</body>
+</html>
