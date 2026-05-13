@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GoldScope v1.2.1 — XAUUSD Pro Analyzer</title>
+<title>GoldScope v1.2.2 — XAUUSD Pro Analyzer</title>
 <meta name="description" content="XAUUSDリアルタイム分析ツール。ADX・BB・EMA・マーケット構造・モンテカルロ予測を統合。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -85,8 +86,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 .sb{width:2.5px;background:var(--gr);border-radius:2px;animation:sbA .5s ease-in-out infinite alternate;}
 .sb:nth-child(1){height:4px;animation-delay:0s}.sb:nth-child(2){height:9px;animation-delay:.15s}.sb:nth-child(3){height:6px;animation-delay:.3s}
 @keyframes sbA{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
-.btn-stop-voice{font-size:11px;padding:4px 10px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx2);cursor:pointer;display:none;}
-.btn-stop-voice.on{display:block;border-color:var(--rd);color:var(--rd);}
+.btn-stop-voice{font-size:11px;padding:4px 10px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx3);cursor:pointer;display:block;transition:all .2s;}
+.btn-stop-voice.on{border-color:var(--rd);color:var(--rd);background:rgba(224,85,48,.12);animation:stopPulse 1.2s ease-in-out infinite;}
+@keyframes stopPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,85,48,0)}50%{box-shadow:0 0 0 3px rgba(224,85,48,.25)}}
 .speed-sel{font-size:11px;padding:4px 8px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);font-family:var(--mn);cursor:pointer;outline:none;}
 
 /* ===================== MAIN CONTENT ===================== */
@@ -296,7 +298,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     <div class="login-logo">
       <div class="login-logo-icon">⬡</div>
       <div class="login-logo-text">Gold<span>Scope</span></div>
-      <div class="login-ver">v1.2.1</div>
+      <div class="login-ver">v1.2.2</div>
     </div>
     <div class="login-card">
       <div class="login-title">アカウントにログイン</div>
@@ -336,7 +338,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     <div class="hdr-logo" onclick="showPage('app')">
       <div class="hdr-logo-icon">⬡</div>
       <span class="hdr-logo-text">Gold<span>Scope</span></span>
-      <span class="hdr-ver">v1.2.1</span>
+      <span class="hdr-ver">v1.2.2</span>
     </div>
     <nav class="hdr-nav">
       <button class="hdr-nav-btn active" onclick="showPage('app')">分析</button>
@@ -535,7 +537,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 
     <div id="tab-guide" style="display:none">
       <div class="panel">
-        <div class="panel-lbl">GoldScope v1.2.1 — 使い方ガイド</div>
+        <div class="panel-lbl">GoldScope v1.2.2 — 使い方ガイド</div>
         <div style="font-size:13px;color:var(--tx2);line-height:1.9">
           <p style="margin-bottom:14px"><strong style="color:var(--tx)">GoldScope</strong>は株式会社サウンドテラスが提供するXAUUSD（金/ドル）リアルタイム分析ツールです。</p>
           <div style="display:grid;gap:8px">
@@ -561,7 +563,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div class="footer-txt">GoldScope v1.2.1 · 株式会社サウンドテラス · 2026</div>
+      <div class="footer-txt">GoldScope v1.2.2 · 株式会社サウンドテラス · 2026</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showPage('policy')">利用規約</span>
         <span class="footer-link" onclick="showPage('policy')">プライバシーポリシー</span>
@@ -575,7 +577,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 <!-- ==================== POLICY PAGE ==================== -->
 <div id="page-policy" class="page">
   <header class="app-hdr">
-    <div class="hdr-logo" onclick="showPage('login')"><div class="hdr-logo-icon">⬡</div><span class="hdr-logo-text">Gold<span>Scope</span></span><span class="hdr-ver">v1.2.1</span></div>
+    <div class="hdr-logo" onclick="showPage('login')"><div class="hdr-logo-icon">⬡</div><span class="hdr-logo-text">Gold<span>Scope</span></span><span class="hdr-ver">v1.2.2</span></div>
     <nav class="hdr-nav">
       <button class="hdr-nav-btn" onclick="showPage('login')">← ログインへ</button>
     </nav>
@@ -654,7 +656,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 <!-- ==================== ACCOUNT PAGE ==================== -->
 <div id="page-account" class="page">
   <header class="app-hdr">
-    <div class="hdr-logo" onclick="showPage('app')"><div class="hdr-logo-icon">⬡</div><span class="hdr-logo-text">Gold<span>Scope</span></span><span class="hdr-ver">v1.2.1</span></div>
+    <div class="hdr-logo" onclick="showPage('app')"><div class="hdr-logo-icon">⬡</div><span class="hdr-logo-text">Gold<span>Scope</span></span><span class="hdr-ver">v1.2.2</span></div>
     <nav class="hdr-nav">
       <button class="hdr-nav-btn" onclick="showPage('app')">← 分析へ戻る</button>
     </nav>
@@ -763,6 +765,7 @@ function goBackFromPolicy(){
 
 // ===================== VOICE =====================
 let currentUtt=null;
+let isSpeaking=false;
 function speak(text){
   if(!voiceOn||!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
@@ -771,9 +774,11 @@ function speak(text){
   const jv=window.speechSynthesis.getVoices().find(v=>v.lang.includes('ja'));
   if(jv)u.voice=jv;
   currentUtt=u;
+  isSpeaking=true;
   document.getElementById('speakAnim').className='speak-anim on';
   document.getElementById('btnStopVoice').className='btn-stop-voice on';
   u.onend=u.onerror=()=>{
+    isSpeaking=false;
     document.getElementById('speakAnim').className='speak-anim';
     document.getElementById('btnStopVoice').className='btn-stop-voice';
   };
@@ -781,6 +786,7 @@ function speak(text){
 }
 function stopVoice(){
   window.speechSynthesis&&window.speechSynthesis.cancel();
+  isSpeaking=false;
   document.getElementById('speakAnim').className='speak-anim';
   document.getElementById('btnStopVoice').className='btn-stop-voice';
 }
@@ -941,6 +947,40 @@ function marketStructure(hist){
   return{trend,hh,hl,lh,ll,desc};
 }
 
+// ===== Order Block 検出 =====
+// オーダーブロック = 直近で大きく反発・拒絶された価格帯
+// 上昇OB（買いOB）: 大陽線の直前の安値圏 → サポート
+// 下降OB（売りOB）: 大陰線の直前の高値圏 → レジスタンス
+function detectOrderBlocks(hist){
+  const obs=[];
+  if(hist.length<10)return obs;
+  const atrVal=hist.slice(-20).reduce((s,b,i,a)=>i>0?s+Math.abs(b.c-a[i-1].c):s,0)/19||1;
+  const n=hist.length;
+  for(let i=3;i<n-1;i++){
+    const body=Math.abs(hist[i].c-hist[i].o||hist[i].c-hist[i-1].c);
+    const move=hist[i].c-hist[i-1].c;
+    // 強い上昇足 → 直前の足がベア OB（レジスタンス）
+    if(move>atrVal*1.5){
+      const obHigh=hist[i-1].h||(hist[i-1].c+atrVal*0.5);
+      const obLow=hist[i-1].l||(hist[i-1].c-atrVal*0.5);
+      obs.push({type:'bull',high:parseFloat(obHigh.toFixed(1)),low:parseFloat(obLow.toFixed(1)),mid:parseFloat(((obHigh+obLow)/2).toFixed(1)),idx:i,label:'買いOB'});
+    }
+    // 強い下降足 → 直前の足がブル OB（サポート→反転候補）
+    if(move<-atrVal*1.5){
+      const obHigh=hist[i-1].h||(hist[i-1].c+atrVal*0.5);
+      const obLow=hist[i-1].l||(hist[i-1].c-atrVal*0.5);
+      obs.push({type:'bear',high:parseFloat(obHigh.toFixed(1)),low:parseFloat(obLow.toFixed(1)),mid:parseFloat(((obHigh+obLow)/2).toFixed(1)),idx:i,label:'売りOB'});
+    }
+  }
+  // 現在価格に近いOBだけ残す（ATR10本以内）
+  const price=hist[n-1].c;
+  const filtered=obs.filter(o=>Math.abs(o.mid-price)<atrVal*10);
+  // 上のOB（レジスタンス）と下のOB（サポート）を近い順に返す
+  const above=filtered.filter(o=>o.mid>price).sort((a,b)=>a.mid-b.mid).slice(0,2);
+  const below=filtered.filter(o=>o.mid<price).sort((a,b)=>b.mid-a.mid).slice(0,2);
+  return{above,below,atr:atrVal};
+}
+
 // Pattern detection
 function detectPatterns(hist,bband,adxVal){
   const patterns=[];
@@ -1035,6 +1075,7 @@ function analyze(price,open,hist,source){
   const rsiM=rsi(closes.slice(-50));
   const ATRM=atr(hist,20);
   const MS=marketStructure(hist);
+  const OB=detectOrderBlocks(hist); // オーダーブロック検出
   const changePct=((price-open)/open)*100;
   const {adx:adxVal,pdi,ndi}=ADX;
   const trendDir=pdi>ndi?'bull':'bear';
@@ -1168,20 +1209,77 @@ function analyze(price,open,hist,source){
   const cmtIdx=Math.floor(Date.now()/60000)%commentVariants.length;
   const comment=commentVariants[cmtIdx];
 
-  // 音声: 方向・TP・SLを最初に言う（人間の頭に入りやすい順）
-  const dirWord=shortDir==='bull'?'上昇方向です':shortDir==='bear'?'下落方向です':'方向感がありません';
-  const tp1VoiceStr=shortTP?`目標は${shortTP.price}ドル、${shortTP.pts}ポイント先の${shortTP.desc}です。`:'ターゲットはまだ未確定です。';
-  const tp2VoiceStr=shortTP2?`その先は${shortTP2.price}ドルも視野に入ります。`:'';
-  const slVoiceStr=shortDir==='bull'?`${slLong}ドルを割ったら撤退ラインです。`:shortDir==='bear'?`${slShort}ドルを上抜けたら撤退ラインです。`:'';
-  const predVoiceStr=predMins?`到達予測は約${predMins}分です。`:'';
-  const midVoiceStr=`中期は${midDir==='bull'?'上昇':midDir==='bear'?'下落':'中立'}目線。`;
-  const scenarioVoiceStr=MC.upPct>=60?`価格シナリオ予測でも上昇確率${MC.upPct}%と優勢です。`:MC.dnPct>=60?`価格シナリオ予測では下落確率${MC.dnPct}%と強めです。`:`上下どちらも五分五分のシナリオです。`;
-  const voiceText=`今は${dirWord}${tp1VoiceStr}${tp2VoiceStr}${slVoiceStr}${predVoiceStr}${midVoiceStr}${entryShort}。${scenarioVoiceStr}現在価格は${price.toFixed(1)}ドルです。`;
+  // ===== 音声ナレーション（読み上げ開始時点で確定・更新しない） =====
+  // レンジと トレンドで完全に別の言い回し
+  // 人間の頭に入る順: 状況 → 次の壁 → 目標 → 撤退 → 確率
+  let voiceText='';
+  const isRange=adxVal<20;
+  const isWeakTrend=adxVal>=20&&adxVal<25;
+
+  // オーダーブロック情報を文章化
+  const nearestResistOB=OB.above[0];
+  const nearestSupportOB=OB.below[0];
+  const obResistStr=nearestResistOB
+    ?`${nearestResistOB.mid}ドル付近に売りの壁（オーダーブロック）があります。`:'';
+  const obSupportStr=nearestSupportOB
+    ?`${nearestSupportOB.mid}ドル付近に買いの壁（サポートゾーン）があります。`:'';
+
+  // EMA障壁を文章化
+  const emaResistStr=e20&&price<e20?`EMA20の${Math.round(e20)}ドルがすぐ上の抵抗になっています。`
+    :e75&&price<e75?`EMA75の${Math.round(e75)}ドルが中期の壁になっています。`:'';
+  const emaSupportStr=e20&&price>e20?`EMA20の${Math.round(e20)}ドルが直近のサポートです。`:'';
+
+  if(isRange){
+    // レンジ相場: 方向を言わず俯瞰で状況を伝える
+    const rangeLow=BB?Math.round(BB.l):Math.round(price-ATR*2);
+    const rangeHigh=BB?Math.round(BB.u):Math.round(price+ATR*2);
+    const dominance=bPct>55?`買い圧力が${bPct}%とやや強く、上方向への意識があります。`
+      :bPct<45?`売り圧力が${sPct}%とやや強く、下方向への意識があります。`
+      :`買いと売りが拮抗していて、どちらとも言えない状況です。`;
+    const obContext=nearestResistOB||nearestSupportOB
+      ?`${obSupportStr}${obResistStr}`:'';
+    const breakoutHint=shortTP
+      ?`上に抜ければ${tpLong[0]?tpLong[0].price+'ドルまで上昇余地があります':'上昇余地があります'}。下に抜ければ${tpShort[0]?tpShort[0].price+'ドルまで下落を想定してください。':'下落を想定してください。'}`:'';
+    voiceText=`今は${rangeLow}ドルから${rangeHigh}ドルのレンジ内で動いています。${dominance}${obContext}${emaResistStr}${breakoutHint}今のところはどちらにも動ける状況なので、ブレイクを確認してからエントリーがおすすめです。現在価格は${price.toFixed(1)}ドルです。`;
+
+  } else if(isWeakTrend){
+    // 弱いトレンド: 方向は言うが慎重な表現
+    const dirTxt=shortDir==='bull'?'上方向':'下方向';
+    const wallStr=shortDir==='bull'
+      ?`${obResistStr}${emaResistStr}`
+      :`${obSupportStr}${emaSupportStr}`;
+    const tp1Str=shortTP?`まずは${shortTP.price}ドルが目標です。`:'';
+    const slStr=shortDir==='bull'?`${slLong}ドルを割ると方向転換のサインです。`:`${slShort}ドルを超えると方向転換のサインです。`;
+    voiceText=`トレンドは出ていますが、まだ弱い状態です。どちらかというと${dirTxt}ですが、まだ様子見が賢明です。${wallStr}${tp1Str}${slStr}価格シナリオ予測では上昇${MC.upPct}%、下落${MC.dnPct}%のシナリオです。現在価格は${price.toFixed(1)}ドルです。`;
+
+  } else if(shortDir==='bull'){
+    // 明確な上昇トレンド
+    const tp1Str=shortTP?`次の目標は${shortTP.price}ドル、${shortTP.pts}ポイント先の${shortTP.desc}です。`:'';
+    const tp2Str=shortTP2?`そこを超えると${shortTP2.price}ドルまで上昇余地があります。`:'';
+    const wallStr=nearestResistOB?`ただし${nearestResistOB.mid}ドル付近に売りの壁があるので、そこで一度反発する可能性があります。`
+      :emaResistStr?emaResistStr:'';
+    const slStr=`${slLong}ドルを割り込んだら撤退ラインです。`;
+    const predStr=predMins?`到達予測は約${predMins}分です。`:'';
+    voiceText=`今は上昇方向です。${tp1Str}${tp2Str}${wallStr}${slStr}${predStr}価格シナリオ予測でも上昇${MC.upPct}%と優勢です。現在価格は${price.toFixed(1)}ドルです。`;
+
+  } else if(shortDir==='bear'){
+    // 明確な下落トレンド
+    const tp1Str=shortTP?`次の目標は${shortTP.price}ドル、${shortTP.pts}ポイント下の${shortTP.desc}です。`:'';
+    const tp2Str=shortTP2?`そこを割ると${shortTP2.price}ドルまで下落余地があります。`:'';
+    const wallStr=nearestSupportOB?`ただし${nearestSupportOB.mid}ドル付近に買いの壁があるので、そこで反発する可能性があります。`
+      :emaSupportStr?emaSupportStr:'';
+    const slStr=`${slShort}ドルを上抜けたら撤退ラインです。`;
+    const predStr=predMins?`到達予測は約${predMins}分です。`:'';
+    voiceText=`今は下落方向です。${tp1Str}${tp2Str}${wallStr}${slStr}${predStr}価格シナリオ予測でも下落${MC.dnPct}%と優勢です。現在価格は${price.toFixed(1)}ドルです。`;
+
+  } else {
+    voiceText=`今は方向感がない状態です。価格シナリオ予測では上昇${MC.upPct}%、下落${MC.dnPct}%で拮抗しています。${obSupportStr}${obResistStr}ブレイクを待ちましょう。現在価格は${price.toFixed(1)}ドルです。`;
+  }
 
   return{price,open,shortDir,midDir,longDir:longTrend,ultraDir,
     shortTP,shortTP2,predMins,midTP,longTP,ultraTP:parseFloat(ultraTP.toFixed(1)),
     bPct,sPct,ultraBP,entryVerdict,entryReason,entryClass,entryColor,
-    adxVal,pdi,ndi,msLabel,msColor,MS,
+    adxVal,pdi,ndi,msLabel,msColor,MS,OB,
     tpLong,tpShort,slLong,slShort,levels,BB,e20,e75,e200,VW,
     rsiS,rsiM,ATR,ATRM,patterns,MC,nextScenarios,
     tech:{score:techScore,dir:techDir,label:`RSI${rsiS}·OBV${obvDir==='bull'?'↑':obvDir==='bear'?'↓':'→'}`},
@@ -1291,13 +1389,23 @@ function renderAll(r){
   // Next items
   document.getElementById('nextItems').innerHTML=r.nextScenarios.map(s=>`<div class="next-item"><div class="ndot" style="background:${s.c}"></div><div style="flex:1"><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">${s.cond}</div><div style="font-size:13px;font-weight:600;color:${s.c};margin-bottom:3px">${s.title}</div><div style="font-size:12px;color:var(--tx2);line-height:1.6">${s.body}</div></div></div>`).join('');
 
-  // Level map
+  // Level map (EMA/BB/VWAP + Order Blocks)
   const cur=`<div class="row-item"><span class="pill p-info">現在値</span><span style="font-family:var(--mn);font-size:14px;font-weight:700">$${r.price.toFixed(1)}</span></div>`;
-  document.getElementById('levelMap').innerHTML=cur+r.levels.map(x=>{
+  // OBをレベルリストに追加
+  const obRows=[...r.OB.above,...r.OB.below].map(ob=>{
+    const dist=ob.mid-r.price;
+    const pillCls=ob.type==='bear'?'p-bear':'p-bull';
+    const obLabel=ob.type==='bear'?'売りOB（レジスタンス）':'買いOB（サポート）';
+    return `<div class="row-item" style="background:${ob.type==='bear'?'rgba(224,85,48,.04)':'rgba(27,174,130,.04)'}"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="pill ${pillCls}" style="font-size:9px">${ob.label}</span><span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--tx3)">OB</span><span style="font-size:11px;color:var(--tx2)">${obLabel}</span></div><div style="display:flex;align-items:center;gap:7px;flex-shrink:0"><span style="font-size:11px;color:var(--tx3)">${dist>=0?'+':''}${dist.toFixed(1)}</span><span style="font-family:var(--mn);font-size:13px;font-weight:500">$${ob.mid}</span></div></div>`;
+  });
+  const emaRows=r.levels.map(x=>{
     const dist=x.p-r.price;
     const pc=x.tf==='長期'?'p-pur':x.tf==='中期'?'p-warn':x.t==='bull'?'p-bull':x.t==='bear'?'p-bear':'p-neut';
     return `<div class="row-item"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="pill ${pc}">${x.l}</span><span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--tx3)">${x.tf}</span><span style="font-size:11px;color:var(--tx2)">${x.d}</span></div><div style="display:flex;align-items:center;gap:7px;flex-shrink:0"><span style="font-size:11px;color:var(--tx3)">${dist>=0?'+':''}${dist.toFixed(1)}</span><span style="font-family:var(--mn);font-size:13px;font-weight:500">$${x.p.toFixed(1)}</span></div></div>`;
-  }).join('');
+  });
+  // 全レベルをprice順にソートして表示
+  const allLevelRows=[...r.levels.map(x=>({p:x.p,html:emaRows[r.levels.indexOf(x)]})),...[...r.OB.above,...r.OB.below].map((ob,i)=>({p:ob.mid,html:obRows[i]}))].sort((a,b)=>b.p-a.p).map(x=>x.html);
+  document.getElementById('levelMap').innerHTML=cur+allLevelRows.join('');
 
   // Market structure
   const msHtml=`<div style="font-size:13px;color:${r.MS.trend==='bull'?'var(--gr)':r.MS.trend==='bear'?'var(--rd)':'var(--tx2)'};font-weight:600;margin-bottom:8px">${r.MS.desc}</div>
@@ -1405,9 +1513,18 @@ async function runTick(){
     lastResult=r;
     renderAll(r);
     document.getElementById('liveLabel').textContent='モニタリング中';
-    const entryChanged=lastSpokenEntry!==r.entryVerdict;
-    const bigMove=lastSpokenPrice&&Math.abs(price-lastSpokenPrice)>r.ATR*.8;
-    if(entryChanged||bigMove){speak(r.voiceText);lastSpokenEntry=r.entryVerdict;lastSpokenPrice=price;}
+
+    // 読み上げ中はデータ更新するが新たな音声は発火しない
+    // → 聞いている最中に内容が変わらないように
+    if(!isSpeaking){
+      const entryChanged=lastSpokenEntry!==r.entryVerdict;
+      const bigMove=lastSpokenPrice&&Math.abs(price-lastSpokenPrice)>r.ATR*.8;
+      if(entryChanged||bigMove){
+        speak(r.voiceText);
+        lastSpokenEntry=r.entryVerdict;
+        lastSpokenPrice=price;
+      }
+    }
   }catch(e){
     document.getElementById('liveLabel').textContent='エラー';
     document.getElementById('liveDot').className='ldot';
