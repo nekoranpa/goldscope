@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoldScope 管理者ログイン</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family:sans-serif;
+      background:#0f172a;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+    }
+
+    .box{
+      width:360px;
+      background:#111827;
+      padding:40px;
+      border-radius:20px;
+      box-shadow:0 10px 40px rgba(0,0,0,.4);
+    }
+
+    h1{
+      margin-top:0;
+      text-align:center;
+      margin-bottom:30px;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      margin-bottom:15px;
+      border:none;
+      border-radius:10px;
+      font-size:16px;
+      box-sizing:border-box;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:10px;
+      background:#f59e0b;
+      color:black;
+      font-weight:bold;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    button:hover{
+      opacity:.9;
+    }
+
+    .back{
+      display:block;
+      margin-top:20px;
+      text-align:center;
+      color:#94a3b8;
+      text-decoration:none;
+    }
+
+    .error{
+      margin-top:15px;
+      color:#ef4444;
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h1>管理者ログイン</h1>
+
+    <input type="text" id="id" placeholder="ID">
+    <input type="password" id="pw" placeholder="Password">
+
+    <button onclick="login()">ログイン</button>
+
+    <div class="error" id="error"></div>
+
+    <a class="back" href="/">← トップへ戻る</a>
+  </div>
+
+  <script>
+    function login(){
+
+      const id = document.getElementById('id').value;
+      const pw = document.getElementById('pw').value;
+
+      // 仮ログイン
+      if(id === 'admin' && pw === 'goldscope'){
+        alert('ログイン成功');
+
+        // 管理画面へ
+        window.location.href = '/dashboard.html';
+
+      }else{
+        document.getElementById('error').innerText =
+          'IDまたはパスワードが違います';
+      }
+    }
+  </script>
+
+</body>
+</html>
