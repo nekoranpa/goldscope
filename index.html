@@ -666,14 +666,14 @@ function speak(text){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.lang='ja-JP';u.rate=voiceRate;
-  // 1時間ごとに声を変える
-  const h=new Date().getUTCHours();
+  // 最も自然な日本語音声を選ぶ（変な声を避ける）
   const voices=window.speechSynthesis.getVoices();
-  const jaVoices=voices.filter(v=>v.lang.includes('ja'));
-  if(jaVoices.length>0){
-    const vi=h%jaVoices.length;
-    u.voice=jaVoices[vi];
-  }
+  // 優先順位: Kyoko > O-ren > ja-JP > ja含む の順
+  const preferred=voices.find(v=>v.name.includes('Kyoko'))
+    ||voices.find(v=>v.name.includes('O-ren'))
+    ||voices.find(v=>v.lang==='ja-JP')
+    ||voices.find(v=>v.lang.startsWith('ja'));
+  if(preferred)u.voice=preferred;
   isSpeaking=true;
   $('speakAnim').className='speak-wave on';
   $('btnStop').className='vb-btn stop on';
@@ -975,16 +975,68 @@ function tpFirstProb(hist,price,tpPrice,slPrice){
 }
 function entryJudge(prob,adxVal){if(adxVal<18)return{label:'WAIT',color:'var(--am)',detail:`ADX${adxVal} レンジ`,prob};if(prob>=70)return{label:'ENTRY',color:'var(--gr)',detail:`TP先到達 ${prob}%`,prob};if(prob>=60)return{label:'WAIT',color:'var(--am)',detail:`TP先到達 ${prob}%`,prob};return{label:'NO TRADE',color:'var(--dn)',detail:`TP先到達 ${prob}%`,prob};}
 
-function getTPLevels(price,shortDir,BB,e20,e75,e200,VW,ATR,OB){
-  const isLong=shortDir==='bull';const cands=[];
-  const add=(l,p,d)=>{if(!p||isNaN(p))return;const inDir=isLong?(p-price)>ATR*.1:(price-p)>ATR*.1;if(inDir)cands.push({label:l,price:parseFloat(p.toFixed(1)),pips:Math.round(Math.abs(p-price)/0.01),desc:d});};
-  if(BB){add('BB上限',BB.u,'BB抵抗');add('BB中央',BB.m,'ミドル');add('BB下限',BB.l,'BB支持');}
-  if(e20)add('EMA20',e20,'短期MA');if(e75)add('EMA75',e75,'中期MA');if(e200)add('EMA200',e200,'長期MA');if(VW)add('VWAP',VW,'出来高平均');
-  add('ATR×1',isLong?price+ATR:price-ATR,'ATR1倍');add('ATR×1.5',isLong?price+ATR*1.5:price-ATR*1.5,'ATR1.5倍');add('ATR×2',isLong?price+ATR*2:price-ATR*2,'ATR2倍');
-  const obs=isLong?OB.above:OB.below;obs.forEach(o=>add(o.label,o.mid,isLong?'売りOB':'買いOB'));
-  if(simHistory.length>=20){const r20=simHistory.slice(-20);add('直近高値',Math.max(...r20.map(b=>b.h)),'スイング高値');add('直近安値',Math.min(...r20.map(b=>b.l)),'スイング安値');}
-  const base=Math.round(price/50)*50;[50,100,150,200].forEach(d=>add('$'+(base+(isLong?d:-d)),base+(isLong?d:-d),'ラウンドナンバー'));
-  return cands.sort((a,b)=>a.pips-b.pips).slice(0,5);
+function getTPLevels(price,shortDir,BB,e20,e75,e200,VW,ATR,OB,hist){
+  const isLong=shortDir==='bull';
+  const MIN_DIST=ATR*1.5; // 最低距離: ATR×1.5以上離れていること
+  const allCands=[];
+
+  // 候補を収集（最低距離チェック込み）
+  const add=(label,p,desc,score=1)=>{
+    if(!p||isNaN(p))return;
+    const dist=isLong?p-price:price-p;
+    if(dist<MIN_DIST)return; // 近すぎるTP排除
+    if(dist>ATR*25)return;   // 遠すぎるTP排除
+    // 既存候補にATR×0.5以内なら合算（Confluence）
+    const ex=allCands.find(c=>Math.abs(c.price-p)<ATR*.5);
+    if(ex){ex.score+=score;ex.label+='+'+label.slice(0,3);return;}
+    allCands.push({label,price:parseFloat(p.toFixed(1)),pips:Math.round(dist/0.01),desc,score});
+  };
+
+  // テクニカルレベル（スコア付き）
+  if(BB){
+    add('BB上限',BB.u,'BB抵抗',2);
+    add('BB中央',BB.m,'ミドルバンド',1);
+    add('BB下限',BB.l,'BB支持',2);
+  }
+  if(e20)add('EMA20',e20,'短期MA',2);
+  if(e75)add('EMA75',e75,'中期MA',3); // 中期MAは高スコア
+  if(e200)add('EMA200',e200,'長期MA',4); // 長期MAは最高スコア
+  if(VW)add('VWAP',VW,'出来高平均',2);
+
+  // OB（高スコア）
+  const obs=isLong?OB.above:OB.below;
+  obs.forEach(o=>add(o.label,o.mid,isLong?'売りOB':'買いOB',3));
+
+  // ATRベース（確実に候補が出るように）
+  [2,3,4,5].forEach(m=>add(`ATR×${m}`,isLong?price+ATR*m:price-ATR*m,`ATR${m}倍目標`,1));
+
+  // ラウンドナンバー（$50刻み）
+  const base=Math.round(price/50)*50;
+  for(let i=1;i<=6;i++){
+    const rn=base+(isLong?i*50:-i*50);
+    add('$'+rn,rn,'ラウンドナンバー',1);
+  }
+
+  // 直近スイング高値安値（histから計算）
+  if(hist&&hist.length>=20){
+    const recent=hist.slice(-30);
+    const swHigh=Math.max(...recent.map(b=>b.h));
+    const swLow=Math.min(...recent.map(b=>b.l));
+    add('スイング高値',swHigh,'直近スイング高値',2);
+    add('スイング安値',swLow,'直近スイング安値',2);
+  }
+
+  if(!allCands.length)return[];
+
+  // Confluenceスコア × 距離の合理性でソート
+  // 最適TP: 近すぎず遠すぎず + Confluenceが高い
+  // スコアリング: confluence×3 + (距離がATR×2〜6の範囲なら+2)
+  const scored=allCands.map(c=>{
+    const optDist=c.pips>=Math.round(ATR*2/0.01)&&c.pips<=Math.round(ATR*6/0.01);
+    return{...c,finalScore:c.score*3+(optDist?2:0)};
+  });
+  scored.sort((a,b)=>b.finalScore-a.finalScore||a.pips-b.pips);
+  return scored.slice(0,5);
 }
 
 // EV per TF
@@ -1044,10 +1096,11 @@ function analyze(price,open,hist,spotMeta){
   const msColor=adxVal>=25?'var(--gr)':adxVal>=18?'var(--am)':'var(--dn)';
 
   // TP/SL
-  const tpLevels=getTPLevels(price,shortDir,BB,e20,e75,e200,VW,ATR,OB);
-  const slLong=parseFloat((BB?BB.l-ATR*.25:price-ATR*1.5).toFixed(1));
-  const slShort=parseFloat((BB?BB.u+ATR*.25:price+ATR*1.5).toFixed(1));
-  const activeSL=shortDir==='bull'?slLong:shortDir==='bear'?slShort:price-ATR*1.5;
+  // TP/SL — ATR×1.5最低距離、SLはATR×1.5〜2.0
+  const tpLevels=getTPLevels(price,shortDir,BB,e20,e75,e200,VW,ATR,OB,hist);
+  const slLong=parseFloat((BB?BB.l-ATR*1.5:price-ATR*2.0).toFixed(1));
+  const slShort=parseFloat((BB?BB.u+ATR*1.5:price+ATR*2.0).toFixed(1));
+  const activeSL=shortDir==='bull'?slLong:shortDir==='bear'?slShort:price-ATR*2.0;
 
   // HFM補正後SL/TP
   const hfmTP1=tpLevels[0]?parseFloat((tpLevels[0].price-hfmOffset).toFixed(1)):0;
@@ -1158,6 +1211,25 @@ function buildNarration(r,tabContext){
 }
 
 // ==================== TV CHART ====================
+let tvChart=null,tvSeries=null;
+let tvTPLine1=null,tvTPLine2=null,tvSLLine=null,tvEMALine=null; // 固定ライン（移動しない）
+let tvCandleHistory=[]; // 蓄積履歴
+let tvTPPrice1=0,tvTPPrice2=0,tvSLPrice=0; // 現在のTP/SL価格
+
+// 平均足計算
+function toHeikinAshi(candles){
+  const ha=[];
+  for(let i=0;i<candles.length;i++){
+    const c=candles[i];
+    const haClose=(c.open+c.high+c.low+c.close)/4;
+    const haOpen=i===0?(c.open+c.close)/2:(ha[i-1].open+ha[i-1].close)/2;
+    const haHigh=Math.max(c.high,haOpen,haClose);
+    const haLow=Math.min(c.low,haOpen,haClose);
+    ha.push({time:c.time,open:haOpen,high:haHigh,low:haLow,close:haClose});
+  }
+  return ha;
+}
+
 function initTVChart(){
   if(tvChart)return;
   const container=document.getElementById('tvChart');
@@ -1171,62 +1243,86 @@ function initTVChart(){
       timeScale:{borderColor:'rgba(255,255,255,0.05)',timeVisible:true},
       handleScroll:true,handleScale:true,
     });
+    // 平均足キャンドル
     tvSeries=tvChart.addCandlestickSeries({
       upColor:'#3A8AE0',downColor:'#E05530',
       borderUpColor:'#3A8AE0',borderDownColor:'#E05530',
-      wickUpColor:'#3A8AE0',wickDownColor:'#E05530',
+      wickUpColor:'rgba(58,138,224,.6)',wickDownColor:'rgba(224,85,48,.6)',
     });
-    console.log('[TV] chart initialized');
-  }catch(e){console.warn('[TV] init failed:',e.message);}
+    // EMAライン（一度だけ作成）
+    tvEMALine=tvChart.addLineSeries({
+      color:'rgba(58,138,224,.5)',lineWidth:1,
+      crosshairMarkerVisible:false,lastValueVisible:false,priceLineVisible:false,
+    });
+    console.log('[TV] chart initialized (Heikin-Ashi)');
+  }catch(e){console.warn('[TV] init:',e.message);}
 }
 
-let tvCandleData=[];
 function updateTVChart(r,d){
   if(!tvSeries){initTVChart();if(!tvSeries)return;}
   try{
-    // 履歴データをTV形式に変換
     const now=Math.floor(Date.now()/1000);
     const hist=r.hist.slice(-80);
-    const step=300; // 5分足と仮定
-    const candles=hist.map((b,i)=>({
+    const step=300;
+    const rawCandles=hist.map((b,i)=>({
       time:now-(hist.length-i)*step,
       open:b.o||b.c,high:b.h,low:b.l,close:b.c,
     }));
-    tvSeries.setData(candles);
 
-    // オーバーレイライン削除
-    tvLines.forEach(l=>{try{tvChart.removeSeries(l);}catch{}});
-    tvLines=[];
+    // 平均足に変換
+    const haCandles=toHeikinAshi(rawCandles);
+    tvSeries.setData(haCandles);
 
-    // TP1ライン（青）
+    // EMAライン更新
+    if(tvEMALine&&r.e20){
+      const k=2/21;let e=rawCandles[0].close;
+      const emaData=rawCandles.map(c=>{e=c.close*k+e*(1-k);return{time:c.time,value:parseFloat(e.toFixed(2))};});
+      tvEMALine.setData(emaData);
+    }
+
+    // TP/SLライン: 価格が変わった時だけ更新（動かない）
     const tp1=r.tpLevels?.[0];
-    if(tp1){
-      const tpLine=tvChart.addLineSeries({color:'rgba(58,138,224,.8)',lineWidth:1,lineStyle:2,lastValueVisible:true,priceLabel:{visible:true}});
-      tpLine.setData([{time:candles[0].time,value:tp1.price},{time:now+step*5,value:tp1.price}]);
-      tvLines.push(tpLine);
+    const tp2=r.tpLevels?.[1];
+    const sl=r.shortDir==='bull'?r.slLong:r.slShort;
+    const tStart=rawCandles[0].time;
+    const tEnd=now+step*20; // 遠い未来まで伸ばす
+
+    // TP1ライン
+    if(tp1?.price&&tp1.price!==tvTPPrice1){
+      if(!tvTPLine1){
+        tvTPLine1=tvChart.addLineSeries({
+          color:'rgba(58,138,224,.85)',lineWidth:1.5,lineStyle:2,
+          lastValueVisible:true,priceLineVisible:false,
+          title:'TP1',
+        });
+      }
+      tvTPLine1.setData([{time:tStart,value:tp1.price},{time:tEnd,value:tp1.price}]);
+      tvTPPrice1=tp1.price;
     }
     // TP2ライン
-    const tp2=r.tpLevels?.[1];
-    if(tp2){
-      const tpLine2=tvChart.addLineSeries({color:'rgba(58,138,224,.45)',lineWidth:1,lineStyle:3});
-      tpLine2.setData([{time:candles[0].time,value:tp2.price},{time:now+step*5,value:tp2.price}]);
-      tvLines.push(tpLine2);
+    if(tp2?.price&&tp2.price!==tvTPPrice2){
+      if(!tvTPLine2){
+        tvTPLine2=tvChart.addLineSeries({
+          color:'rgba(58,138,224,.45)',lineWidth:1,lineStyle:3,
+          lastValueVisible:true,priceLineVisible:false,
+          title:'TP2',
+        });
+      }
+      tvTPLine2.setData([{time:tStart,value:tp2.price},{time:tEnd,value:tp2.price}]);
+      tvTPPrice2=tp2.price;
     }
-    // SLライン（赤）
-    const sl=r.shortDir==='bull'?r.slLong:r.slShort;
-    if(sl){
-      const slLine=tvChart.addLineSeries({color:'rgba(224,85,48,.8)',lineWidth:1,lineStyle:2});
-      slLine.setData([{time:candles[0].time,value:sl},{time:now+step*5,value:sl}]);
-      tvLines.push(slLine);
+    // SLライン
+    if(sl&&sl!==tvSLPrice){
+      if(!tvSLLine){
+        tvSLLine=tvChart.addLineSeries({
+          color:'rgba(224,85,48,.85)',lineWidth:1.5,lineStyle:2,
+          lastValueVisible:true,priceLineVisible:false,
+          title:'SL',
+        });
+      }
+      tvSLLine.setData([{time:tStart,value:sl},{time:tEnd,value:sl}]);
+      tvSLPrice=sl;
     }
-    // EMA20（薄青）
-    const emaData=candles.map((c,i)=>({time:c.time,value:r.e20||c.close}));
-    const emaLine=tvChart.addLineSeries({color:'rgba(58,138,224,.5)',lineWidth:1,crosshairMarkerVisible:false});
-    emaLine.setData(emaData);tvLines.push(emaLine);
-
-    // チャートinfo更新
-    const infoEl=document.getElementById('chartInfo');
-    if(infoEl)infoEl.textContent=`${d.source} | EMA20:$${Math.round(r.e20)} | ATR:$${r.ATR?.toFixed(1)}`;
 
     // 凡例
     const legEl=document.getElementById('chartLegend');
@@ -1234,7 +1330,11 @@ function updateTVChart(r,d){
       <span class="cl-item" style="color:#E8C96A">$${r.price?.toFixed(1)}</span>
       ${tp1?`<span class="cl-item" style="color:#3A8AE0">TP1 $${tp1.price}</span>`:''}
       ${sl?`<span class="cl-item" style="color:#E05530">SL $${sl}</span>`:''}
-      <span class="cl-item" style="color:var(--gr)">${r.shortDir==='bull'?'↑':r.shortDir==='bear'?'↓':'→'} ${r.msLabel}</span>`;
+      <span class="cl-item" style="color:var(--gr)">${r.shortDir==='bull'?'↑':r.shortDir==='bear'?'↓':'→'} ${r.msLabel}</span>
+      <span class="cl-item" style="color:var(--tx3)">平均足</span>`;
+
+    const infoEl=document.getElementById('chartInfo');
+    if(infoEl)infoEl.textContent=`${d.source} | EMA20:$${Math.round(r.e20)} | ATR:$${r.ATR?.toFixed(1)}`;
   }catch(e){console.warn('[TV] update:',e.message);}
 }
 
@@ -1308,35 +1408,90 @@ function renderAll(r){
 }
 
 function renderTPPanel(containerId,r,tpStart,tpEnd,mode){
-  const el=$(containerId);if(!el||!el.innerHTML!==undefined&&!r.tpLevels)return;
-  const tp1=r.tpLevels?.[tpStart];const sl=r.shortDir==='bull'?r.slLong:r.slShort;
-  const prob=r.prob||50;const ec=r.Entry?.color||'var(--tx3)';
-  const tpItems=(r.tpLevels||[]).slice(tpStart,tpEnd);
-  // HFM補正表示
-  const hfmNote=hfmOffset!==0?`<div style="font-size:9px;color:var(--am);margin-top:4px;">HFM補正後 TP:$${hfmOffset>0?(tp1?.price-hfmOffset).toFixed(1):(tp1?.price+Math.abs(hfmOffset)).toFixed(1)} / SL:$${(sl-hfmOffset).toFixed(1)}</div>`:'';
-  el.innerHTML=`
-    <div class="entry-row">
-      <div class="entry-prob">
-        <div class="entry-lbl">TP先到達確率</div>
-        <div class="entry-num" style="color:${prob>=70?'var(--gr)':prob>=60?'var(--am)':'var(--dn)'}">${prob}%</div>
-        <div class="entry-badge" style="color:${ec};border-color:${ec}">${r.Entry?.label||'--'}</div>
-      </div>
-      <div>
-        <div class="entry-detail">${r.Entry?.detail||'--'}</div>
-        <div class="prob-bar"><div class="prob-fill" style="width:${prob}%;background:${ec}"></div></div>
-        <div class="tp-grid">
-          ${tpItems.map((tp,i)=>`<div class="tp-row ${i===0?'best':''}">
-            <div><span style="font-size:10px;color:${i===0?'var(--up)':'var(--tx2)'};font-weight:${i===0?700:400}">TP${tpStart+i+1}</span> <span class="tp-tag">${tp.label}</span> <span style="font-size:9px;color:var(--tx3)">${tp.desc}</span></div>
-            <div style="display:flex;align-items:center;gap:8px"><span class="tp-pips">${tp.pips}p</span><span class="tp-price" style="color:var(--up)">$${tp.price}</span></div>
-          </div>`).join('')}
-          <div class="sl-row">
-            <div><span style="font-size:10px;color:var(--dn);font-weight:700">SL</span> <span class="tp-tag">参考SL</span></div>
-            <div style="display:flex;align-items:center;gap:8px"><span class="tp-pips">${Math.round(Math.abs(sl-r.price)/0.01)}p</span><span class="tp-price" style="color:var(--dn)">$${sl}</span></div>
-          </div>
+  const el=$(containerId);
+  if(!el||el.innerHTML===undefined)return;
+  const tp1=r.tpLevels?.[tpStart];
+  const sl=r.shortDir==='bull'?r.slLong:r.slShort;
+  const prob=r.prob||50;
+  const ec=r.Entry?.color||'var(--tx3)';
+  const isLong=r.shortDir==='bull',isShort=r.shortDir==='bear';
+  if(!tp1){el.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:10px 0">分析後に表示</div>';return;}
+  const tp1Pips=tp1.pips;
+  const slPips=Math.round(Math.abs(sl-r.price)/0.01);
+  const rr=slPips>0?(tp1Pips/slPips).toFixed(1):'--';
+  const totalRange=tp1Pips+slPips||1;
+  const tpPct=Math.round(tp1Pips/totalRange*100);
+  const slPct=100-tpPct;
+  const probColor=prob>=70?'var(--gr)':prob>=60?'var(--am)':'var(--dn)';
+  const hfmTP=hfmOffset!==0?parseFloat((tp1.price-hfmOffset).toFixed(1)):tp1.price;
+  const hfmSLv=hfmOffset!==0?parseFloat((sl-hfmOffset).toFixed(1)):sl;
+  const rrNum=parseFloat(rr);
+  const rrColor=rrNum>=2?'var(--gr)':rrNum>=1.5?'var(--am)':rrNum>=1?'#8C8A84':'var(--dn)';
+
+  const tpRows=(r.tpLevels||[]).slice(tpStart,tpEnd).map((tp,i)=>{
+    const isBest=i===0;
+    const barW=Math.min(Math.round(tp.pips/Math.max(slPips,1)*70),100);
+    const stars='⬡'.repeat(Math.min(Math.round(tp.score||1),4));
+    return `<div style="background:${isBest?'rgba(58,138,224,.08)':'var(--bg3)'};border-radius:var(--rs);padding:8px 11px;border:0.5px solid ${isBest?'rgba(58,138,224,.4)':'var(--bo)'};display:flex;align-items:center;gap:8px;">
+      <div style="font-size:10px;color:${isBest?'var(--up)':'var(--tx3)'};font-weight:${isBest?700:400};min-width:26px;">TP${tpStart+i+1}</div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+          <span style="font-size:11px;color:var(--tx2);">${tp.label}</span>
+          <span style="font-size:9px;color:var(--g);">${stars}</span>
+          <span style="font-size:9px;color:var(--tx3);">${tp.desc}</span>
         </div>
-        ${hfmNote}
+        <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${barW}%;background:rgba(58,138,224,${isBest?.7:.4});border-radius:2px;transition:width .7s;"></div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:var(--mn);font-size:15px;font-weight:700;color:var(--up);">$${tp.price}</div>
+        <div style="font-size:10px;color:var(--tx3);font-family:var(--mn);">+${tp.pips}pips</div>
       </div>
     </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:12px;">
+      <div style="text-align:center;background:var(--bg3);border-radius:var(--rs);padding:10px 13px;border:1.5px solid ${ec};min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">TP先到達</div>
+        <div style="font-size:28px;font-weight:800;font-family:var(--mn);color:${probColor};line-height:1;">${prob}%</div>
+        <div style="font-size:11px;font-weight:700;color:${ec};margin-top:3px;">${r.Entry?.label||'--'}</div>
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:10px;color:var(--tx3);">RR比</span>
+          <span style="font-size:18px;font-weight:800;font-family:var(--mn);color:${rrColor};">${rr}:1</span>
+          <span style="font-size:10px;color:var(--tx3);">TP${tp1Pips}p / SL${slPips}p</span>
+        </div>
+        <div style="position:relative;height:24px;border-radius:4px;overflow:hidden;background:var(--bg4);">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:${slPct}%;background:rgba(224,85,48,.3);"></div>
+          <div style="position:absolute;right:0;top:0;bottom:0;width:${tpPct}%;background:rgba(58,138,224,.3);"></div>
+          <div style="position:absolute;left:${slPct}%;top:0;bottom:0;width:3px;background:#B8942A;transform:translateX(-50%);z-index:2;"></div>
+          <div style="position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:9px;color:#F0A080;font-family:var(--mn);font-weight:700;">SL $${sl}</div>
+          <div style="position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:9px;color:#80B8EC;font-family:var(--mn);font-weight:700;">$${tp1.price}</div>
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:9px;color:#E8C96A;font-weight:700;white-space:nowrap;">NOW $${r.price.toFixed(1)}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      ${tpRows}
+      <div style="background:rgba(224,85,48,.06);border-radius:var(--rs);padding:8px 11px;border:0.5px solid rgba(224,85,48,.3);display:flex;align-items:center;gap:8px;">
+        <div style="font-size:10px;color:var(--dn);font-weight:700;min-width:26px;">SL</div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--tx2);margin-bottom:3px;">参考SL（BB外側/ATR×1.5）</div>
+          <div style="height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;">
+            <div style="height:100%;width:${Math.min(slPips/Math.max(tp1Pips,1)*70,100)}%;background:rgba(224,85,48,.55);border-radius:2px;transition:width .7s;"></div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:var(--mn);font-size:15px;font-weight:700;color:var(--dn);">$${sl}</div>
+          <div style="font-size:10px;color:var(--tx3);font-family:var(--mn);">-${slPips}pips</div>
+        </div>
+      </div>
+    </div>
+    ${hfmOffset!==0?`<div style="font-size:10px;color:var(--am);margin-top:7px;padding:4px 8px;background:rgba(192,122,16,.08);border-radius:var(--rs);">HFM補正: TP $${hfmTP} / SL $${hfmSLv}（補正${hfmOffset>=0?'+':''}${hfmOffset.toFixed(1)}）</div>`:''}
+  `;
 }
 
 function renderBeginnerTP(r){
