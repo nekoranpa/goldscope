@@ -295,14 +295,15 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 .footer-link:hover{color:var(--tx2);}
 .disclaimer{font-size:10px;color:var(--tx3);line-height:1.7;padding:9px 14px;background:var(--bg2);border-radius:var(--rs);border:0.5px solid var(--bo);margin-top:8px;}
 
-/* TF MINI GRID */
-.tf-mini{background:var(--bg3);border-radius:var(--rs);padding:10px 8px;border:0.5px solid var(--bo);text-align:center;transition:all .4s;}
-.tf-mini.bull{border-color:rgba(27,174,130,.4);background:rgba(27,174,130,.08);}
-.tf-mini.bear{border-color:rgba(224,85,48,.4);background:rgba(224,85,48,.08);}
-.tf-mini.wait{border-color:rgba(192,122,16,.4);background:rgba(192,122,16,.06);}
-.tfm-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
-.tfm-arrow{font-size:22px;line-height:1;margin-bottom:4px;transition:color .4s;}
-.tfm-state{font-size:9px;font-weight:600;line-height:1.3;}
+/* EV TF CARDS (青=上 赤=下) */
+.evtf-card{background:var(--bg3);border-radius:var(--rs);padding:10px 7px;border:0.5px solid var(--bo);text-align:center;transition:all .4s;}
+.evtf-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.evtf-bar-wrap{height:48px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;margin-bottom:5px;}
+.evtf-bar-up{border-radius:2px;background:#3A8AE0;transition:height .7s ease;min-height:2px;width:18px;}
+.evtf-bar-dn{border-radius:2px;background:#E05530;transition:height .7s ease;min-height:2px;width:18px;}
+.evtf-up{font-size:11px;font-weight:700;font-family:var(--mn);color:#3A8AE0;margin-bottom:1px;}
+.evtf-dn{font-size:11px;font-weight:700;font-family:var(--mn);color:#E05530;margin-bottom:3px;}
+.evtf-state{font-size:9px;font-weight:600;line-height:1.2;}
 /* EVENT ITEMS */
 .ev-row{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid var(--bo);}
 .ev-time{font-size:10px;font-family:var(--mn);color:var(--g);white-space:nowrap;min-width:42px;}
@@ -368,7 +369,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     <div class="hdr-left" onclick="showPage('app')">
       <div class="hdr-icon">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v1.5.0</span>
+      <span class="hdr-ver">v1.5.1</span>
     </div>
     <nav class="hdr-nav">
       <button class="hn-btn act" onclick="showPage('app')">分析</button>
@@ -454,19 +455,34 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
       </div>
     </div>
 
-    <!-- ===== MULTI-TF DIRECTION GRID ===== -->
+
+    <!-- ===== 期待値目安 × タイムフレーム (青=上 赤=下) ===== -->
     <div style="background:var(--bg2);border:0.5px solid var(--bo2);border-radius:var(--r);padding:13px 15px;margin-bottom:14px;">
-      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">⬡ マルチタイムフレーム方向判定</div>
-      <div id="tfGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
-        <!-- 1m/5m/15m/1h/日足 -->
-        <div class="tf-mini" id="tfm-1m"><div class="tfm-lbl">1分</div><div class="tfm-arrow" id="tfm-1m-a">→</div><div class="tfm-state" id="tfm-1m-s">--</div></div>
-        <div class="tf-mini" id="tfm-5m"><div class="tfm-lbl">5分</div><div class="tfm-arrow" id="tfm-5m-a">→</div><div class="tfm-state" id="tfm-5m-s">--</div></div>
-        <div class="tf-mini" id="tfm-15m"><div class="tfm-lbl">15分</div><div class="tfm-arrow" id="tfm-15m-a">→</div><div class="tfm-state" id="tfm-15m-s">--</div></div>
-        <div class="tf-mini" id="tfm-1h"><div class="tfm-lbl">1時間</div><div class="tfm-arrow" id="tfm-1h-a">→</div><div class="tfm-state" id="tfm-1h-s">--</div></div>
-        <div class="tf-mini" id="tfm-1d"><div class="tfm-lbl">日足</div><div class="tfm-arrow" id="tfm-1d-a">→</div><div class="tfm-state" id="tfm-1d-s">--</div></div>
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">⬡ 期待値目安 · Expected Value Reference</div>
+      <div id="evTFGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px;">
+        <!-- 1m/5m/15m/1h/日足 — JSで描画 -->
+        <div class="evtf-card" id="evtf-1m"><div class="evtf-lbl">1分</div><div class="evtf-bar-wrap"><div class="evtf-bar-up" id="evtf-1m-u"></div><div class="evtf-bar-dn" id="evtf-1m-d"></div></div><div class="evtf-up" id="evtf-1m-up">--</div><div class="evtf-dn" id="evtf-1m-dn">--</div><div class="evtf-state" id="evtf-1m-s">--</div></div>
+        <div class="evtf-card" id="evtf-5m"><div class="evtf-lbl">5分</div><div class="evtf-bar-wrap"><div class="evtf-bar-up" id="evtf-5m-u"></div><div class="evtf-bar-dn" id="evtf-5m-d"></div></div><div class="evtf-up" id="evtf-5m-up">--</div><div class="evtf-dn" id="evtf-5m-dn">--</div><div class="evtf-state" id="evtf-5m-s">--</div></div>
+        <div class="evtf-card" id="evtf-15m"><div class="evtf-lbl">15分</div><div class="evtf-bar-wrap"><div class="evtf-bar-up" id="evtf-15m-u"></div><div class="evtf-bar-dn" id="evtf-15m-d"></div></div><div class="evtf-up" id="evtf-15m-up">--</div><div class="evtf-dn" id="evtf-15m-dn">--</div><div class="evtf-state" id="evtf-15m-s">--</div></div>
+        <div class="evtf-card" id="evtf-1h"><div class="evtf-lbl">1時間</div><div class="evtf-bar-wrap"><div class="evtf-bar-up" id="evtf-1h-u"></div><div class="evtf-bar-dn" id="evtf-1h-d"></div></div><div class="evtf-up" id="evtf-1h-up">--</div><div class="evtf-dn" id="evtf-1h-dn">--</div><div class="evtf-state" id="evtf-1h-s">--</div></div>
+        <div class="evtf-card" id="evtf-1d"><div class="evtf-lbl">日足</div><div class="evtf-bar-wrap"><div class="evtf-bar-up" id="evtf-1d-u"></div><div class="evtf-bar-dn" id="evtf-1d-d"></div></div><div class="evtf-up" id="evtf-1d-up">--</div><div class="evtf-dn" id="evtf-1d-dn">--</div><div class="evtf-state" id="evtf-1d-s">--</div></div>
       </div>
-      <!-- 状態ラベル -->
-      <div id="tfSummary" style="font-size:11px;color:var(--tx2);margin-top:8px;padding:6px 10px;background:var(--bg3);border-radius:var(--rs);">--</div>
+      <div id="evTFSummary" style="font-size:11px;color:var(--tx2);padding:6px 10px;background:var(--bg3);border-radius:var(--rs);">--</div>
+    </div>
+
+    <!-- ===== 作戦チャート (方向変化まで固定・SVG矢印) ===== -->
+    <div style="background:var(--bg2);border:0.5px solid rgba(184,148,42,.2);border-radius:var(--r);padding:13px 15px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+        <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:.05em;">⬡ 作戦マップ（方向変化まで固定）</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span id="tacticBias" style="font-size:10px;padding:2px 9px;border-radius:20px;background:var(--bg3);border:0.5px solid var(--bo2);color:var(--tx3);">--</span>
+          <span id="tacticLock" style="font-size:9px;color:var(--tx3);">🔒 固定中</span>
+        </div>
+      </div>
+      <div style="position:relative;border-radius:var(--rs);overflow:hidden;background:var(--bg3);border:0.5px solid var(--bo);">
+        <svg id="tacticSVG" width="100%" height="200" style="display:block;"></svg>
+      </div>
+      <div id="tacticDesc" style="font-size:11px;color:var(--tx2);margin-top:8px;line-height:1.7;"></div>
     </div>
 
     <!-- PRICE HERO -->
@@ -747,7 +763,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     </div>
     <div id="tab-guide" style="display:none">
       <div class="panel">
-        <div class="panel-lbl">GoldScope Vision v1.5.0 — 使い方ガイド</div>
+        <div class="panel-lbl">GoldScope Vision v1.5.1 — 使い方ガイド</div>
         <div style="font-size:12px;color:var(--tx2);line-height:1.9;space-y:12px">
           <p style="margin-bottom:10px"><strong style="color:var(--tx)">GoldScope Vision（ゴールドスコープビジョン）</strong>は、株式会社サウンドテラスが提供するGOLD/XAUUSDの市場情報整理・分析支援ツールです。投資助言・売買指示・利益保証を行うものではありません。</p>
           <div style="display:grid;gap:8px">
@@ -765,7 +781,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div class="footer-txt">GoldScope Vision v1.5.0 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
+      <div class="footer-txt">GoldScope Vision v1.5.1 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showPage('policy')">利用規約</span>
         <span class="footer-link" onclick="showPage('policy')">プライバシーポリシー</span>
@@ -877,7 +893,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 </div>
 <script>
 
-// ===== GoldScope Vision v1.5.0 — 軽量・即時動作版 =====
+// ===== GoldScope Vision v1.5.1 — 軽量・即時動作版 =====
 // 重い処理(Monte Carlo/300試行等)を全削除
 // ログイン→即表示が最優先
 
@@ -1667,11 +1683,13 @@ function renderAll(r){
   $('volVal').textContent=`$${r.ATR.toFixed(1)}`;$('volTag').textContent=r.bbStateLabel||'Normal';
   $('sessVal').textContent=r.sessName||'--';$('sessTag').textContent='';
 
-  // ナレーション更新
+  // 期待値TFグリッド
+  const evTF=calcEVTF(r.hist,r.price,r.ATR);
+  renderEVTF(evTF);
+  // 作戦チャート（方向変化時のみ更新）
+  updateTacticChart(r);
+  // ナレーション
   renderNarration(r,r.Entry?.label||'--');
-  // マルチTF
-  const tfData=calcMultiTF(r.hist,r.price,r.ATR,r.BB,r.e20,r.e75);
-  renderMultiTF(tfData,r.price);
   // バックグラウンドで重いロジック
   scheduleHeavyAnalysis(r);
 
@@ -1779,114 +1797,267 @@ function loadEconomicCalendar(){
     </div>`).join('');
 }
 
-// ===== マルチTF方向判定 =====
-// 各TFの方向をシミュレーションデータから推定
-// （1m/5m/15m/1h/日足）
-function calcMultiTF(hist,price,ATR,BB,e20,e75){
-  // 使えるbarsから各TFを疑似的に構築
+// ===== 期待値目安 × タイムフレーム =====
+// ATRスケールでTFごとの上下期待値を算出
+function calcEVTF(hist, price, ATR){
   const n=hist.length;
+  const closes=hist.map(b=>b.c);
 
-  function tfDir(bars,lookback,label){
-    if(bars.length<lookback)return{dir:'neut',label:'--',state:'wait'};
-    const sl=bars.slice(-lookback);
-    const closes=sl.map(b=>b.c);
-    const first=closes[0],last=closes[closes.length-1];
-    const k=2/(lookback+1);
-    let e=closes[0];
-    closes.forEach(c=>e=c*k+e*(1-k));
-    const rsiV=rsi(closes,Math.min(14,lookback-1));
+  function evForLookback(lb){
+    if(n<lb)lb=Math.max(n-1,4);
+    const sl=closes.slice(-lb);
+    const ret=[];
+    for(let i=1;i<sl.length;i++)ret.push(sl[i]-sl[i-1]);
+    if(!ret.length)return{upPips:0,dnPips:0,dir:'neut',state:'--'};
 
-    // ADX簡易
-    let upMoves=0,dnMoves=0;
-    for(let i=1;i<closes.length;i++){
-      if(closes[i]>closes[i-1])upMoves++;
-      else if(closes[i]<closes[i-1])dnMoves++;
-    }
-    const ratio=upMoves/(upMoves+dnMoves||1);
+    const mu=ret.reduce((a,b)=>a+b,0)/ret.length;
+    const sigma=Math.sqrt(ret.reduce((a,b)=>a+(b-mu)**2,0)/ret.length)||0.01;
 
-    // BB幅でスクイーズ判定
-    const bbV=bb(closes,Math.min(20,lookback),2);
-    const bw=bbV?(bbV.u-bbV.l)/bbV.m:0.01;
-    const isSqueeze=bw<0.005;
+    // 上方向・下方向の期待pips
+    const upMove=Math.max(0,mu+sigma)*lb*.4;
+    const dnMove=Math.max(0,-mu+sigma)*lb*.4;
+    const upPips=Math.round(Math.max(upMove,ATR*.3)/0.01);
+    const dnPips=Math.round(Math.max(dnMove,ATR*.3)/0.01);
 
-    // 方向
-    let dir,state;
-    if(isSqueeze){dir='neut';state='squeeze';}
-    else if(ratio>0.62&&last>e&&rsiV>50){dir='bull';state='trend';}
-    else if(ratio<0.38&&last<e&&rsiV<50){dir='bear';state='trend';}
-    else if(Math.abs(last-first)<ATR*0.3){dir='neut';state='range';}
-    else if(last>first*1.002){dir='bull';state=ratio>0.55?'trend':'weak';}
-    else if(last<first*0.998){dir='bear';state=ratio<0.45?'trend':'weak';}
-    else{dir='neut';state='range';}
+    // 方向判定
+    const last=sl[sl.length-1],first=sl[0];
+    const upCount=ret.filter(r=>r>0).length;
+    const ratio=upCount/ret.length;
+    let dir='neut',state='レンジ';
+    if(ratio>0.60&&last>first){dir='bull';state='上昇優勢';}
+    else if(ratio<0.40&&last<first){dir='bear';state='下落優勢';}
+    else if(Math.abs(mu)<sigma*.1){state='レンジ';}
+    else if(mu>0){dir='bull';state='弱い上昇';}
+    else{dir='bear';state='弱い下落';}
 
-    return{dir,state,ema:e,rsi:rsiV};
+    // BBスクイーズ確認
+    const bbV=bb(sl,Math.min(20,sl.length),2);
+    if(bbV&&(bbV.u-bbV.l)/bbV.m<0.005){dir='neut';state='⚡スクイーズ';}
+
+    return{upPips,dnPips,dir,state};
   }
 
-  // 5分足barsを使い各TFを近似
-  // 1m ≒ 直近3本, 5m ≒ 直近10本, 15m ≒ 直近20本, 1h ≒ 直近50本, 日足 ≒ 全体
+  // 5分足barsから各TFを近似
+  // 1m≒2本, 5m≒8本, 15m≒20本, 1h≒60本, 日足≒180本
   return{
-    '1m': tfDir(hist,Math.min(n,4),'1m'),
-    '5m': tfDir(hist,Math.min(n,12),'5m'),
-    '15m':tfDir(hist,Math.min(n,25),'15m'),
-    '1h': tfDir(hist,Math.min(n,60),'1h'),
-    '1d': tfDir(hist,Math.min(n,180),'日足'),
+    '1m': evForLookback(Math.min(n,3)),
+    '5m': evForLookback(Math.min(n,10)),
+    '15m':evForLookback(Math.min(n,22)),
+    '1h': evForLookback(Math.min(n,60)),
+    '1d': evForLookback(Math.min(n,180)),
   };
 }
 
-function renderMultiTF(tfData,price){
-  const tfs=[
-    {id:'1m',label:'1分'},
-    {id:'5m',label:'5分'},
-    {id:'15m',label:'15分'},
-    {id:'1h',label:'1h'},
-    {id:'1d',label:'日足'},
-  ];
-  const stateLabel={
-    trend:'トレンド',range:'レンジ',squeeze:'⚡スクイーズ',
-    weak:'弱いトレンド',wait:'待機'
-  };
-  const stateColorBg={
-    trend:'',range:'',squeeze:'wait',weak:'wait',wait:''
-  };
+function renderEVTF(evData){
+  const tfs=['1m','5m','15m','1h','1d'];
+  const maxPips=Math.max(...tfs.map(t=>(evData[t]?.upPips||0)+(evData[t]?.dnPips||0)),1);
+  const BAR_MAX=40; // px
 
-  let bullCount=0,bearCount=0,neutCount=0;
+  let bullCount=0,bearCount=0;
+  tfs.forEach(id=>{
+    const d=evData[id];
+    if(!d)return;
+    const {upPips,dnPips,dir,state}=d;
 
-  tfs.forEach(({id,label})=>{
-    const d=tfData[id]||{dir:'neut',state:'wait'};
-    const card=document.getElementById(`tfm-${id}`);
-    const arrow=document.getElementById(`tfm-${id}-a`);
-    const state=document.getElementById(`tfm-${id}-s`);
-    if(!card)return;
+    // バー高さ（上下それぞれ）
+    const upH=Math.max(2,Math.round((upPips/(maxPips/2))*BAR_MAX*.6));
+    const dnH=Math.max(2,Math.round((dnPips/(maxPips/2))*BAR_MAX*.6));
 
-    if(d.dir==='bull'){bullCount++;card.className='tf-mini bull';}
-    else if(d.dir==='bear'){bearCount++;card.className='tf-mini bear';}
-    else if(d.state==='squeeze'){card.className='tf-mini wait';}
-    else{card.className='tf-mini';neutCount++;}
+    const upBar=document.getElementById(`evtf-${id}-u`);
+    const dnBar=document.getElementById(`evtf-${id}-d`);
+    const upEl=document.getElementById(`evtf-${id}-up`);
+    const dnEl=document.getElementById(`evtf-${id}-dn`);
+    const stEl=document.getElementById(`evtf-${id}-s`);
+    const card=document.getElementById(`evtf-${id}`);
 
-    const arrowTxt=d.dir==='bull'?'↑':d.dir==='bear'?'↓':d.state==='squeeze'?'⚡':'→';
-    const arrowColor=d.dir==='bull'?'var(--gr)':d.dir==='bear'?'var(--rd)':d.state==='squeeze'?'#E8C96A':'var(--tx3)';
-    if(arrow){arrow.textContent=arrowTxt;arrow.style.color=arrowColor;}
-    if(state){
-      state.textContent=stateLabel[d.state]||'--';
-      state.style.color=d.dir==='bull'?'var(--gr)':d.dir==='bear'?'var(--rd)':d.state==='squeeze'?'#E8C96A':'var(--tx3)';
+    if(upBar)upBar.style.height=upH+'px';
+    if(dnBar)dnBar.style.height=dnH+'px';
+    if(upEl)upEl.textContent=`+${upPips}p`;
+    if(dnEl)dnEl.textContent=`-${dnPips}p`;
+    if(stEl){
+      stEl.textContent=state;
+      stEl.style.color=dir==='bull'?'#3A8AE0':dir==='bear'?'#E05530':'var(--tx3)';
     }
+    if(card){
+      card.style.borderColor=dir==='bull'?'rgba(58,138,224,.4)':dir==='bear'?'rgba(224,85,48,.4)':'var(--bo)';
+      card.style.background=dir==='bull'?'rgba(58,138,224,.07)':dir==='bear'?'rgba(224,85,48,.07)':'var(--bg3)';
+    }
+    if(dir==='bull')bullCount++;
+    else if(dir==='bear')bearCount++;
   });
 
-  // サマリー
-  const sumEl=document.getElementById('tfSummary');
+  const sumEl=document.getElementById('evTFSummary');
   if(sumEl){
-    const allBull=bullCount>=4;
-    const allBear=bearCount>=4;
-    const mixed=bullCount>0&&bearCount>0;
-    let txt='';
-    if(allBull)txt=`↑ 全TF上昇方向 — 強いBullish Bias`;
-    else if(allBear)txt=`↓ 全TF下落方向 — 強いBearish Bias`;
-    else if(bullCount>=3)txt=`↑ ${bullCount}/5のTFが上昇方向 — 上昇優勢`;
-    else if(bearCount>=3)txt=`↓ ${bearCount}/5のTFが下落方向 — 下落優勢`;
-    else if(mixed)txt=`↔ 方向混在（上${bullCount} 下${bearCount} 中${neutCount}）— レンジ継続の可能性`;
-    else txt=`→ 方向感なし — ブレイクを待機`;
+    const b=bullCount,br=bearCount,n=5-b-br;
+    let txt,col;
+    if(b>=4){txt=`↑↑ 全TF上昇優勢 — 強い上方向バイアス`;col='#3A8AE0';}
+    else if(br>=4){txt=`↓↓ 全TF下落優勢 — 強い下方向バイアス`;col='#E05530';}
+    else if(b>=3){txt=`↑ ${b}/5が上昇優勢 — 上方向バイアス`;col='#3A8AE0';}
+    else if(br>=3){txt=`↓ ${br}/5が下落優勢 — 下方向バイアス`;col='#E05530';}
+    else{txt=`↔ 方向混在（上${b} 下${br} 中立${n}）— レンジ・様子見`;col='var(--tx2)';}
     sumEl.textContent=txt;
-    sumEl.style.color=allBull?'var(--gr)':allBear?'var(--rd)':bullCount>=3?'var(--gr)':bearCount>=3?'var(--rd)':'var(--tx2)';
+    sumEl.style.color=col;
+  }
+}
+
+// ===== 作戦チャート (短期・中期が変化するまで固定) =====
+let tacticShortDir='', tacticMidDir='', tacticPrice=0, tacticTP=0, tacticSL=0;
+
+function updateTacticChart(r){
+  const newShort=r.shortDir, newMid=r.midDir;
+  // 短期か中期どちらかが変化した場合のみ更新
+  if(newShort===tacticShortDir&&newMid===tacticMidDir&&tacticPrice>0) return;
+
+  tacticShortDir=newShort;
+  tacticMidDir=newMid;
+  tacticPrice=r.price;
+  tacticTP=r.tpLevels?.[0]?.price||0;
+  tacticSL=newShort==='bull'?r.slLong:r.slShort;
+
+  drawTacticSVG(r);
+
+  // バッジ更新
+  const bias=document.getElementById('tacticBias');
+  const lock=document.getElementById('tacticLock');
+  if(bias){
+    const label=newShort==='bull'?'↑ Bullish Bias':newShort==='bear'?'↓ Bearish Bias':'→ Neutral';
+    const col=newShort==='bull'?'rgba(58,138,224,.4)':newShort==='bear'?'rgba(224,85,48,.4)':'var(--bo2)';
+    const tcol=newShort==='bull'?'#3A8AE0':newShort==='bear'?'#E05530':'var(--tx2)';
+    bias.textContent=label;bias.style.borderColor=col;bias.style.color=tcol;
+  }
+  if(lock)lock.textContent='🔒 固定中（方向変化で更新）';
+}
+
+function drawTacticSVG(r){
+  const svg=document.getElementById('tacticSVG');
+  if(!svg)return;
+  const W=svg.parentElement?.clientWidth||600;
+  const H=200;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  const price=r.price;
+  const tp=r.tpLevels?.[0]?.price||0;
+  const sl=r.shortDir==='bull'?r.slLong:r.shortDir==='bear'?r.slShort:price-r.ATR;
+  const tp2=r.tpLevels?.[1]?.price||0;
+  const isLong=r.shortDir==='bull';
+  const isShort=r.shortDir==='bear';
+
+  // 価格レンジ
+  const allP=[price,tp||price+r.ATR*2,sl||price-r.ATR*2,tp2||price];
+  const pMax=Math.max(...allP)+r.ATR*.5;
+  const pMin=Math.min(...allP)-r.ATR*.5;
+  const pRange=pMax-pMin||1;
+
+  const PL=55,PR=18,PT=16,PB=16;
+  const CW=W-PL-PR,CH=H-PT-PB;
+  const toY=p=>PT+CH*(1-(p-pMin)/pRange);
+  const midX=PL+CW*.45; // 現在値のX位置
+  const rightX=PL+CW*.92;
+
+  let s='';
+
+  // 背景
+  if(tp&&!isNaN(tp)){
+    const y1=toY(Math.max(price,tp)),y2=toY(Math.min(price,tp));
+    s+=`<rect x="${PL}" y="${y1}" width="${CW}" height="${y2-y1}" fill="${isLong?'rgba(58,138,224,.06)':'rgba(224,85,48,.06)'}" />`;
+  }
+  if(sl&&!isNaN(sl)){
+    const y1=toY(Math.max(price,sl)),y2=toY(Math.min(price,sl));
+    s+=`<rect x="${PL}" y="${y1}" width="${CW}" height="${y2-y1}" fill="rgba(224,85,48,.05)" />`;
+  }
+
+  // グリッド線
+  [pMin+(pRange/4),pMin+(pRange/2),pMin+(pRange*3/4)].forEach(p=>{
+    const y=toY(p);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`;
+  });
+
+  // TP1ライン
+  if(tp&&!isNaN(tp)){
+    const y=toY(tp);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#3A8AE0" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+    s+=`<text x="${PL-4}" y="${y+4}" text-anchor="end" font-size="9" fill="#3A8AE0" font-family="monospace">TP1 $${tp}</text>`;
+  }
+  // TP2ライン
+  if(tp2&&!isNaN(tp2)&&tp2!==tp){
+    const y=toY(tp2);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(58,138,224,.5)" stroke-width="1" stroke-dasharray="3,4"/>`;
+    s+=`<text x="${PL-4}" y="${y+4}" text-anchor="end" font-size="8" fill="rgba(58,138,224,.7)" font-family="monospace">TP2 $${tp2}</text>`;
+  }
+  // SLライン
+  if(sl&&!isNaN(sl)){
+    const y=toY(sl);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#E05530" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+    s+=`<text x="${PL-4}" y="${y+4}" text-anchor="end" font-size="9" fill="#E05530" font-family="monospace">SL $${sl}</text>`;
+  }
+  // EMA20/75
+  if(r.e20){
+    const y=toY(r.e20);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(58,138,224,.5)" stroke-width="0.8"/>`;
+    s+=`<text x="${W-PR+2}" y="${y+3}" font-size="8" fill="rgba(58,138,224,.7)" font-family="monospace">E20</text>`;
+  }
+  if(r.e75){
+    const y=toY(r.e75);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(192,122,16,.5)" stroke-width="0.8"/>`;
+    s+=`<text x="${W-PR+2}" y="${y+3}" font-size="8" fill="rgba(192,122,16,.7)" font-family="monospace">E75</text>`;
+  }
+  // OBゾーン
+  ;[...r.OB.above,...r.OB.below].forEach(ob=>{
+    const y=toY(ob.mid);
+    const col=ob.type==='bear'?'rgba(224,85,48,.25)':'rgba(58,138,224,.25)';
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="${col}" stroke-width="3" opacity="0.5"/>`;
+    s+=`<text x="${PL+2}" y="${y-3}" font-size="7.5" fill="${ob.type==='bear'?'#F0A080':'#80B8EC'}" font-family="sans-serif">${ob.label} $${ob.mid}</text>`;
+  });
+
+  // 現在値ライン
+  const curY=toY(price);
+  s+=`<line x1="${PL}" y1="${curY}" x2="${W-PR}" y2="${curY}" stroke="#B8942A" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.8"/>`;
+  s+=`<text x="${PL-4}" y="${curY+4}" text-anchor="end" font-size="9" font-weight="700" fill="#E8C96A" font-family="monospace">$${price.toFixed(1)}</text>`;
+
+  // 大きな方向矢印
+  const arrowColor=isLong?'#3A8AE0':isShort?'#E05530':'#8C8A84';
+  if(isLong&&tp){
+    const fromY=curY+10, toYVal=toY(tp)-10;
+    s+=`<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="${arrowColor}"/></marker></defs>`;
+    s+=`<line x1="${midX}" y1="${fromY}" x2="${midX}" y2="${toYVal}" stroke="${arrowColor}" stroke-width="3" marker-end="url(#ah)" opacity="0.85"/>`;
+    // 現在値丸
+    s+=`<circle cx="${midX}" cy="${curY}" r="6" fill="${arrowColor}" opacity="0.9"/>`;
+    // TP丸
+    s+=`<circle cx="${midX}" cy="${toY(tp)}" r="5" fill="#3A8AE0" opacity="0.7"/>`;
+  }else if(isShort&&tp){
+    const fromY=curY-10, toYVal=toY(tp)+10;
+    s+=`<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="${arrowColor}"/></marker></defs>`;
+    s+=`<line x1="${midX}" y1="${fromY}" x2="${midX}" y2="${toYVal}" stroke="${arrowColor}" stroke-width="3" marker-end="url(#ah)" opacity="0.85"/>`;
+    s+=`<circle cx="${midX}" cy="${curY}" r="6" fill="${arrowColor}" opacity="0.9"/>`;
+    s+=`<circle cx="${midX}" cy="${toY(tp)}" r="5" fill="#E05530" opacity="0.7"/>`;
+  }else{
+    // レンジ → 水平矢印
+    s+=`<defs><marker id="ahr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill="${arrowColor}"/></marker>
+    <marker id="ahl" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><polygon points="0,0 8,4 0,8" fill="${arrowColor}"/></marker></defs>`;
+    s+=`<line x1="${PL+CW*.25}" y1="${curY}" x2="${PL+CW*.75}" y2="${curY}" stroke="${arrowColor}" stroke-width="2.5" marker-end="url(#ahr)" marker-start="url(#ahl)" opacity="0.7"/>`;
+    s+=`<circle cx="${midX}" cy="${curY}" r="5" fill="${arrowColor}" opacity="0.6"/>`;
+  }
+
+  // ラベル
+  const biasLabel=isLong?'↑ Bullish Bias':isShort?'↓ Bearish Bias':'→ Neutral';
+  const labelY=isLong?curY+28:curY-20;
+  s+=`<rect x="${midX-36}" y="${labelY-12}" width="72" height="16" rx="4" fill="${arrowColor}" opacity="0.15"/>`;
+  s+=`<text x="${midX}" y="${labelY}" text-anchor="middle" font-size="9" font-weight="700" fill="${arrowColor}" font-family="sans-serif">${biasLabel}</text>`;
+
+  svg.innerHTML=s;
+
+  // 説明テキスト
+  const desc=document.getElementById('tacticDesc');
+  if(desc){
+    const tp1=r.tpLevels?.[0];
+    const slPips=sl?Math.round(Math.abs(sl-price)/0.01):0;
+    const tpPips=tp1?.pips||0;
+    const rr=slPips>0?(tpPips/slPips).toFixed(1):'--';
+    desc.textContent=isLong
+      ?`上方向シナリオ: $${tp1?.price||'--'}（+${tpPips}pips）を目標。参考SL: $${sl}（-${slPips}pips）。RR${rr}:1。短期・中期の方向が変わるまでこの作戦マップを保持します。`
+      :isShort
+      ?`下方向シナリオ: $${tp1?.price||'--'}（-${tpPips}pips）を目標。参考SL: $${sl}（-${slPips}pips）。RR${rr}:1。短期・中期の方向が変わるまでこの作戦マップを保持します。`
+      :`レンジ相場: $${sl?Math.round(Math.min(sl,tp||price-r.ATR*2)):'--'}〜$${Math.round(Math.max(tp||price+r.ATR*2,price+r.ATR*2))}のレンジを整理。方向が出るまで作戦は固定します。`;
   }
 }
 
