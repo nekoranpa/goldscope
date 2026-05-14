@@ -352,7 +352,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     <div class="hdr-left" onclick="showPage('app')">
       <div class="hdr-icon">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v1.4.1</span>
+      <span class="hdr-ver">v1.4.6</span>
     </div>
     <nav class="hdr-nav">
       <button class="hn-btn act" onclick="showPage('app')">分析</button>
@@ -693,7 +693,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     </div>
     <div id="tab-guide" style="display:none">
       <div class="panel">
-        <div class="panel-lbl">GoldScope Vision v1.4.1 — 使い方ガイド</div>
+        <div class="panel-lbl">GoldScope Vision v1.4.6 — 使い方ガイド</div>
         <div style="font-size:12px;color:var(--tx2);line-height:1.9;space-y:12px">
           <p style="margin-bottom:10px"><strong style="color:var(--tx)">GoldScope Vision（ゴールドスコープビジョン）</strong>は、株式会社サウンドテラスが提供するGOLD/XAUUSDの市場情報整理・分析支援ツールです。投資助言・売買指示・利益保証を行うものではありません。</p>
           <div style="display:grid;gap:8px">
@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div class="footer-txt">GoldScope Vision v1.4.1 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
+      <div class="footer-txt">GoldScope Vision v1.4.6 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showPage('policy')">利用規約</span>
         <span class="footer-link" onclick="showPage('policy')">プライバシーポリシー</span>
@@ -822,84 +822,62 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
   <footer class="app-footer"><div class="footer-inner"><div class="footer-txt">© 2026 株式会社サウンドテラス · goldscope.ai</div></div></footer>
 </div>
 <script>
-// ==================== STATE ====================
-// 安全な getElementById helper（存在しない場合はダミーオブジェクトを返す）
-const $ = id => document.getElementById(id) || {textContent:'',style:{},className:'',innerHTML:''};
 
+// ===== GoldScope Vision v1.4.6 — 軽量・即時動作版 =====
+// 重い処理(Monte Carlo/300試行等)を全削除
+// ログイン→即表示が最優先
+
+// ===== STATE =====
+const $ = id => document.getElementById(id) || {textContent:'',style:{},className:'',innerHTML:''};
 const ACCOUNTS={
   'soundterrace':{pass:'0000',name:'soundterrace'},
   'basic_test':{pass:'1111',name:'Basic User'},
   'user001':{pass:'gold2026',name:'User001'},
   'user002':{pass:'gold2026',name:'User002'},
-  'user003':{pass:'gold2026',name:'User003'},
 };
-// 複数同時ログイン対応: セッション管理はクライアントサイドのみ
-// 同じID/PASSで複数人が使っても互いに干渉しない
-
-let currentUser=null;
-let voiceOn=true,voiceRate=1.0,isSpeaking=false;
-let isRunning=false,tickTimer=null,lastResult=null;
-let simHistory=[],prevPage='login';
-let lastSpokenEntry='',lastSpokenPrice=0;
-let chart=null;
-// Range filter persistent state
+let currentUser=null,voiceOn=true,voiceRate=1.0,isSpeaking=false;
+let isRunning=false,tickTimer=null,lastResult=null,simHistory=[];
+let lastSpokenEntry='',lastSpokenPrice=0,tickErrorCount=0;
+let avCacheData=null,avCacheTime=0,histCache=null,histCacheTime=0;
 let rfPrevFiltered=null,rfPrevDir='neut';
-// Squeeze persistent state
-let prevSqState='normal';
-// Price snapshot (Alpha Vantage)
-let lastAVData=null;
+let countdownTimer=null,countdownSec=0;
 
-// ==================== AUTH ====================
+// ===== AUTH =====
 function doLogin(){
-  const idEl=document.getElementById('inp-id');
-  const pwEl=document.getElementById('inp-pw');
-  const errEl=document.getElementById('login-err');
-  if(!idEl||!pwEl)return;
-  const uid=idEl.value.trim().toLowerCase();
-  const pw=pwEl.value;
+  const idEl=$('inp-id'),pwEl=$('inp-pw'),errEl=$('login-err');
+  const uid=idEl.value?.trim().toLowerCase()||'';
+  const pw=pwEl.value||'';
   const acc=ACCOUNTS[uid];
   if(acc&&acc.pass===pw){
     currentUser={id:uid,name:acc.name};
-    if(errEl)errEl.style.display='none';
-    const accNameEl=document.getElementById('accName');
-    if(accNameEl)accNameEl.textContent=acc.name;
-    const lockEl=document.getElementById('lock-short');
-    if(lockEl)lockEl.className='lock-ov';
+    errEl.style.display='none';
+    $('accName').textContent=acc.name;
+    $('lock-short').className='lock-ov';
     showPage('app');
-    // ログイン直後に即起動
-    setTimeout(autoStartOnLogin, 50);
+    setTimeout(autoStart,50);
   }else{
-    if(errEl)errEl.style.display='block';
+    errEl.style.display='block';
   }
 }
-
-// addEventListener は DOMContentLoaded 後に安全に登録
 document.addEventListener('DOMContentLoaded',()=>{
-  const pwEl=document.getElementById('inp-pw');
-  const idEl=document.getElementById('inp-id');
-  if(pwEl)pwEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  if(idEl)idEl.addEventListener('keydown',e=>{if(e.key==='Enter'){const p=document.getElementById('inp-pw');if(p)p.focus();}});
+  const pw=$('inp-pw'),id=$('inp-id');
+  if(pw.addEventListener)pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  if(id.addEventListener)id.addEventListener('keydown',e=>{if(e.key==='Enter')pw.focus?.();});
 });
-
 function doLogout(){
   if(isRunning){isRunning=false;clearInterval(tickTimer);}
-  stopVoice();
-  currentUser=null;
-  showPage('login');
+  stopVoice();currentUser=null;showPage('login');
 }
 
-// ==================== PAGES ====================
-function showPage(name){
+// ===== PAGES =====
+function showPage(n){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const target=document.getElementById('page-'+name);
-  if(target)target.classList.add('active');
-  document.querySelectorAll('.hn-btn').forEach(b=>b.classList.remove('act'));
-  if(name==='app'){const btn=document.querySelectorAll('.hn-btn')[0];if(btn)btn.classList.add('act');}
-  prevPage=name;
+  const t=document.getElementById('page-'+n);
+  if(t)t.classList.add('active');
 }
 function goBackFromPolicy(){showPage(currentUser?'app':'login');}
 
-// ==================== VOICE ====================
+// ===== VOICE =====
 function speak(text){
   if(!voiceOn||!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
@@ -908,659 +886,469 @@ function speak(text){
   const jv=window.speechSynthesis.getVoices().find(v=>v.lang.includes('ja'));
   if(jv)u.voice=jv;
   isSpeaking=true;
-  document.getElementById('speakAnim').className='speak-anim on';
-  document.getElementById('btnStop').className='ab-btn stop on';
-  u.onend=u.onerror=()=>{
-    isSpeaking=false;
-    document.getElementById('speakAnim').className='speak-anim';
-    document.getElementById('btnStop').className='ab-btn stop';
-  };
+  $('speakAnim').className='speak-anim on';
+  $('btnStop').className='ab-btn stop on';
+  u.onend=u.onerror=()=>{isSpeaking=false;$('speakAnim').className='speak-anim';$('btnStop').className='ab-btn stop';};
   window.speechSynthesis.speak(u);
 }
-function stopVoice(){
-  window.speechSynthesis?.cancel();
-  isSpeaking=false;
-  document.getElementById('speakAnim').className='speak-anim';
-  document.getElementById('btnStop').className='ab-btn stop';
-}
+function stopVoice(){window.speechSynthesis?.cancel();isSpeaking=false;$('speakAnim').className='speak-anim';$('btnStop').className='ab-btn stop';}
 function speakNow(){if(lastResult)speak(lastResult.voiceText);else speak('まだ分析が完了していません。');}
-function toggleVoice(){voiceOn=!voiceOn;document.getElementById('voiceBtn').innerHTML=voiceOn?'<i class="ti ti-bell"></i> 音声: ON':'<i class="ti ti-bell-off"></i> 音声: OFF';}
+function toggleVoice(){voiceOn=!voiceOn;$('voiceBtn').innerHTML=voiceOn?'<i class="ti ti-bell"></i> 音声: ON':'<i class="ti ti-bell-off"></i> 音声: OFF';}
 
-// ==================== TABS ====================
-function showTab(name){
-  ['next','chart','sentiment','guide'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'block':'none';});
-  document.querySelectorAll('.tab').forEach((b,i)=>{b.className='tab'+(['next','chart','sentiment','guide'][i]===name?' active':'');});
+// ===== TABS =====
+function showTab(n){
+  ['next','chart','market','sentiment','guide'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el)el.style.display=t===n?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach((b,i)=>{
+    b.className='tab'+(['next','chart','market','sentiment','guide'][i]===n?' active':'');
+  });
 }
 
-// ==================== MONITORING ====================
-// ログイン直後に即起動（呼び出し元: doLogin）
-function autoStartOnLogin(){
+// ===== COUNTDOWN =====
+function startCountdown(sec){
+  countdownSec=sec;clearInterval(countdownTimer);
+  const upd=()=>{
+    const t=countdownSec>0?`次回更新 ${countdownSec}秒`:'更新済み';
+    $('statusRight').textContent=t;
+    const cc=$('chartCountdown');if(cc.textContent!==undefined)cc.textContent=t;
+  };
+  upd();
+  countdownTimer=setInterval(()=>{countdownSec--;if(countdownSec<=0){clearInterval(countdownTimer);$('statusRight').textContent='';}else upd();},1000);
+}
+function showLoading(msg){$('statusIcon').style.opacity='1';$('statusTxt').textContent=msg||'取得中...';}
+function hideLoading(){$('statusIcon').style.opacity='0';}
+
+// ===== MONITORING =====
+function autoStart(){
   if(isRunning)return;
   isRunning=true;
-  document.getElementById('startBtn').innerHTML='<i class="ti ti-player-stop"></i> 停止';
-  document.getElementById('startBtn').className='ab-btn stop on';
-  document.getElementById('liveLabel').textContent='分析中';
-  document.getElementById('liveDot').className='ldot on';
-
-  // ① まずシミュレーションで即描画（0ms待ち）
+  $('startBtn').innerHTML='<i class="ti ti-player-stop"></i> 停止';
+  $('startBtn').className='ab-btn stop on';
+  $('liveDot').className='ldot on';
+  $('liveLabel').textContent='分析中';
+  // 即時表示
   drawInstant();
-
-  // ② バックグラウンドでリアルデータ取得（結果が来たら差し替え）
+  // バックグラウンドでリアルデータ
   fetchAndUpdate();
-
-  // ③ 90秒ごとにリアルデータ更新（CORSタイムアウトを考慮した現実的な間隔）
-  tickTimer=setInterval(()=>{
-    startCountdown(90);
-    fetchAndUpdate();
-  }, 90000);
-  startCountdown(10); // 初回は10秒でリアルデータが来る想定
+  tickTimer=setInterval(()=>{fetchAndUpdate();},5000);
+  startCountdown(5);
 }
-
 function startMonitoring(){
   if(isRunning){
     isRunning=false;clearInterval(tickTimer);
-    document.getElementById('startBtn').innerHTML='<i class="ti ti-player-play"></i> リアルタイム開始';
-    document.getElementById('startBtn').className='ab-btn primary';
-    document.getElementById('liveDot').className='ldot';
-    document.getElementById('liveLabel').textContent='停止中';
+    $('startBtn').innerHTML='<i class="ti ti-player-play"></i> リアルタイム開始';
+    $('startBtn').className='ab-btn primary';
+    $('liveDot').className='ldot';
+    $('liveLabel').textContent='停止中';
     return;
   }
-  autoStartOnLogin();
+  autoStart();
 }
-
-// 即時描画: ログイン直後に0ms待ちで表示
 function drawInstant(){
   try{
-    // 現実的なベース価格（前回実績 > キャッシュ > デフォルト3300）
-    const basePrice=lastResult?.price||(avCacheData?.mid)||3300;
-    const sh=growSimHistory(basePrice);
-    const simMeta={
-      rate:basePrice,bid:basePrice-0.5,ask:basePrice+0.5,mid:basePrice,
-      lastRefreshed:'価格取得中...',timeZone:'--',
-      source:'シミュレーション（価格取得中）',open:sh[0]?.c||basePrice,live:false
-    };
-    const r=analyze(basePrice,sh[0]?.c||basePrice,sh,simMeta);
-    lastResult=r;
-    renderAll(r);
-    const txt=document.getElementById('statusTxt');
-    if(txt)txt.textContent='分析表示完了 — リアル価格取得中...';
-  }catch(e){
-    console.error('[GSV] drawInstant error:',e);
-    // エラーでもUIに最低限の表示を出す
-    const txt=document.getElementById('statusTxt');
-    if(txt)txt.textContent='表示エラー — 再試行中...';
-    const tpMain=document.getElementById('tpMain');
-    if(tpMain)tpMain.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:12px;">分析データを準備中...</div>';
-    const atBody=document.getElementById('at-body');
-    if(atBody)atBody.textContent='価格データ取得後に表示されます。';
-  }
+    const p=lastResult?.price||avCacheData?.mid||4700;
+    if(simHistory.length===0){
+      let base=p;
+      for(let i=0;i<80;i++){base+=(Math.random()-.5)*1.5;simHistory.push({c:base,h:base+Math.random(),l:base-Math.random(),v:400});}
+    }
+    simHistory.push({c:p,h:p+.5,l:p-.5,v:500});
+    if(simHistory.length>300)simHistory=simHistory.slice(-300);
+    const meta={rate:p,bid:p-.5,ask:p+.5,mid:p,lastRefreshed:'取得中...',timeZone:'--',source:'シミュレーション',open:simHistory[0].c,live:false};
+    const r=analyze(p,simHistory[0].c,simHistory,meta);
+    lastResult=r;renderAll(r);
+    $('statusTxt').textContent='表示完了 — リアル価格取得中...';
+  }catch(e){console.error('[GSV] drawInstant:',e);}
 }
-
-// バックグラウンドでリアルデータ取得・差し替え
 async function fetchAndUpdate(){
-  const txt=document.getElementById('statusTxt');
-  const icon=document.getElementById('statusIcon');
-  // スピナー表示（レイアウトは変わらない）
-  if(icon){icon.textContent='⟳';icon.style.opacity='1';icon.style.animation='spin .9s linear infinite';}
-  if(txt)txt.textContent='価格データ取得中...';
+  showLoading('価格データ取得中...');
   try{
     const d=await fetchAll();
-    if(icon){icon.style.animation='';icon.style.opacity='0';}
-    if(!d){
-      if(txt)txt.textContent='接続待ち — 前回データを表示中';
-      return;
-    }
+    hideLoading();
+    // dは必ずnon-nullになった（SIMフォールバックがある）
     const r=analyze(d.mid||d.rate,d.open||d.rate,d.hist,d);
-    lastResult=r;
-    renderAll(r);
-    document.getElementById('liveLabel').textContent=d.live?'LIVE':'更新済み';
-    document.getElementById('liveDot').className='ldot on';
+    lastResult=r;renderAll(r);
+    $('liveLabel').textContent=d.live?'LIVE':'SIM';
+    $('liveDot').className='ldot on';
     tickErrorCount=0;
     startCountdown(90);
-    if(txt)txt.textContent=d.live?`リアルタイム価格 $${(d.mid||d.rate).toFixed(1)} (${d.source})`:`更新済み — ${d.source}`;
+    $('statusTxt').textContent=d.live
+      ?`LIVE $${(d.mid||d.rate).toFixed(1)} · ${d.source}`
+      :`${d.source} · 5秒ごと更新`;
     if(!isSpeaking){
       const changed=lastSpokenEntry!==r.msLabel;
       const bigMove=lastSpokenPrice>0&&Math.abs((d.mid||d.rate)-lastSpokenPrice)>r.ATR*.8;
-      if(changed||bigMove){
-        speak(r.voiceText);
-        lastSpokenEntry=r.msLabel;
-        lastSpokenPrice=d.mid||d.rate;
-      }
+      if(changed||bigMove){speak(r.voiceText);lastSpokenEntry=r.msLabel;lastSpokenPrice=d.mid||d.rate;}
     }
   }catch(e){
-    console.warn('[GSV] fetchAndUpdate失敗:',e.message);
-    if(icon){icon.style.animation='';icon.style.opacity='0';}
-    tickErrorCount++;
-    if(txt)txt.textContent=tickErrorCount>3?'接続待ち — しばらくお待ちください':'取得失敗 — 再試行中...';
-    if(tickErrorCount>3)document.getElementById('liveLabel').textContent='接続待ち';
+    hideLoading();
+    console.warn('[GSV] fetchAndUpdate:',e.message);
+    // エラーでもSIMで継続
+    try{
+      const p=(lastResult?.price||4700)+(Math.random()-.49)*.5;
+      simHistory.push({c:p,h:p+.3,l:p-.3,v:300});
+      if(simHistory.length>300)simHistory=simHistory.slice(-300);
+      const simMeta={rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,
+        lastRefreshed:new Date().toLocaleTimeString('ja-JP'),timeZone:'JST',source:'SIM',live:false};
+      const r=analyze(p,simHistory[0].c,simHistory,simMeta);
+      lastResult=r;renderAll(r);
+      $('statusTxt').textContent='SIM動作中（Vercel上で実価格取得）';
+    }catch(e2){console.error('[GSV] SIM fallback error:',e2);}
   }
 }
 
-// ==================== FETCH ====================
-// 設計: gold-api.com（CORS対応・無料）を最優先
-// Alpha Vantageはブラウザから直接CORSブロックされるため、
-// Next.js APIルート経由（goldscope.ai本番）でのみ使用
-// このHTMLファイルではgold-api.com + Yahoo Financeを使用
+// ===== FETCH =====
+const AV_KEY='KQ0JM9V617AQX62W';
+let avCallTime=0;
 
-const AV_KEY='KQ0JM9V617AQX62W'; // 将来のサーバーサイド用に保持
-let avCacheTime=0,avCacheData=null;
-let histCache=null,histCacheTime=0;
-
-// タイムアウト付きfetch
-function fetchWithTimeout(url,ms=4000,opts={}){
+function fetchTimeout(url,ms=6000){
   const ctrl=new AbortController();
   const tid=setTimeout(()=>ctrl.abort(),ms);
-  return fetch(url,{...opts,signal:ctrl.signal})
-    .finally(()=>clearTimeout(tid));
+  return fetch(url,{signal:ctrl.signal,cache:'no-store'}).finally(()=>clearTimeout(tid));
 }
 
-// gold-api.com — CORS対応・無料・無制限・最優先
-async function fetchSpotPrice(){
-  // キャッシュ5秒
-  if(avCacheData&&Date.now()-avCacheTime<5000)
-    return{...avCacheData,source:'gold-api.com (cached)'};
+async function fetchSpot(){
+  // Alpha Vantage CURRENCY_EXCHANGE_RATE（有料プラン・XAU/USD）
+  // 3秒インターバル制限
+  if(Date.now()-avCallTime<3000&&avCacheData&&Date.now()-avCacheTime<10000){
+    return{...avCacheData,source:'Alpha Vantage (cached)'};
+  }
+  avCallTime=Date.now();
   try{
-    const res=await fetchWithTimeout('https://gold-api.com/price/XAU',3500,{cache:'no-store'});
-    if(!res.ok)throw new Error('gold-api '+res.status);
-    const d=await res.json();
-    const price=parseFloat(d.price);
-    if(isNaN(price)||price<100)throw new Error('invalid price');
-    const prev=parseFloat(d.prev_close||price);
-    const data={
-      rate:price,bid:price-0.5,ask:price+0.5,mid:price,
-      lastRefreshed:new Date().toLocaleString('ja-JP'),
-      timeZone:'JST',source:'gold-api.com',
-      open:prev,live:true
-    };
+    const url=`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`;
+    const res=await fetchTimeout(url,7000);
+    if(!res.ok){console.warn('[AV] HTTP',res.status);throw new Error('http '+res.status);}
+    const j=await res.json();
+    // デバッグ: レスポンス全表示
+    console.log('[AV] response keys:', Object.keys(j));
+    if(j.Note){console.warn('[AV] Note:',j.Note);throw new Error('rate_limit');}
+    if(j.Information){console.warn('[AV] Info:',j.Information);throw new Error('info: '+j.Information);}
+    if(j['Error Message']){console.warn('[AV] Error:',j['Error Message']);throw new Error(j['Error Message']);}
+    const r=j['Realtime Currency Exchange Rate'];
+    if(!r){console.warn('[AV] no rate field, keys:',Object.keys(j));throw new Error('no_rate');}
+    const rate=parseFloat(r['5. Exchange Rate']);
+    const bid=parseFloat(r['8. Bid Price'])||rate-0.5;
+    const ask=parseFloat(r['9. Ask Price'])||rate+0.5;
+    const mid=parseFloat(((bid+ask)/2).toFixed(2));
+    console.log(`[AV] XAU/USD rate=${rate} bid=${bid} ask=${ask} mid=${mid}`);
+    if(!mid||isNaN(mid)||mid<500){console.warn('[AV] price too low:',mid);throw new Error('invalid_price');}
+    const data={rate:mid,bid,ask,mid,open:mid,
+      lastRefreshed:r['6. Last Refreshed']||new Date().toISOString(),
+      timeZone:r['7. Time Zone']||'UTC',source:'Alpha Vantage',live:true};
     avCacheData=data;avCacheTime=Date.now();
-    console.log('[GSV] gold-api.com 取得成功:',price);
     return data;
   }catch(e){
-    console.warn('[GSV] gold-api.com失敗:',e.message);
+    console.warn('[AV] fetchSpot failed:',e.message);
+    // Vercel API経由を試す
+    try{
+      const res2=await fetchTimeout('/api/gold',3000);
+      if(res2.ok){
+        const d=await res2.json();
+        if(d.mid&&d.mid>500){
+          return{rate:d.mid,bid:d.bid||d.mid-.5,ask:d.ask||d.mid+.5,mid:d.mid,
+            open:d.mid,lastRefreshed:d.lastRefreshed||'',timeZone:'UTC',source:'Vercel API',live:true};
+        }
+      }
+    }catch{}
     return null;
   }
 }
 
-// Yahoo Finance — 履歴データ（テクニカル計算用）
 async function fetchHistory(){
-  // キャッシュ60秒（履歴は頻繁に変わらない）
   if(histCache&&Date.now()-histCacheTime<60000)return histCache;
-  const urls=[
-    'https://query1.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=5m&range=3d',
-    'https://query2.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=5m&range=3d',
-  ];
-  for(const url of urls){
-    try{
-      const res=await fetchWithTimeout(url,4000,{cache:'no-store'});
-      if(!res.ok)continue;
-      const d=await res.json();
-      const q=d?.chart?.result?.[0]?.indicators?.quote?.[0];
-      if(!q)continue;
-      const c=q.close||[],h=q.high||[],l=q.low||[],v=q.volume||[];
-      const bars=[];
-      for(let i=0;i<c.length;i++)
-        if(c[i]!=null)bars.push({c:c[i],h:h[i]||c[i],l:l[i]||c[i],v:v[i]||500});
-      if(bars.length<20)continue;
-      histCache=bars.slice(-300);
-      histCacheTime=Date.now();
-      console.log('[GSV] Yahoo Finance 取得成功:',bars.length,'本');
-      return histCache;
-    }catch(e){console.warn('[GSV] Yahoo失敗:',e.message);}
-  }
+  // Alpha Vantage FX_INTRADAY（XAUUSDの5分足）
+  try{
+    const url=`https://www.alphavantage.co/query?function=FX_INTRADAY&from_symbol=XAU&to_symbol=USD&interval=5min&outputsize=compact&apikey=${AV_KEY}`;
+    const res=await fetchTimeout(url,8000);
+    if(res.ok){
+      const j=await res.json();
+      const series=j['Time Series FX (5min)'];
+      if(series){
+        const bars=Object.entries(series)
+          .sort((a,b)=>a[0]<b[0]?-1:1)
+          .map(([,v])=>({c:parseFloat(v['4. close']),h:parseFloat(v['2. high']),l:parseFloat(v['3. low']),v:500}))
+          .filter(b=>b.c>500);
+        if(bars.length>=10){
+          histCache=bars.slice(-300);histCacheTime=Date.now();
+          console.log('[AV] FX_INTRADAY OK:',bars.length,'bars, latest:',bars[bars.length-1].c);
+          return histCache;
+        }
+      }
+      if(j.Note||j.Information)console.warn('[AV] history limit');
+    }
+  }catch(e){console.warn('[AV] history failed:',e.message);}
   return null;
 }
 
-// シミュレーション履歴を現在価格で成長させる
-function growSimHistory(price){
-  if(simHistory.length===0){
-    // 初回: 直近100本をランダムウォークで生成
-    let p=price;
-    for(let i=0;i<100;i++){
-      p+=( Math.random()-0.5)*2;
-      simHistory.push({c:p,h:p+Math.random()*1.5,l:p-Math.random()*1.5,v:Math.round(300+Math.random()*400)});
-    }
-  }
-  // 最新値を現在価格で更新
-  simHistory.push({c:price,h:price+0.5,l:price-0.5,v:500});
-  if(simHistory.length>300)simHistory=simHistory.slice(-300);
-  return[...simHistory];
-}
-
 async function fetchAll(){
-  // 初回のみローディング
-  if(!lastResult)showLoading('価格データ取得中...');
-
-  // スポット価格と履歴を並列取得（独立して失敗OK）
-  const[spotData,hist]=await Promise.allSettled([
-    fetchSpotPrice(),
-    fetchHistory()
-  ]).then(r=>r.map(x=>x.status==='fulfilled'?x.value:null));
-
-  hideLoading();
-
-  const price=spotData?.mid||spotData?.rate||null;
-
-  if(spotData&&hist){
-    // 両方成功: 履歴の最新バーをリアル価格で上書き
-    const uh=[...hist];
-    const lb=uh[uh.length-1];
-    uh[uh.length-1]={c:price,h:Math.max(lb.h,price),l:Math.min(lb.l,price),v:lb.v};
-    return{...spotData,hist:uh};
-  }else if(spotData&&!hist){
-    // スポットのみ: シミュレーション履歴で補完
-    const sh=growSimHistory(price);
-    return{...spotData,hist:sh,source:spotData.source+' (履歴SIM)'};
-  }else if(!spotData&&hist){
-    // 履歴のみ: Yahoo最新値を価格として使用
+  const[spot,hist]=await Promise.allSettled([fetchSpot(),fetchHistory()])
+    .then(r=>r.map(x=>x.status==='fulfilled'?x.value:null));
+  if(spot&&hist){
+    const uh=[...hist];const lb=uh[uh.length-1];
+    uh[uh.length-1]={c:spot.mid,h:Math.max(lb.h,spot.mid),l:Math.min(lb.l,spot.mid),v:lb.v};
+    return{...spot,hist:uh};
+  }else if(spot){
+    simHistory.push({c:spot.mid,h:spot.mid+.5,l:spot.mid-.5,v:500});
+    if(simHistory.length>300)simHistory=simHistory.slice(-300);
+    return{...spot,hist:[...simHistory],source:spot.source+' (履歴SIM)'};
+  }else if(hist){
     const p=hist[hist.length-1].c;
-    return{rate:p,bid:p-0.5,ask:p+0.5,mid:p,
-      lastRefreshed:'Yahoo Finance',timeZone:'--',
-      source:'Yahoo Finance',open:hist[0].c,hist,live:false};
-  }else{
-    // 全失敗: 前回データ維持 or シミュレーション
-    if(lastResult){
-      console.warn('[GSV] 全取得失敗 → 前回データ維持');
-      return null;
-    }
-    // 初回全失敗: シミュレーションで起動
-    const simPrice=4700+(Math.random()-0.5)*10;
-    const sh=growSimHistory(simPrice);
-    const p=sh[sh.length-1].c;
-    return{rate:p,bid:p-0.5,ask:p+0.5,mid:p,
-      lastRefreshed:'--',timeZone:'--',
-      source:'シミュレーション',open:sh[0].c,hist:sh,live:false};
+    return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:hist[0].c,
+      lastRefreshed:new Date().toISOString(),timeZone:'--',source:'Yahoo Finance',hist,live:false};
   }
+  // 全失敗: シミュレーションで継続
+  // ベース価格は前回実績 or AVキャッシュ or 現在のXAUUSD水準
+  const base=lastResult?.price||avCacheData?.mid||4700;
+  const drift=(Math.random()-.49)*.8;
+  const p=parseFloat((base+drift).toFixed(2));
+  simHistory.push({c:p,h:p+Math.random()*.5,l:p-Math.random()*.5,v:Math.round(300+Math.random()*200)});
+  if(simHistory.length>300)simHistory=simHistory.slice(-300);
+  return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,
+    lastRefreshed:new Date().toLocaleTimeString('ja-JP'),timeZone:'JST',
+    source:'SIM（Vercel上で実価格取得）',hist:[...simHistory],live:false};
 }
 
-function showLoading(msg){
-  // loadingBoxは使わない、statusBarで表示（レイアウトシフトなし）
-  const icon=document.getElementById('statusIcon');
-  const txt=document.getElementById('statusTxt');
-  if(icon){icon.textContent='⟳';icon.style.opacity='1';icon.style.animation='spin .9s linear infinite';}
-  if(txt)txt.textContent=msg||'取得中...';
+// ===== INDICATORS (軽量版) =====
+function ema(v,p){
+  if(!v||v.length<2)return v?v[v.length-1]:0;
+  const k=2/(p+1);let e=v[0];
+  for(let i=1;i<v.length;i++)e=v[i]*k+e*(1-k);
+  return e;
 }
-function hideLoading(){
-  const icon=document.getElementById('statusIcon');
-  if(icon){icon.style.animation='';icon.style.opacity='0';}
+function bb(v,p=20,m=2){
+  if(v.length<p)return null;
+  const s=v.slice(-p),mn=s.reduce((a,b)=>a+b,0)/p;
+  const sd=Math.sqrt(s.reduce((a,b)=>a+(b-mn)**2,0)/p);
+  return{u:mn+m*sd,m:mn,l:mn-m*sd,sd,width:m*sd*2};
 }
-
-// ==================== INDICATORS ====================
-function ema(v,p){if(!v||v.length<p)return v?v[v.length-1]:0;const k=2/(p+1);let e=v.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<v.length;i++)e=v[i]*k+e*(1-k);return e;}
-function bb(v,p=20,m=2){if(v.length<p)return null;const s=v.slice(-p),mn=s.reduce((a,b)=>a+b,0)/p,sd=Math.sqrt(s.reduce((a,b)=>a+Math.pow(b-mn,2),0)/p);return{u:mn+m*sd,m:mn,l:mn-m*sd,sd,width:(mn+m*sd)-(mn-m*sd)};}
-function rsi(v,p=14){if(v.length<p+1)return 50;let g=0,l=0;for(let i=v.length-p;i<v.length;i++){const d=v[i]-v[i-1];if(d>0)g+=d;else l-=d;}if(!l)return 100;return Math.round(100-100/(1+g/p/(l/p)));}
-function vwap(h){let pv=0,v=0;for(const b of h){const t=(b.h+b.l+b.c)/3;pv+=t*b.v;v+=b.v;}return v>0?pv/v:h[h.length-1].c;}
-function calcATR(h,p=14){if(h.length<p+1)return 5;let s=0;for(let i=h.length-p;i<h.length;i++){const tr=Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c));s+=tr;}return s/p;}
-function buyPressure(h){const r=h.slice(-20);let b=0,s=0;for(const x of r){const rng=x.h-x.l||.01;b+=x.v*(x.c-x.l)/rng;s+=x.v*(x.h-x.c)/rng;}const t=b+s;return t>0?Math.round(b/t*100):50;}
-function calcOBV(h){let o=0;const a=[0];for(let i=1;i<h.length;i++){o+=h[i].c>h[i-1].c?h[i].v:h[i].c<h[i-1].c?-h[i].v:0;a.push(o);}return a;}
+function rsi(v,p=14){
+  if(v.length<p+1)return 50;
+  let g=0,l=0;
+  for(let i=v.length-p;i<v.length;i++){const d=v[i]-v[i-1];if(d>0)g+=d;else l-=d;}
+  if(!l)return 100;
+  return Math.round(100-100/(1+g/p/(l/p)));
+}
+function vwap(h){
+  let pv=0,v=0;
+  for(const b of h){const t=(b.h+b.l+b.c)/3;pv+=t*b.v;v+=b.v;}
+  return v>0?pv/v:h[h.length-1]?.c||0;
+}
+function calcATR(h,p=14){
+  if(h.length<p+1)return 5;
+  let s=0;
+  for(let i=h.length-p;i<h.length;i++){
+    const tr=Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c));
+    s+=tr;
+  }
+  return s/p;
+}
+function buyPressure(h){
+  const r=h.slice(-20);let b=0,s=0;
+  for(const x of r){const rng=x.h-x.l||.01;b+=x.v*(x.c-x.l)/rng;s+=x.v*(x.h-x.c)/rng;}
+  const t=b+s;return t>0?Math.round(b/t*100):50;
+}
 function calcADX(h,p=14){
   if(h.length<p*2+2)return{adx:20,pdi:20,ndi:20};
   const pDM=[],nDM=[],tr=[];
-  for(let i=1;i<h.length;i++){const up=h[i].h-h[i-1].h,dn=h[i-1].l-h[i].l;pDM.push(up>dn&&up>0?up:0);nDM.push(dn>up&&dn>0?dn:0);tr.push(Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c)));}
-  function ws(arr){let s=arr.slice(0,p).reduce((a,b)=>a+b,0);const res=[s];for(let i=p;i<arr.length;i++){s=s-s/p+arr[i];res.push(s);}return res;}
+  for(let i=1;i<h.length;i++){
+    const up=h[i].h-h[i-1].h,dn=h[i-1].l-h[i].l;
+    pDM.push(up>dn&&up>0?up:0);nDM.push(dn>up&&dn>0?dn:0);
+    tr.push(Math.max(h[i].h-h[i].l,Math.abs(h[i].h-h[i-1].c),Math.abs(h[i].l-h[i-1].c)));
+  }
+  function ws(a){let s=a.slice(0,p).reduce((x,y)=>x+y,0);const r=[s];for(let i=p;i<a.length;i++){s=s-s/p+a[i];r.push(s);}return r;}
   const sTR=ws(tr),sPDM=ws(pDM),sNDM=ws(nDM),DX=[];
-  for(let i=0;i<sTR.length;i++){const pi=sTR[i]>0?100*sPDM[i]/sTR[i]:0,ni=sTR[i]>0?100*sNDM[i]/sTR[i]:0;DX.push((pi+ni)>0?100*Math.abs(pi-ni)/(pi+ni):0);}
+  for(let i=0;i<sTR.length;i++){
+    const pi=sTR[i]>0?100*sPDM[i]/sTR[i]:0,ni=sTR[i]>0?100*sNDM[i]/sTR[i]:0;
+    DX.push((pi+ni)>0?100*Math.abs(pi-ni)/(pi+ni):0);
+  }
   if(DX.length<p)return{adx:20,pdi:20,ndi:20};
   let av=DX.slice(0,p).reduce((a,b)=>a+b,0)/p;
   for(let i=p;i<DX.length;i++)av=(av*(p-1)+DX[i])/p;
   const last=sTR.length-1;
-  return{adx:Math.round(av),pdi:Math.round(sTR[last]>0?100*sPDM[last]/sTR[last]:0),ndi:Math.round(sTR[last]>0?100*sNDM[last]/sTR[last]:0)};
+  return{
+    adx:Math.round(av),
+    pdi:Math.round(sTR[last]>0?100*sPDM[last]/sTR[last]:0),
+    ndi:Math.round(sTR[last]>0?100*sNDM[last]/sTR[last]:0)
+  };
 }
-function marketStructure(h){
-  if(h.length<10)return{trend:'neut',hh:0,hl:0,lh:0,ll:0};
-  const n=Math.min(h.length,30),r=h.slice(-n);
-  let hh=0,hl=0,lh=0,ll=0;
-  for(let i=3;i<r.length;i++){const ph=Math.max(...r.slice(i-3,i).map(b=>b.h)),pl=Math.min(...r.slice(i-3,i).map(b=>b.l));if(r[i].h>ph)hh++;else if(r[i].h<ph)lh++;if(r[i].l>pl)hl++;else if(r[i].l<pl)ll++;}
-  const bull=hh+hl,bear=lh+ll;
-  return{trend:bull>bear+2?'bull':bear>bull+2?'bear':'neut',hh,hl,lh,ll};
-}
-
-// ==================== RANGE FILTER (独自ロジック) ====================
-// ATR×2.5のフィルター幅でノイズを除去し方向を判定
-// GoldScope Vision独自実装 — 既存インジケーターのコピーではない
-function calcRangeFilter(bars,multiplier=2.5,atrPeriod=14){
-  const n=bars.length;if(n<20)return{filtered:bars[n-1].c,dir:'neut',dist:0};
-  const ATR=calcATR(bars,atrPeriod);
-  const filterRange=ATR*multiplier;
-  let filtered=rfPrevFiltered!==null?rfPrevFiltered:bars[0].c;
-  let dir=rfPrevDir;
-  const price=bars[n-1].c;
-  if(price>filtered+filterRange){filtered=price;dir='bull';}
-  else if(price<filtered-filterRange){filtered=price;dir='bear';}
-  // 方向変化時は更新
-  rfPrevFiltered=filtered;rfPrevDir=dir;
-  const dist=parseFloat((price-filtered).toFixed(1));
-  return{filtered:parseFloat(filtered.toFixed(1)),dir,dist,filterRange:parseFloat(filterRange.toFixed(1)),ATR};
-}
-
-// ==================== SLOW TREND ====================
-// EMAslopeとHH頻度からじわ上げ/じわ下げを判定
-function calcSlowTrend(bars,lookback=40){
-  if(bars.length<lookback)return'neut';
-  const closes=bars.slice(-lookback).map(b=>b.c);
-  const emaEarly=ema(closes.slice(0,Math.floor(lookback/2)),Math.min(14,Math.floor(lookback/2)));
-  const emaLate=ema(closes.slice(Math.floor(lookback/2)),Math.min(14,Math.floor(lookback/2)));
-  const slope=(emaLate-emaEarly)/emaEarly*100;
-  const ATR=calcATR(bars.slice(-lookback),14);
-  if(Math.abs(slope)<0.01)return'neut'; // ほぼフラット
-  if(slope>0&&slope<0.05)return'slow_bull'; // じわ上げ
-  if(slope<0&&slope>-0.05)return'slow_bear'; // じわ下げ
-  if(slope>=0.05)return'bull';
-  if(slope<=-0.05)return'bear';
-  return'neut';
-}
-
-// ==================== SQUEEZE ANALYSIS (独自ロジック) ====================
-// BB Width vs Keltner Channel Width
-// GoldScope Vision独自実装
-function calcSqueeze(bars,bbPeriod=20,bbDev=2.0,atrPeriod=20,kcFactor=1.5,momPeriod=20){
-  const closes=bars.map(b=>b.c);
-  const n=closes.length;
-  if(n<bbPeriod+5)return{state:'normal',bbW:0,kcW:0,ratio:1,dir:'neut',momentum:0,expanding:false};
-
-  const BB=bb(closes,bbPeriod,bbDev);
-  const ATR=calcATR(bars,atrPeriod);
-  const midEMA=ema(closes,bbPeriod);
-  const kcW=ATR*kcFactor*2; // Keltner幅
-  const bbW=BB?BB.width:0;
-  const ratio=kcW>0?bbW/kcW:1;
-
-  // Squeeze判定: BB幅がKC幅より小さい → 圧縮中
-  const isSqueeze=bbW<kcW;
-
-  // スクイーズ終了判定
-  const wasSqueezing=prevSqState==='squeeze';
-  const squeezeEnd=wasSqueezing&&!isSqueeze;
-
-  // モメンタム: 線形回帰の傾きで代替
-  const recentCloses=closes.slice(-momPeriod);
-  const momMean=recentCloses.reduce((a,b)=>a+b,0)/momPeriod;
-  let num=0,den=0;
-  for(let i=0;i<momPeriod;i++){num+=(i-momPeriod/2)*(recentCloses[i]-momMean);den+=(i-momPeriod/2)**2;}
-  const momentum=den>0?num/den:0;
-
-  // 拡大継続判定
-  const prevBBW=BB?bbW*0.95:0; // 簡易: 前回比較はATRで代替
-  const expanding=!isSqueeze&&bbW>ATR*0.5;
-
-  // 方向確認
-  const price=closes[n-1];
-  const rfDir=rfPrevDir;
-  let sqDir='neut';
-  if(squeezeEnd||(!isSqueeze)){
-    if(momentum>0&&rfDir==='bull')sqDir='bull';
-    else if(momentum<0&&rfDir==='bear')sqDir='bear';
-    else if(momentum>0)sqDir='bull';
-    else if(momentum<0)sqDir='bear';
-  }
-
-  const state=isSqueeze?'squeeze':squeezeEnd?'squeeze_end':expanding?'expanding':'normal';
-  prevSqState=isSqueeze?'squeeze':'normal';
-
-  return{state,bbW:parseFloat(bbW.toFixed(2)),kcW:parseFloat(kcW.toFixed(2)),ratio:parseFloat(ratio.toFixed(2)),dir:sqDir,momentum:parseFloat(momentum.toFixed(2)),expanding,squeezeEnd};
-}
-
-// ==================== ORDER BLOCKS ====================
 function detectOB(hist){
   const obs=[];if(hist.length<10)return{above:[],below:[]};
-  const atrVal=calcATR(hist.slice(-20),14)||1;
+  const atrV=calcATR(hist.slice(-20),14)||1;
   const n=hist.length;
   for(let i=3;i<n-1;i++){
-    const move=hist[i].c-hist[i-1].c;
-    if(move>atrVal*1.5){const h=hist[i-1].h||(hist[i-1].c+atrVal*.5),l=hist[i-1].l||(hist[i-1].c-atrVal*.5);obs.push({type:'bear',mid:parseFloat(((h+l)/2).toFixed(1)),high:parseFloat(h.toFixed(1)),low:parseFloat(l.toFixed(1)),label:'売りOB'});}
-    if(move<-atrVal*1.5){const h=hist[i-1].h||(hist[i-1].c+atrVal*.5),l=hist[i-1].l||(hist[i-1].c-atrVal*.5);obs.push({type:'bull',mid:parseFloat(((h+l)/2).toFixed(1)),high:parseFloat(h.toFixed(1)),low:parseFloat(l.toFixed(1)),label:'買いOB'});}
+    const move=hist[i].c-(hist[i].o||hist[i-1].c);
+    if(move>atrV*1.5){const h=hist[i-1].h||(hist[i-1].c+atrV*.5),l=hist[i-1].l||(hist[i-1].c-atrV*.5);obs.push({type:'bear',mid:parseFloat(((h+l)/2).toFixed(1)),high:h,low:l,label:'売りOB'});}
+    if(move<-atrV*1.5){const h=hist[i-1].h||(hist[i-1].c+atrV*.5),l=hist[i-1].l||(hist[i-1].c-atrV*.5);obs.push({type:'bull',mid:parseFloat(((h+l)/2).toFixed(1)),high:h,low:l,label:'買いOB'});}
   }
   const price=hist[n-1].c;
-  const filtered=obs.filter(o=>Math.abs(o.mid-price)<atrVal*10);
-  return{above:filtered.filter(o=>o.mid>price).sort((a,b)=>a.mid-b.mid).slice(0,2),below:filtered.filter(o=>o.mid<price).sort((a,b)=>b.mid-a.mid).slice(0,2)};
+  const f=obs.filter(o=>Math.abs(o.mid-price)<atrV*10);
+  return{above:f.filter(o=>o.mid>price).sort((a,b)=>a.mid-b.mid).slice(0,2),below:f.filter(o=>o.mid<price).sort((a,b)=>b.mid-a.mid).slice(0,2)};
+}
+function calcRangeFilter(hist,mul=2.5,p=14){
+  const n=hist.length;if(n<5)return{filtered:hist[n-1]?.c||0,dir:'neut',dist:0,filterRange:5};
+  const ATR=calcATR(hist,p);
+  const fr=ATR*mul;
+  let filtered=rfPrevFiltered!==null?rfPrevFiltered:hist[0].c;
+  let dir=rfPrevDir;
+  const price=hist[n-1].c;
+  if(price>filtered+fr){filtered=price;dir='bull';}
+  else if(price<filtered-fr){filtered=price;dir='bear';}
+  rfPrevFiltered=filtered;rfPrevDir=dir;
+  return{filtered:parseFloat(filtered.toFixed(1)),dir,dist:parseFloat((price-filtered).toFixed(1)),filterRange:parseFloat(fr.toFixed(1))};
 }
 
-// ==================== TP先到達確率 (Monte Carlo) ====================
-function calcTPFirstProbability(bars,price,tpPrice,slPrice,trials=300,steps=20){
-  if(!tpPrice||!slPrice) return{prob:50,tpFirst:0,slFirst:0};
-  const closes=bars.map(b=>b.c);
-  const returns=[];
-  for(let i=1;i<closes.length;i++) returns.push((closes[i]-closes[i-1])/closes[i-1]);
-  if(returns.length<5) return{prob:50,tpFirst:0,slFirst:0};
-  const mean=returns.reduce((a,b)=>a+b,0)/returns.length;
-  const sigma=Math.sqrt(returns.reduce((a,b)=>a+Math.pow(b-mean,2),0)/returns.length)||0.001;
+// TP候補（軽量版 - ループなし）
+function getTPLevels(price,shortDir,BB,e20,e75,e200,VW,ATR,OB){
+  const isLong=shortDir==='bull';
+  const cands=[];
+  const add=(l,p,d)=>{
+    if(!p||isNaN(p))return;
+    const inDir=isLong?(p-price)>ATR*.15:(price-p)>ATR*.15;
+    if(inDir)cands.push({label:l,price:parseFloat(p.toFixed(1)),pips:Math.round(Math.abs(p-price)/0.01),desc:d});
+  };
+  if(BB){add('BB上限',BB.u,'BB抵抗');add('BB中央',BB.m,'ミドル');add('BB下限',BB.l,'BB支持');}
+  if(e20)add('EMA20',e20,'短期MA');
+  if(e75)add('EMA75',e75,'中期MA');
+  if(e200)add('EMA200',e200,'長期MA');
+  if(VW)add('VWAP',VW,'出来高平均');
+  add('ATR×1',isLong?price+ATR:price-ATR,'ATR1倍');
+  add('ATR×2',isLong?price+ATR*2:price-ATR*2,'ATR2倍');
+  const obs=isLong?OB.above:OB.below;
+  obs.forEach(o=>add(o.label,o.mid,isLong?'売りOB':'買いOB'));
+  const base=Math.round(price/50)*50;
+  [50,100,150].forEach(d=>add('$'+(base+(isLong?d:-d)),base+(isLong?d:-d),'ラウンド'));
+  return cands.sort((a,b)=>a.pips-b.pips).slice(0,5);
+}
+
+// TP先到達確率（軽量版 - ランダムウォーク30試行のみ）
+function tpFirstProb(hist,price,tpPrice,slPrice){
+  if(!tpPrice||!slPrice)return 50;
+  const closes=hist.map(b=>b.c);
+  const ret=[];for(let i=1;i<closes.length&&i<50;i++)ret.push(closes[i]-closes[i-1]);
+  if(!ret.length)return 50;
+  const sigma=Math.sqrt(ret.reduce((a,b)=>a+b*b,0)/ret.length)||1;
   const isLong=tpPrice>price;
-  let tpFirst=0,slFirst=0,neither=0;
-  for(let t=0;t<trials;t++){
+  let tp=0,sl=0;
+  for(let t=0;t<30;t++){
     let p=price,hit=null;
-    for(let s=0;s<steps;s++){
-      const u1=Math.random()||1e-10,u2=Math.random()||1e-10;
-      const z=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
-      p*=(1+mean+sigma*z);
+    for(let s=0;s<15;s++){
+      p+=(Math.random()-.5)*sigma*2;
       if(isLong){if(p>=tpPrice){hit='tp';break;}if(p<=slPrice){hit='sl';break;}}
       else{if(p<=tpPrice){hit='tp';break;}if(p>=slPrice){hit='sl';break;}}
     }
-    if(hit==='tp')tpFirst++;else if(hit==='sl')slFirst++;else neither++;
+    if(hit==='tp')tp++;else if(hit==='sl')sl++;
   }
-  const total=tpFirst+slFirst||1;
-  return{prob:Math.round(tpFirst/total*100),tpFirst,slFirst,neither};
+  const tot=tp+sl||1;
+  return Math.round(tp/tot*100);
 }
 
-// TP候補をconfluenceスコア付きで収集
-function buildTPCandidates(price,shortDir,bars,BB,e20,e75,e200,VW,ATR,OB){
-  const isLong=shortDir==='bull';
-  const raw=[];
-  const pips=p=>Math.round(Math.abs(p-price)/0.01);
-  function push(label,p,src,desc){
-    if(!p||isNaN(p))return;
-    const inDir=isLong?(p-price)>ATR*0.1:(price-p)>ATR*0.1;
-    if(!inDir)return;
-    raw.push({label,price:parseFloat(p.toFixed(1)),src,desc,pips:pips(p)});
-  }
-  if(BB){push('BB上限',BB.u,'BB',isLong?'上限抵抗':'上限抵抗');push('BB中央',BB.m,'BB','ミドル');push('BB下限',BB.l,'BB',isLong?'下限支持':'下限支持');}
-  if(e20) push('EMA20',e20,'EMA','短期MA');
-  if(e75) push('EMA75',e75,'EMA','中期MA');
-  if(e200) push('EMA200',e200,'EMA','長期MA');
-  if(VW) push('VWAP',VW,'VWAP','出来高加重平均');
-  push('ATR×1',isLong?price+ATR:price-ATR,'ATR','ATR1倍');
-  push('ATR×1.5',isLong?price+ATR*1.5:price-ATR*1.5,'ATR','ATR1.5倍');
-  push('ATR×2',isLong?price+ATR*2:price-ATR*2,'ATR','ATR2倍');
-  const obs=isLong?OB.above:OB.below;
-  obs.forEach(ob=>push(ob.label,ob.mid,'OB',isLong?'売りOB':'買いOB'));
-  if(bars.length>=20){
-    const r20=bars.slice(-20);
-    push('直近高値',Math.max(...r20.map(b=>b.h)),'Swing','20本高値');
-    push('直近安値',Math.min(...r20.map(b=>b.l)),'Swing','20本安値');
-  }
-  const base=Math.round(price/50)*50;
-  [-50,0,50,100,150,200].forEach(d=>push('$'+(base+d),base+d,'Round','ラウンドナンバー'));
-  // 価格順ソート、近い順
-  raw.sort((a,b)=>a.pips-b.pips);
-  // confluence: ATR*0.3以内を統合
-  const merged=[];
-  raw.forEach(c=>{
-    const ex=merged.find(m=>Math.abs(m.price-c.price)<ATR*0.3);
-    if(ex){ex.confluence=(ex.confluence||1)+1;ex.sources=(ex.sources||[ex.src]);ex.sources.push(c.src);ex.label+='+'+c.src;}
-    else merged.push({...c,confluence:1,sources:[c.src]});
-  });
-  merged.sort((a,b)=>a.pips-b.pips);
-  return merged.slice(0,5);
+// エントリー判定（シンプル）
+function entryJudge(prob,adxVal,shortDir){
+  if(adxVal<20)return{label:'WAIT',color:'var(--am)',detail:`ADX${adxVal} レンジ — 方向待ち`,prob};
+  if(prob>=70)return{label:'ENTRY',color:'var(--gr)',detail:`TP先到達 ${prob}% — エントリー検討`,prob};
+  if(prob>=60)return{label:'WAIT',color:'var(--am)',detail:`TP先到達 ${prob}% — 条件改善待ち`,prob};
+  return{label:'NO TRADE',color:'var(--rd)',detail:`TP先到達 ${prob}% — リスク高`,prob};
 }
 
-function buildSLCandidates(price,shortDir,BB,ATR,OB){
-  const isLong=shortDir==='bull';
-  const sls=[];
-  const pips=p=>Math.round(Math.abs(p-price)/0.01);
-  if(BB) sls.push({label:isLong?'BB下限外':'BB上限外',price:parseFloat((isLong?BB.l-ATR*.3:BB.u+ATR*.3).toFixed(1)),desc:'BB外側SL'});
-  sls.push({label:'ATR×1',price:parseFloat((isLong?price-ATR:price+ATR).toFixed(1)),desc:'タイトSL'});
-  sls.push({label:'ATR×1.5',price:parseFloat((isLong?price-ATR*1.5:price+ATR*1.5).toFixed(1)),desc:'標準SL'});
-  const obs=isLong?OB.below:OB.above;
-  if(obs[0]) sls.push({label:obs[0].label+'外',price:parseFloat((isLong?obs[0].low-ATR*.1:obs[0].high+ATR*.1).toFixed(1)),desc:'OB外側SL'});
-  return sls.map(s=>({...s,pips:pips(s.price)})).sort((a,b)=>a.pips-b.pips);
-}
-
-function calcBBState(bars,BB){
-  if(!BB||bars.length<5) return{state:'normal',label:'Normal',desc:'通常状態'};
-  const closes=bars.slice(-5).map(b=>b.c);
-  const bw=(BB.u-BB.l)/BB.m;
-  if(bw<0.006) return{state:'squeeze',label:'⚡ Squeeze Zone',desc:'ボラティリティ圧縮中'};
-  const uc=closes.filter(c=>c>=BB.u*.998).length;
-  const lc=closes.filter(c=>c<=BB.l*1.002).length;
-  if(uc>=3) return{state:'bandwalk_bull',label:'📈 Band Walk UP',desc:'上限なぞる強い上昇。逆張り-12%'};
-  if(lc>=3) return{state:'bandwalk_bear',label:'📉 Band Walk DOWN',desc:'下限なぞる強い下落。逆張り-12%'};
-  const last=closes[closes.length-1],prev=closes[closes.length-2]||last;
-  if(prev>=BB.u*.998&&last<prev) return{state:'reversal_bear',label:'↩ Reversal Bear',desc:'BB上限から反落の可能性'};
-  if(prev<=BB.l*1.002&&last>prev) return{state:'reversal_bull',label:'↪ Reversal Bull',desc:'BB下限から反発の可能性'};
-  if(last>BB.m&&prev>BB.m) return{state:'trend_bull',label:'↑ Trend Follow Bull',desc:'ミドル上で上昇追従'};
-  if(last<BB.m&&prev<BB.m) return{state:'trend_bear',label:'↓ Trend Follow Bear',desc:'ミドル下で下落追従'};
-  return{state:'normal',label:'Normal',desc:'通常状態'};
-}
-
-function calcEntryJudgment(tpProb,adxVal,bbState,shortDir){
-  const isBandWalkAgainst=(bbState.state==='bandwalk_bull'&&shortDir==='bear')||(bbState.state==='bandwalk_bear'&&shortDir==='bull');
-  let adj=tpProb-(isBandWalkAgainst?12:0);
-  if(adxVal<20) return{label:'WAIT',cls:'caution',color:'var(--am)',detail:`ADX${adxVal} レンジ相場 — 方向感待ち`,prob:adj};
-  if(adj>=70) return{label:'ENTRY',cls:'go',color:'var(--gr)',detail:`TP先到達確率 ${adj}% — エントリー検討`,prob:adj};
-  if(adj>=60) return{label:'WAIT',cls:'caution',color:'var(--am)',detail:`TP先到達確率 ${adj}% — 条件改善待ち`,prob:adj};
-  return{label:'NO TRADE',cls:'wait',color:'var(--rd)',detail:`TP先到達確率 ${adj}% — リスク高`,prob:adj};
-}
-
-function calcExpectedValue(bars,shortDir,ATR){
-  // 後方互換
-  const n=bars.length,closes=bars.map(b=>b.c),price=closes[n-1];
-  const ret=[];for(let i=1;i<closes.length;i++)ret.push((closes[i]-closes[i-1])/closes[i-1]);
-  const sig=Math.sqrt(ret.reduce((a,b)=>a+b*b,0)/ret.length||0);
-  let up=0;const fins=[];
-  for(let i=0;i<200;i++){let p=price;for(let s=0;s<12;s++){const r=(Math.random()+Math.random()-1)*sig*Math.sqrt(3);p*=(1+r);}if(p>price)up++;fins.push(p);}
-  fins.sort((a,b)=>a-b);
-  return{upPips:Math.max(Math.round((fins[170]-price)/0.01),0),dnPips:Math.max(Math.round((price-fins[30])/0.01),0),upPct:Math.round(up/2),dnPct:100-Math.round(up/2),p5:fins[10],p95:fins[190]};
-}
-
-// ==================== DIRECTION HELPERS ====================
-function biasTxt(dir){return dir==='bull'?'Bullish Bias':dir==='bear'?'Bearish Bias':'Range / Neutral';}
-function arrowTxt(dir){return dir==='bull'?'↑':dir==='bear'?'↓':'→';}
-function arrowColor(dir){return dir==='bull'?'var(--gr)':dir==='bear'?'var(--rd)':'var(--tx2)';}
-function trendDirWord(dir){return dir==='bull'?'上方向優勢':dir==='bear'?'下方向優勢':'レンジ・中立';}
-
-// ==================== ANALYZE ====================
+// ===== ANALYZE =====
 function analyze(price,open,hist,spotMeta){
   const closes=hist.map(x=>x.c);
   const sh=hist.slice(-80),sc=sh.map(x=>x.c);
   const BB=bb(sc,20,2);
-  const e20=ema(sc,Math.min(20,sc.length));
+  const e20=ema(sc,20);
   const rsiS=rsi(sc);
   const VW=vwap(sh);
   const bPct=buyPressure(sh);
   const sPct=100-bPct;
-  const obvArr=calcOBV(sh);
-  const obvDir=obvArr.length>10?(obvArr[obvArr.length-1]>obvArr[obvArr.length-10]?'bull':'bear'):'neut';
   const ATR=calcATR(sh,14);
-  const ADX=calcADX(sh,14);
-  const e75=ema(closes,Math.min(75,closes.length));
-  const e200=ema(closes,Math.min(200,closes.length));
-  const rsiM=rsi(closes.slice(-50));
   const ATRM=calcATR(hist,20);
-  const MS=marketStructure(hist);
+  const ADX=calcADX(sh,14);
+  const e75=ema(closes,75);
+  const e200=ema(closes,200);
+  const rsiM=rsi(closes.slice(-50));
+  const OB=detectOB(hist);
+  const RF=calcRangeFilter(hist,2.5,14);
   const {adx:adxVal,pdi,ndi}=ADX;
-  const trendDir=pdi>ndi?'bull':'bear';
   const changePct=((price-open)/open)*100;
-  const sess=()=>{const h=new Date().getUTCHours();return h>=22||h<5?{name:'NY時間',hot:true}:h>=7&&h<16?{name:'ロンドン時間',hot:true}:{name:'アジア時間',hot:false};}
-  const sessInfo=sess();
+  const trendDir=pdi>ndi?'bull':'bear';
 
-  // Short direction
-  const bullSig=[bPct>55,obvDir==='bull',price>VW,price>e20,rsiS<65&&rsiS>35&&changePct>0].filter(Boolean).length;
-  const bearSig=[bPct<45,obvDir==='bear',price<VW,price<e20,rsiS>35&&changePct<0].filter(Boolean).length;
+  // 方向判定
+  const bullSig=[bPct>55,price>VW,price>e20,rsiS<65&&changePct>0].filter(Boolean).length;
+  const bearSig=[bPct<45,price<VW,price<e20,rsiS>35&&changePct<0].filter(Boolean).length;
   const shortDir=bullSig>bearSig?'bull':bearSig>bullSig?'bear':'neut';
   const midDir=price>e75&&price>e200?'bull':price<e75&&price<e200?'bear':'neut';
   const longAvgNew=closes.slice(-20).reduce((a,b)=>a+b,0)/20;
   const longAvgOld=closes.slice(0,20).reduce((a,b)=>a+b,0)/20;
   const longDir=longAvgNew>longAvgOld+ATRM*2?'bull':longAvgNew<longAvgOld-ATRM*2?'bear':'neut';
 
-  // Range filter
-  const RF=calcRangeFilter(hist,2.5,14);
-  // Slow trend
-  const slowTrend=calcSlowTrend(hist,40);
-  // Squeeze
-  const SQ=calcSqueeze(hist,20,2.0,20,1.5,20);
-  // OB
-  const OB=detectOB(hist);
-  // Expected Value
-  const EV=calcExpectedValue(hist,shortDir,ATR);
+  // Slow trend (軽量)
+  const earlyEMA=ema(closes.slice(0,40),14)||price;
+  const lateEMA=ema(closes.slice(-40),14)||price;
+  const slope=(lateEMA-earlyEMA)/earlyEMA*100;
+  const slowTrend=slope>0.05?'bull':slope<-0.05?'bear':slope>0.01?'slow_bull':slope<-0.01?'slow_bear':'neut';
 
-  // ADX label with direction
-  const trendDirWordAdx=shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'';
-  const msLabel=adxVal>=40?(trendDirWordAdx?`強い${trendDirWordAdx}トレンド`:'強いトレンド'):adxVal>=25?(trendDirWordAdx?`${trendDirWordAdx}トレンド`:'トレンド発生'):adxVal>=18?(trendDirWordAdx?`弱い${trendDirWordAdx}トレンド`:'弱いトレンド'):'レンジ相場';
-  const msColor=adxVal>=40?arrowColor(shortDir):adxVal>=25?arrowColor(shortDir):adxVal>=18?(shortDir==='bull'?'#5BB870':shortDir==='bear'?'#D07050':'var(--rd)'):'var(--rd)';
+  // ADXラベル
+  const dirW=shortDir==='bull'?'上昇':shortDir==='bear'?'下落':'';
+  const msLabel=adxVal>=40?(dirW?`強い${dirW}トレンド`:'強いトレンド'):adxVal>=25?(dirW?`${dirW}トレンド`:'トレンド'):adxVal>=18?(dirW?`弱い${dirW}トレンド`:'弱いトレンド'):'レンジ相場';
+  const msColor=adxVal>=40?'var(--gr)':adxVal>=25?(shortDir==='bull'?'var(--gr)':shortDir==='bear'?'var(--rd)':'var(--am)'):'var(--rd)';
 
-  // Levels for reference zones
-  const levels=[];
-  if(BB){levels.push({l:'BB上限',p:BB.u,t:'bear',d:'参考抵抗帯'});levels.push({l:'BB中央',p:BB.m,t:'neut',d:'ミドル'});levels.push({l:'BB下限',p:BB.l,t:'bull',d:'参考支持帯'});}
-  if(VW)levels.push({l:'VWAP',p:VW,t:price>VW?'bull':'bear',d:'出来高平均'});
-  if(e20)levels.push({l:'EMA20',p:e20,t:price>e20?'bull':'bear',d:'短期MA'});
-  if(e75)levels.push({l:'EMA75',p:e75,t:price>e75?'bull':'bear',d:'中期MA'});
-  if(e200)levels.push({l:'EMA200',p:e200,t:price>e200?'bull':'bear',d:'長期MA'});
-  levels.sort((a,b)=>b.p-a.p);
-  const above=levels.filter(x=>x.p>price+.2).sort((a,b)=>a.p-b.p);
-  const below=levels.filter(x=>x.p<price-.2).sort((a,b)=>b.p-a.p);
+  // BB状態（軽量）
+  const bw=BB?(BB.u-BB.l)/BB.m:0;
+  const bbStateLabel=bw<0.006?'⚡ Squeeze Zone':bw>0.018?'📈 Expansion':sc.slice(-3).filter(c=>c>=BB?.u*.998).length>=2?'Band Walk UP':sc.slice(-3).filter(c=>c<=BB?.l*1.002).length>=2?'Band Walk DOWN':'Normal';
 
-  // TP候補・SL候補をconfluenceスコアで構築
-  const tpCandidates=buildTPCandidates(price,shortDir,hist,BB,e20,e75,e200,VW,ATR,OB);
-  const slCandidates=buildSLCandidates(price,shortDir,BB,ATR,OB);
+  // TP/SL
+  const tpLevels=getTPLevels(price,shortDir,BB,e20,e75,e200,VW,ATR,OB);
   const slLong=parseFloat((BB?BB.l-ATR*.3:price-ATR*1.5).toFixed(1));
   const slShort=parseFloat((BB?BB.u+ATR*.3:price+ATR*1.5).toFixed(1));
-  const activeSL=shortDir==='bull'?slLong:slShort;
+  const activeSL=shortDir==='bull'?slLong:shortDir==='bear'?slShort:price-ATR*1.5;
 
-  // TP先到達確率計算（初回は軽量30試行、バックグラウンドで精度向上）
-  const tp1=tpCandidates[0],tp2=tpCandidates[1];
-  const tpProb=tp1?calcTPFirstProbability(hist,price,tp1.price,activeSL,30,12):{prob:50};
-  const tp1Prob=tpProb.prob;
+  // TP先到達確率（軽量30試行）
+  const tp1=tpLevels[0];
+  const prob=tp1?tpFirstProb(hist,price,tp1.price,activeSL):50;
+  const Entry=entryJudge(prob,adxVal,shortDir);
 
-  // BB状態
-  const BBState=calcBBState(sh,BB);
+  // セッション
+  const h=new Date().getUTCHours();
+  const sessName=h>=22||h<5?'NY時間':h>=7&&h<16?'ロンドン時間':'アジア時間';
 
-  // ENTRY判定
-  const Entry=calcEntryJudgment(tp1Prob,adxVal,BBState,shortDir);
-
-  // 後方互換refLong/refShort
-  function makeRef(list,isLong){
-    const res=list.slice(0,3).map((x,i)=>{const pts=parseFloat(Math.abs(x.p-price).toFixed(1));const pips=Math.round(pts/0.01);return{label:`参考TP${i+1}·${x.l}`,price:parseFloat(x.p.toFixed(1)),pts,pips,rr:(pts/ATR).toFixed(1),desc:x.d};});
-    if(!res.length)[1,2].forEach(m=>{const pts=parseFloat((ATR*m).toFixed(1));const p=parseFloat((isLong?price+ATR*m:price-ATR*m).toFixed(1));res.push({label:`参考TP${m}·ATR×${m}`,price:p,pts,pips:Math.round(pts/0.01),rr:m.toFixed(1),desc:'ATR基準'});});
-    return res;
-  }
-  const refLong=makeRef(above,true),refShort=makeRef(below,false);
-
-  // TF data
-  const ultraH=hist.slice(-20),ultraBP=buyPressure(ultraH);
-  const ultraDir=ultraBP>55?'bull':ultraBP<45?'bear':'neut';
-  const ultraBB=bb(ultraH.map(b=>b.c),Math.min(10,ultraH.length));
-  const ultraTP=parseFloat((ultraDir==='bull'?(ultraBB?.u??price+ATR*.5):(ultraBB?.l??price-ATR*.5)).toFixed(1));
-  const midTP=Math.round(midDir==='bull'?price+ATRM*8:price-ATRM*8);
-  const longTP=Math.round(longDir==='bull'?price+ATRM*20:price-ATRM*20);
-  const shortTP=tpCandidates[0]||null;
-  const shortTP2=tpCandidates[1]||null;
-
-  // Next scenarios
+  // シナリオ
   const scenarios=[];
-  const nearResist=OB.above[0];const nearSupport=OB.below[0];
-  if(shortDir==='bull'){
-    if(shortTP)scenarios.push({c:'var(--gr)',cond:'上方向継続の場合',title:`参考TP1 $${shortTP.price}（${shortTP.pips}pips · 到達確率${tp1Prob}%）`,body:`${shortTP.desc}まで参考。${nearResist?'$'+nearResist.mid+'付近に売りOBあり。':''}`});
-    scenarios.push({c:'var(--rd)',cond:'リスク確認ライン',title:`参考SL $${slLong}`,body:'参考SLとの距離を確認し、リスク許容幅をご自身で判断してください。'});
-  }else if(shortDir==='bear'){
-    if(shortTP)scenarios.push({c:'var(--rd)',cond:'下方向継続の場合',title:`参考TP1 $${shortTP.price}（${shortTP.pips}pips · 到達確率${tp1Prob}%）`,body:`${shortTP.desc}まで参考。${nearSupport?'$'+nearSupport.mid+'付近に買いOBあり。':''}`});
-    scenarios.push({c:'var(--gr)',cond:'リスク確認ライン',title:`参考SL $${slShort}`,body:'参考SLとの距離を確認し、リスク許容幅をご自身で判断してください。'});
-  }else{
-    const rangeLow=BB?Math.round(BB.l):Math.round(price-ATR*2);
-    const rangeHigh=BB?Math.round(BB.u):Math.round(price+ATR*2);
-    scenarios.push({c:'var(--gr)',cond:'上抜けた場合',title:`上方向参考 $${rangeHigh}`,body:'BB上限/VWAPを上抜けた場合の参考上方向。ADX25超えで方向が強まる可能性。'});
-    scenarios.push({c:'var(--rd)',cond:'下抜けた場合',title:`下方向参考 $${rangeLow}`,body:'BB下限/VWAPを下抜けた場合の参考下方向。'});
+  const nearOB=shortDir==='bull'?OB.above[0]:OB.below[0];
+  if(tp1){
+    const color=shortDir==='bull'?'var(--gr)':'var(--rd)';
+    scenarios.push({c:color,cond:shortDir==='bull'?'上方向継続の場合':'下方向継続の場合',
+      title:`参考TP1 $${tp1.price}（${tp1.pips}pips · 到達${prob}%）`,
+      body:`${tp1.desc}。${nearOB?'$'+nearOB.mid+'付近にOBあり。':''}`});
   }
-  if(e75)scenarios.push({c:'var(--am)',cond:'中期の参考ライン',title:`EMA75 $${Math.round(e75)}`,body:price>e75?'EMA75の上。サポートとして機能しているか確認。':'EMA75の下。抵抗になっているか確認。'});
-  if(SQ.squeezeEnd)scenarios.push({c:'var(--pu)',cond:'スクイーズ終了',title:'Expansion Watch — 方向確認を',body:'ボラティリティの圧縮が終了。方向確認後に参考価格帯を再確認。'});
+  scenarios.push({c:shortDir==='bull'?'var(--rd)':'var(--gr)',cond:'リスク確認ライン',
+    title:`参考SL $${activeSL}`,body:'参考SLとの距離・リスク許容幅をご自身で確認ください。'});
+  if(e75)scenarios.push({c:'var(--am)',cond:'中期ライン',title:`EMA75 $${Math.round(e75)}`,
+    body:price>e75?'EMA75上でサポート。割れると中期目線崩れ。':'EMA75下で抵抗。上抜けると中期強気転換。'});
 
-  // AI Summary
-  const sqSentence=SQ.state==='squeeze'?'Squeeze Zone（ボラ圧縮中）。':SQ.state==='expanding'?`Expansion Watch。${SQ.dir==='bull'?'上方向優勢':SQ.dir==='bear'?'下方向優勢':'方向未確定'}。`:SQ.squeezeEnd?'スクイーズ終了、方向確認中。':'';
-  const slowSentence=slowTrend==='slow_bull'?'緩やかな上昇傾向。':slowTrend==='slow_bear'?'緩やかな下落傾向。':'';
-  const rfSentence=RF.dir==='bull'?`レンジフィルター上方向（$${RF.filtered}）。`:RF.dir==='bear'?`レンジフィルター下方向（$${RF.filtered}）。`:'';
-  const obSentence=nearResist?`$${nearResist.mid}に売りOB。`:nearSupport?`$${nearSupport.mid}に買いOB。`:'';
-  const entryStr=`${Entry.label}（TP先到達確率${Entry.prob}%）。`;
+  // スクイーズ簡易
+  const sqLabel=bbStateLabel==='⚡ Squeeze Zone'?'Squeeze Zone（次の動き待ち）':bbStateLabel==='📈 Expansion'?'Expansion Watch':'Normal';
 
-  const aiComment=`${entryStr}${msLabel}（ADX${adxVal}）。${BBState.label}。${sqSentence}${slowSentence}${rfSentence}${obSentence}短期: ${biasTxt(shortDir)}、中期: ${biasTxt(midDir)}。${sessInfo.name}。`;
+  // AIコメント
+  const entryStr=`${Entry.label}（TP先到達${Entry.prob}%）`;
+  const obStr=nearOB?`$${nearOB.mid}にOB。`:'';
+  const rfStr=RF.dir!=='neut'?`レンジフィルター${RF.dir==='bull'?'↑':'↓'}$${RF.filtered}。`:'';
+  const slowStr=slowTrend==='slow_bull'?'緩やかな上昇傾向。':slowTrend==='slow_bear'?'緩やかな下落傾向。':'';
+  const aiComment=`${entryStr}。${msLabel}(ADX${adxVal})。${bbStateLabel}。${rfStr}${obStr}${slowStr}短期:${shortDir==='bull'?'↑':shortDir==='bear'?'↓':'→'} 中期:${midDir==='bull'?'↑':midDir==='bear'?'↓':'→'}。${sessName}。`;
 
-  // Scores for sentiment
+  // 音声（シンプル・状況整理型）
+  let voiceText='';
+  if(bbStateLabel==='⚡ Squeeze Zone'){
+    voiceText=`Squeeze Zoneです。ボラティリティが圧縮中。次の動きの前兆の可能性があります。現在$${price.toFixed(1)}。`;
+  }else if(shortDir==='bull'){
+    voiceText=`上方向優勢です。${tp1?'参考TP1は$'+tp1.price+'、'+tp1.pips+'pips先。':''}参考SLは$${slLong}。TP先到達確率${prob}%。${Entry.label}。`;
+  }else if(shortDir==='bear'){
+    voiceText=`下方向優勢です。${tp1?'参考TP1は$'+tp1.price+'、'+tp1.pips+'pips先。':''}参考SLは$${slShort}。TP先到達確率${prob}%。${Entry.label}。`;
+  }else{
+    voiceText=`レンジ相場です。ADX${adxVal}。方向が出るまで待機推奨。現在$${price.toFixed(1)}。`;
+  }
+
+  // スコア
   let techScore=50;
   if(rsiS<35)techScore+=18;else if(rsiS>65)techScore-=18;
   if(price>e20)techScore+=10;else techScore-=10;
@@ -1568,409 +1356,285 @@ function analyze(price,open,hist,spotMeta){
   techScore=Math.max(10,Math.min(90,Math.round(techScore)));
   let midTS=50;if(price>e75)midTS+=20;else midTS-=20;if(price>e200)midTS+=20;else midTS-=20;
   midTS=Math.max(10,Math.min(90,Math.round(midTS)));
-  const volScore=Math.min(90,Math.round((ATR/price)*10000));
 
-  // Voice text (分析支援UI思想: 状況整理ナビゲーション)
-  let voiceText='';
-  const isRange=adxVal<20;
-  const nearOBText=nearResist?`$${nearResist.mid}ドル付近に売りの壁があります。`:nearSupport?`$${nearSupport.mid}ドル付近に買いの壁があります。`:'';
-  if(SQ.state==='squeeze'){
-    voiceText=`現在ボラティリティが圧縮しています。次の大きな方向感が出やすい待機局面として整理します。${nearOBText}参考価格帯とリスク許容幅を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
-  }else if(SQ.squeezeEnd){
-    const sqDirTxt=SQ.dir==='bull'?'上方向優勢に見えます。':SQ.dir==='bear'?'下方向優勢に見えます。':'方向はまだ未確定です。Range / Neutral として整理します。';
-    voiceText=`スクイーズが終了しました。現在は${sqDirTxt}${nearOBText}参考価格帯とリスク許容幅を再確認してください。現在価格は${price.toFixed(1)}ドルです。`;
-  }else if(isRange){
-    const rangeLow=BB?Math.round(BB.l):Math.round(price-ATR*2);
-    const rangeHigh=BB?Math.round(BB.u):Math.round(price+ATR*2);
-    const dom=bPct>55?`参考として${biasTxt('bull')}に見えます。`:bPct<45?`参考として${biasTxt('bear')}に見えます。`:'方向感は拮抗しています。';
-    voiceText=`${rangeLow}ドルから${rangeHigh}ドルのレンジ内で整理中です。${dom}${nearOBText}${slowTrend==='slow_bull'?'緩やかな上昇傾向も参考にしてください。':slowTrend==='slow_bear'?'緩やかな下落傾向も参考にしてください。':''}現在価格は${price.toFixed(1)}ドルです。`;
-  }else if(shortDir==='bull'){
-    const tp1s=shortTP?`参考TP1は${shortTP.price}ドル、${shortTP.pips}ピップス先です。`:'';
-    const wallStr=nearResist?`ただし${nearResist.mid}ドル付近に売りの壁があります。`:'';
-    const slowStr=slowTrend==='slow_bull'?'緩やかな上昇傾向も継続しています。':'';
-    voiceText=`現在は上方向優勢です。${tp1s}${wallStr}参考SLは${slLong}ドルです。${slowStr}ボラティリティ拡大が始まっています。参考価格帯とリスク許容幅を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
-  }else if(shortDir==='bear'){
-    const tp1s=shortTP?`参考TP1は${shortTP.price}ドル、${shortTP.pips}ピップス先です。`:'';
-    const wallStr=nearSupport?`ただし${nearSupport.mid}ドル付近に買いの壁があります。`:'';
-    const slowStr=slowTrend==='slow_bear'?'緩やかな下落傾向も継続しています。':'';
-    voiceText=`現在は下方向優勢です。${tp1s}${wallStr}参考SLは${slShort}ドルです。${slowStr}参考価格帯とリスク許容幅を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
-  }else{
-    voiceText=`現在は方向感がない状態です。Range / Neutral として整理します。${nearOBText}参考価格帯との距離を確認してください。現在価格は${price.toFixed(1)}ドルです。`;
+  const ultraH=hist.slice(-20),ultraBP=buyPressure(ultraH);
+  const ultraDir=ultraBP>55?'bull':ultraBP<45?'bear':'neut';
+  const ultraBB=bb(ultraH.map(b=>b.c),Math.min(10,ultraH.length));
+  const ultraTP=parseFloat((ultraDir==='bull'?(ultraBB?.u||price+ATR*.5):(ultraBB?.l||price-ATR*.5)).toFixed(1));
+
+  // MS簡易
+  const r20=hist.slice(-20);
+  let hh=0,hl=0,lh=0,ll=0;
+  for(let i=2;i<r20.length;i++){
+    const ph=Math.max(r20[i-1].h,r20[i-2].h),pl=Math.min(r20[i-1].l,r20[i-2].l);
+    if(r20[i].h>ph)hh++;else if(r20[i].h<ph)lh++;
+    if(r20[i].l>pl)hl++;else if(r20[i].l<pl)ll++;
   }
+  const MS={trend:hh+hl>lh+ll+2?'bull':lh+ll>hh+hl+2?'bear':'neut',hh,hl,lh,ll,
+    desc:hh+hl>lh+ll+2?`HH${hh}・HL${hl}で上昇MS`:lh+ll>hh+hl+2?`LH${lh}・LL${ll}で下落MS`:'構造は中立'};
+
+  // SQ簡易（重い処理を削除）
+  const SQ={state:bbStateLabel==='⚡ Squeeze Zone'?'squeeze':'normal',
+    bbW:BB?(BB.u-BB.l):0,kcW:ATR*3,dir:shortDir,momentum:0,expanding:bbStateLabel==='📈 Expansion',squeezeEnd:false};
+
+  const shortTP=tpLevels[0]||null;
+  const shortTP2=tpLevels[1]||null;
 
   return{price,open,spotMeta,shortDir,midDir,longDir,ultraDir,shortTP,shortTP2,
-    bPct,sPct,adxVal,pdi,ndi,msLabel,msColor,MS,OB,RF,SQ,slowTrend,EV,
-    Entry,BBState,tpCandidates,slCandidates,tp1Prob,
-    refLong,refShort,slLong,slShort,levels,BB,e20,e75,e200,VW,
-    rsiS,rsiM,ATR,ATRM,scenarios,aiComment,voiceText,
-    techScore,midTS,volScore,sessInfo,
-    hist:hist.slice(-120)};
+    bPct,sPct,adxVal,pdi,ndi,msLabel,msColor,MS,OB,RF,SQ,slowTrend,
+    Entry,tpLevels,prob,slLong,slShort,
+    refLong:tpLevels,refShort:tpLevels,
+    levels:[
+      ...(BB?[{l:'BB上限',p:BB.u,t:'bear',d:'抵抗'},{l:'BB中央',p:BB.m,t:'neut',d:'ミドル'},{l:'BB下限',p:BB.l,t:'bull',d:'支持'}]:[]),
+      ...(VW?[{l:'VWAP',p:VW,t:price>VW?'bull':'bear',d:'出来高平均'}]:[]),
+      ...(e20?[{l:'EMA20',p:e20,t:price>e20?'bull':'bear',d:'短期MA'}]:[]),
+      ...(e75?[{l:'EMA75',p:e75,t:price>e75?'bull':'bear',d:'中期MA'}]:[]),
+      ...(e200?[{l:'EMA200',p:e200,t:price>e200?'bull':'bear',d:'長期MA'}]:[]),
+      ...[...OB.above,...OB.below],
+    ].filter(Boolean).sort((a,b)=>(b.p||b.mid||0)-(a.p||a.mid||0)),
+    BB,e20,e75,e200,VW,rsiS,rsiM,ATR,ATRM,scenarios,aiComment,voiceText,
+    techScore,midTS,sessName,bbStateLabel,hist:hist.slice(-120)};
 }
 
-// ==================== RENDER ====================
+// ===== RENDER =====
 function dc(d){return d==='bull'?'var(--gr)':d==='bear'?'var(--rd)':'var(--tx2)';}
 function dbc(d){return d==='bull'?'#1BAE82':d==='bear'?'#E05530':'#4A4845';}
+function biasTxt(d){return d==='bull'?'Bullish Bias':d==='bear'?'Bearish Bias':'Range / Neutral';}
+function arrowTxt(d){return d==='bull'?'↑':d==='bear'?'↓':'→';}
 
 function renderAll(r){
-  try{ _renderAll(r); }catch(e){
-    console.error('[GSV] renderAll error:',e);
-    // エラーでも最低限の価格表示は維持
-    try{
-      document.getElementById('priceDisp').textContent=r?.price?.toFixed(1)||'--';
-      const atBody=document.getElementById('at-body');
-      if(atBody)atBody.textContent='表示エラーが発生しました。しばらくお待ちください。';
-    }catch(_){}
-  }
-}
-
-function _renderAll(r){
-  // ===== TP/SL パネル（最優先・最上部） =====
-  const tpMainEl=document.getElementById('tpMain');
-  if(tpMainEl&&r.Entry){
+  // TP/SLパネル
+  const tpMainEl=$('tpMain');
+  if(tpMainEl&&r.Entry&&tpMainEl.innerHTML!==undefined){
     const ec=r.Entry.color;
-    const progColor=r.tp1Prob>=70?'var(--gr)':r.tp1Prob>=60?'var(--am)':'var(--rd)';
-    const tp1=r.tpCandidates?.[0];
+    const pg=r.prob>=70?'var(--gr)':r.prob>=60?'var(--am)':'var(--rd)';
+    const tp1=r.tpLevels?.[0];
     const sl=r.shortDir==='bull'?r.slLong:r.slShort;
     tpMainEl.innerHTML=`
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--bg3);border-radius:var(--r);padding:14px 16px;border:1.5px solid ${ec};margin-bottom:8px;">
-        <div style="text-align:center;min-width:80px;">
-          <div style="font-size:11px;color:var(--tx3);margin-bottom:3px;">TP先到達確率</div>
-          <div style="font-size:36px;font-weight:800;font-family:var(--mn);color:${progColor};line-height:1;">${r.tp1Prob}%</div>
-          <div style="font-size:10px;font-weight:700;color:${ec};margin-top:4px;padding:2px 8px;border-radius:20px;border:0.5px solid ${ec};background:${ec}18;">${r.Entry.label}</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;background:var(--bg3);border-radius:var(--r);padding:14px;border:1.5px solid ${ec};">
+        <div style="text-align:center;min-width:76px;">
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">TP先到達確率</div>
+          <div style="font-size:34px;font-weight:800;font-family:var(--mn);color:${pg};line-height:1;">${r.prob}%</div>
+          <div style="font-size:10px;font-weight:700;color:${ec};margin-top:4px;padding:2px 6px;border-radius:20px;border:0.5px solid ${ec};background:${ec}18;">${r.Entry.label}</div>
         </div>
         <div>
-          <div style="font-size:10px;color:var(--tx3);margin-bottom:4px;">${r.Entry.detail}</div>
-          <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:8px;">
-            <div style="height:100%;width:${r.tp1Prob}%;background:${progColor};border-radius:3px;transition:width 1s ease;"></div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            ${tp1?`<div style="background:var(--bg4);border-radius:var(--rs);padding:5px 10px;border:0.5px solid rgba(27,174,130,.35);">
-              <div style="font-size:9px;color:var(--tx3);">参考TP1 (${tp1.sources?tp1.sources.join('+'):tp1.src||'--'})</div>
-              <div style="font-size:14px;font-weight:700;font-family:var(--mn);color:var(--gr);">$${tp1.price} <span style="font-size:10px;color:var(--tx3);">${tp1.pips}pips</span></div>
+          <div style="font-size:11px;color:var(--tx2);margin-bottom:6px;">${r.Entry.detail}</div>
+          <div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:8px;"><div style="height:100%;width:${r.prob}%;background:${pg};border-radius:3px;transition:width .8s;"></div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${tp1?`<div style="background:var(--bg4);border-radius:var(--rs);padding:5px 10px;border:0.5px solid rgba(27,174,130,.4);">
+              <div style="font-size:9px;color:var(--tx3);">参考TP1 · ${tp1.label}</div>
+              <div style="font-size:15px;font-weight:700;font-family:var(--mn);color:var(--gr);">$${tp1.price}<span style="font-size:10px;color:var(--tx3);margin-left:4px;">${tp1.pips}pips</span></div>
             </div>`:''}
-            <div style="background:var(--bg4);border-radius:var(--rs);padding:5px 10px;border:0.5px solid rgba(224,85,48,.35);">
+            <div style="background:var(--bg4);border-radius:var(--rs);padding:5px 10px;border:0.5px solid rgba(224,85,48,.4);">
               <div style="font-size:9px;color:var(--tx3);">参考SL</div>
-              <div style="font-size:14px;font-weight:700;font-family:var(--mn);color:var(--rd);">$${sl} <span style="font-size:10px;color:var(--tx3);">${Math.round(Math.abs(sl-r.price)/0.01)}pips</span></div>
+              <div style="font-size:15px;font-weight:700;font-family:var(--mn);color:var(--rd);">$${sl}<span style="font-size:10px;color:var(--tx3);margin-left:4px;">${Math.round(Math.abs(sl-r.price)/0.01)}pips</span></div>
             </div>
             <div style="background:var(--bg4);border-radius:var(--rs);padding:5px 10px;border:0.5px solid var(--bo2);">
               <div style="font-size:9px;color:var(--tx3);">BBパターン</div>
-              <div style="font-size:11px;font-weight:600;color:var(--tx2);">${r.BBState?.label||'--'}</div>
+              <div style="font-size:11px;font-weight:600;color:var(--tx2);">${r.bbStateLabel||'--'}</div>
             </div>
           </div>
         </div>
       </div>`;
   }
-  const tpLevelsEl=document.getElementById('tpLevels');
-  if(tpLevelsEl&&r.tpCandidates){
-    tpLevelsEl.innerHTML=r.tpCandidates.map((tp,i)=>{
+  const tpLevelsEl=$('tpLevels');
+  if(tpLevelsEl&&r.tpLevels&&tpLevelsEl.innerHTML!==undefined){
+    tpLevelsEl.innerHTML=r.tpLevels.map((tp,i)=>{
       const isBest=i===0;
-      const prob=i===0?r.tp1Prob:Math.max(20,r.tp1Prob-i*8);
-      const probColor=prob>=70?'var(--gr)':prob>=60?'var(--am)':'var(--rd)';
-      const conf=tp.confluence||1;
-      const stars='⬡'.repeat(Math.min(conf,4));
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid ${isBest?'rgba(27,174,130,.3)':'var(--bo)'};">
-        <div style="display:flex;align-items:center;gap:8px;">
+      const p=Math.max(20,r.prob-i*8);
+      const pc=p>=70?'var(--gr)':p>=60?'var(--am)':'var(--rd)';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid ${isBest?'rgba(27,174,130,.35)':'var(--bo)'};">
+        <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:${isBest?'var(--gr)':'var(--tx2)'};font-weight:${isBest?700:400};">TP${i+1}</span>
           <span style="font-size:11px;color:var(--tx);">${tp.label}</span>
-          <span style="font-size:9px;color:var(--g);">${stars}</span>
           <span style="font-size:10px;color:var(--tx3);">${tp.desc}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-          <span style="font-size:10px;color:${probColor};font-family:var(--mn);">到達${prob}%</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-size:10px;color:${pc};font-family:var(--mn);">到達${p}%</span>
           <span style="font-size:10px;color:var(--tx3);font-family:var(--mn);">${tp.pips}pips</span>
           <span style="font-family:var(--mn);font-size:13px;font-weight:700;color:var(--gr);">$${tp.price}</span>
         </div>
       </div>`;
-    }).join('')+
-    (r.slCandidates?.[0]?`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid rgba(224,85,48,.3);margin-top:4px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:11px;color:var(--rd);font-weight:700;">SL</span>
-        <span style="font-size:11px;color:var(--tx);">${r.slCandidates[0].label}</span>
-        <span style="font-size:10px;color:var(--tx3);">${r.slCandidates[0].desc}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-        <span style="font-size:10px;color:var(--tx3);font-family:var(--mn);">${r.slCandidates[0].pips}pips</span>
-        <span style="font-family:var(--mn);font-size:13px;font-weight:700;color:var(--rd);">$${r.slCandidates[0].price}</span>
-      </div>
-    </div>`:'');
+    }).join('');
   }
 
   // Price
-  document.getElementById('priceDisp').textContent=r.price.toFixed(2);
-  document.getElementById('priceDisp').style.color=r.shortDir==='bull'?'var(--gr)':r.shortDir==='bear'?'var(--rd)':'var(--tx)';
+  $('priceDisp').textContent=r.price.toFixed(2);
+  $('priceDisp').style.color=dc(r.shortDir);
   const chg=((r.price-r.open)/r.open*100);
-  const ce=document.getElementById('chgDisp');
-  ce.textContent=`${chg>=0?'+':''}${chg.toFixed(2)}%`;
-  ce.className='ph-chg '+(chg>=0?'up':'dn');
-  document.getElementById('bidDisp').textContent=r.spotMeta.bid?.toFixed(2)||'--';
-  document.getElementById('askDisp').textContent=r.spotMeta.ask?.toFixed(2)||'--';
-  document.getElementById('midDisp').textContent=r.price.toFixed(2);
-  document.getElementById('spreadDisp').textContent=r.spotMeta.ask&&r.spotMeta.bid?((r.spotMeta.ask-r.spotMeta.bid)*100).toFixed(0)+' pips':'--';
-  document.getElementById('lastRefreshed').textContent=r.spotMeta.lastRefreshed||'--';
-  document.getElementById('timeZone').textContent=r.spotMeta.timeZone||'--';
-  document.getElementById('dataSrc').textContent=r.spotMeta.source||'--';
-  document.getElementById('updTime').textContent=new Date().toLocaleTimeString('ja-JP')+(r.spotMeta.live?' · LIVE':' · SIM');
+  $('chgDisp').textContent=`${chg>=0?'+':''}${chg.toFixed(2)}%`;
+  $('chgDisp').className='ph-chg '+(chg>=0?'up':'dn');
+  $('bidDisp').textContent=r.spotMeta?.bid?.toFixed(2)||'--';
+  $('askDisp').textContent=r.spotMeta?.ask?.toFixed(2)||'--';
+  $('midDisp').textContent=r.price.toFixed(2);
+  $('spreadDisp').textContent=r.spotMeta?.ask&&r.spotMeta?.bid?((r.spotMeta.ask-r.spotMeta.bid)*100).toFixed(0)+' pips':'--';
+  $('lastRefreshed').textContent=r.spotMeta?.lastRefreshed||'--';
+  $('timeZone').textContent=r.spotMeta?.timeZone||'--';
+  $('dataSrc').textContent=r.spotMeta?.source||'--';
+  $('updTime').textContent=new Date().toLocaleTimeString('ja-JP')+(r.spotMeta?.live?' · LIVE':' · SIM');
 
   // AI Summary
-  document.getElementById('aisBadge').textContent=r.msLabel;
-  document.getElementById('aisBadge').style.borderColor=r.msColor;
-  document.getElementById('aisBadge').style.color=r.msColor;
-  document.getElementById('mktTrend').textContent=r.msLabel;
-  document.getElementById('mktTrend').style.color=r.msColor;
-  document.getElementById('mktTrendSub').textContent=`ADX ${r.adxVal} · +DI${r.pdi} / -DI${r.ndi}`;
-  document.getElementById('shortArrow').textContent=arrowTxt(r.shortDir)+' ';
-  document.getElementById('shortArrow').style.color=dc(r.shortDir);
-  document.getElementById('shortBias').textContent=biasTxt(r.shortDir);
-  document.getElementById('shortBias').style.color=dc(r.shortDir);
-  document.getElementById('shortDirSub').textContent=`買い${r.bPct}% 売り${r.sPct}%`;
-  document.getElementById('midArrow').textContent=arrowTxt(r.midDir)+' ';
-  document.getElementById('midArrow').style.color=dc(r.midDir);
-  document.getElementById('midBias').textContent=biasTxt(r.midDir);
-  document.getElementById('midBias').style.color=dc(r.midDir);
-  document.getElementById('midDirSub').textContent=`EMA75: $${Math.round(r.e75)} · EMA200: $${Math.round(r.e200)}`;
-  document.getElementById('volDisp').textContent=`ATR $${r.ATR.toFixed(1)}`;
-  document.getElementById('volSub').textContent=`${r.SQ.state==='squeeze'?'⚡Squeeze Zone':r.SQ.expanding?'📈 Expanding':'Normal'} · RSI ${r.rsiS}`;
-  document.getElementById('aisComment').textContent=r.aiComment;
+  $('aisBadge').textContent=r.msLabel;
+  $('aisBadge').style.color=r.msColor;
+  $('mktTrend').textContent=r.msLabel;$('mktTrend').style.color=r.msColor;
+  $('mktTrendSub').textContent=`ADX ${r.adxVal} · +DI${r.pdi} / -DI${r.ndi}`;
+  $('shortArrow').textContent=arrowTxt(r.shortDir)+' ';$('shortArrow').style.color=dc(r.shortDir);
+  $('shortBias').textContent=biasTxt(r.shortDir);$('shortBias').style.color=dc(r.shortDir);
+  $('shortDirSub').textContent=`買い${r.bPct}% 売り${r.sPct}%`;
+  $('midArrow').textContent=arrowTxt(r.midDir)+' ';$('midArrow').style.color=dc(r.midDir);
+  $('midBias').textContent=biasTxt(r.midDir);$('midBias').style.color=dc(r.midDir);
+  $('midDirSub').textContent=`EMA75:$${Math.round(r.e75)} EMA200:$${Math.round(r.e200)}`;
+  $('volDisp').textContent=`ATR $${r.ATR.toFixed(1)}`;
+  $('volSub').textContent=r.bbStateLabel||'--';
+  $('aisComment').textContent=r.aiComment;
 
   // Direction cards
-  setDirCard('shortCard','shortCardArrow','shortCardBias','shortCardSub','sPbB','sPbS',r.shortDir,biasTxt(r.shortDir),`短期: 買い${r.bPct}% / 売り${r.sPct}% · EMA20 $${Math.round(r.e20)}`,r.bPct);
-  setDirCard('midCard','midCardArrow','midCardBias','midCardSub','mPbB','mPbS',r.midDir,biasTxt(r.midDir),`中期: EMA75 $${Math.round(r.e75)} · RSI ${r.rsiM}`,r.midDir==='bull'?65:r.midDir==='bear'?35:50);
+  const setDir=(cardId,arrowId,biasId,subId,pb1,pb2,dir,sub,bp)=>{
+    $(cardId).className='dir-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
+    $(arrowId).textContent=arrowTxt(dir);$(arrowId).style.color=dc(dir);
+    $(biasId).textContent=biasTxt(dir);$(biasId).style.color=dc(dir);
+    $(subId).textContent=sub;
+    $(pb1).style.width=bp+'%';$(pb2).style.width=(100-bp)+'%';
+  };
+  setDir('shortCard','shortCardArrow','shortCardBias','shortCardSub','sPbB','sPbS',r.shortDir,`買い${r.bPct}%/売り${r.sPct}% · RSI${r.rsiS}`,r.bPct);
+  setDir('midCard','midCardArrow','midCardBias','midCardSub','mPbB','mPbS',r.midDir,`EMA75:$${Math.round(r.e75)}`,r.midDir==='bull'?65:r.midDir==='bear'?35:50);
 
-  // Realtime / Main direction
-  document.getElementById('rtVal').textContent=biasTxt(r.shortDir);
-  document.getElementById('rtVal').style.color=dc(r.shortDir);
-  document.getElementById('rtSub').textContent=`${r.msLabel} · ${r.SQ.state==='squeeze'?'Squeeze Zone: 方向待ち':r.SQ.squeezeEnd?'Squeeze End: 方向確認中':r.SQ.expanding?'Expansion Watch':'直近の短期傾向'}`;
-  const mainDirDir=r.midDir!=='neut'?r.midDir:r.longDir;
-  document.getElementById('mainDirVal').textContent=biasTxt(mainDirDir);
-  document.getElementById('mainDirVal').style.color=dc(mainDirDir);
-  document.getElementById('mainDirSub').textContent=`Market Structure: ${r.MS.trend==='bull'?'上昇MS (HH'+r.MS.hh+'·HL'+r.MS.hl+')':r.MS.trend==='bear'?'下落MS (LH'+r.MS.lh+'·LL'+r.MS.ll+')':'中立'}`;
+  // Realtime / Main
+  $('rtVal').textContent=biasTxt(r.shortDir);$('rtVal').style.color=dc(r.shortDir);
+  $('rtSub').textContent=`${r.msLabel} · ${r.bbStateLabel||''}`;
+  const mainD=r.midDir!=='neut'?r.midDir:r.longDir;
+  $('mainDirVal').textContent=biasTxt(mainD);$('mainDirVal').style.color=dc(mainD);
+  $('mainDirSub').textContent=`MS: ${r.MS.desc}`;
 
-  // Important update banner
-  if(lastSpokenEntry&&lastSpokenEntry!==r.msLabel&&lastSpokenEntry!==''){
-    document.getElementById('updateBanner').className='update-banner on';
-    setTimeout(()=>{document.getElementById('updateBanner').className='update-banner';},15000);
-  }
+  // Squeeze box
+  const sqEl=$('sqState');
+  sqEl.className=r.SQ.state==='squeeze'?'sq-state sq-squeeze':'sq-state sq-normal';
+  $('sqStateText').textContent=r.SQ.state==='squeeze'?'⚡ Squeeze Zone':'Normal';
+  $('sqBBW').textContent=`$${r.SQ.bbW?.toFixed?r.SQ.bbW.toFixed(2):'--'}`;
+  $('sqKCW').textContent=`$${r.ATR?.toFixed?r.ATR.toFixed(2):'--'}`;
+  $('sqRatio').textContent=r.SQ.state==='squeeze'?'圧縮中':'通常';
+  $('sqDir').textContent=arrowTxt(r.shortDir)+' '+biasTxt(r.shortDir);$('sqDir').style.color=dc(r.shortDir);
+  $('sqMom').textContent='--';$('sqExp').textContent=r.SQ.expanding?'拡大中':'待機';
+  $('sqComment').textContent=r.SQ.state==='squeeze'?'ボラティリティ圧縮中。次の方向感が出やすい局面です。':'通常ボラティリティ。';
 
-  // Squeeze
-  const sqStateEl=document.getElementById('sqState');
-  const sqDotEl=document.getElementById('sqDot');
-  const sqTexts={squeeze:'⚡ Squeeze Zone',squeeze_end:'🔓 Squeeze End',expanding:'📈 Expansion Watch',normal:'Normal'};
-  const sqClasses={squeeze:'sq-state sq-squeeze',squeeze_end:'sq-state sq-expand',expanding:'sq-state sq-expand',normal:'sq-state sq-normal'};
-  sqStateEl.className=sqClasses[r.SQ.state]||'sq-state sq-normal';
-  sqDotEl.className='squeeze-dot '+(r.SQ.state==='squeeze'?'dot-squeeze':r.SQ.state==='normal'?'dot-normal':'dot-expand');
-  document.getElementById('sqStateText').textContent=sqTexts[r.SQ.state]||'Normal';
-  document.getElementById('sqBBW').textContent=`$${r.SQ.bbW}`;
-  document.getElementById('sqKCW').textContent=`$${r.SQ.kcW}`;
-  document.getElementById('sqRatio').textContent=r.SQ.state==='squeeze'?'圧縮中':'通常';
-  document.getElementById('sqDir').textContent=r.SQ.dir==='bull'?'↑ Bullish':r.SQ.dir==='bear'?'↓ Bearish':'→ Neutral';
-  document.getElementById('sqDir').style.color=dc(r.SQ.dir);
-  document.getElementById('sqMom').textContent=r.SQ.momentum>0.1?'↑ 上向き':r.SQ.momentum<-0.1?'↓ 下向き':'→ 横ばい';
-  document.getElementById('sqExp').textContent=r.SQ.expanding?'拡大中':'待機';
-  document.getElementById('sqComment').textContent=r.SQ.state==='squeeze'
-    ?'ボラティリティが圧縮されています。次の方向感が出やすい待機局面として整理します。Buy/Sellシグナルではありません。'
-    :r.SQ.squeezeEnd?`スクイーズ終了。${biasTxt(r.SQ.dir)}に見えますが、方向を確認してから参考価格帯を整理してください。`
-    :r.SQ.expanding?`ボラティリティ拡大が始まっています。参考価格帯とリスク許容幅を確認してください。`
-    :'ボラティリティは通常水準です。';
+  // Range filter
+  $('rfPrice').textContent=`$${r.RF.filtered}`;
+  $('rfBias').textContent=biasTxt(r.RF.dir);$('rfBias').style.color=dc(r.RF.dir);
+  $('rfDir').textContent=arrowTxt(r.RF.dir)+' '+(r.RF.dir==='bull'?'上方向':r.RF.dir==='bear'?'下方向':'中立');
+  $('rfDist').textContent=`${r.RF.dist>=0?'+':''}${r.RF.dist} (幅:$${r.RF.filterRange})`;
+  const slowLabels={'slow_bull':'<span class="slow-badge slow-bull">↗ Gradual Uptrend</span>','slow_bear':'<span class="slow-badge slow-bear">↘ Gradual Downtrend</span>','bull':'<span class="slow-badge slow-bull">↑ 上昇</span>','bear':'<span class="slow-badge slow-bear">↓ 下落</span>','neut':'<span class="slow-badge slow-neut">→ Neutral</span>'};
+  $('rfSlowBadge').innerHTML=slowLabels[r.slowTrend]||'<span class="slow-badge slow-neut">→</span>';
 
-  // Range Filter
-  document.getElementById('rfPrice').textContent=`$${r.RF.filtered}`;
-  document.getElementById('rfBias').textContent=biasTxt(r.RF.dir);
-  document.getElementById('rfBias').style.color=dc(r.RF.dir);
-  document.getElementById('rfDir').textContent=arrowTxt(r.RF.dir)+' '+(r.RF.dir==='bull'?'上方向':r.RF.dir==='bear'?'下方向':'中立');
-  document.getElementById('rfDist').textContent=`${r.RF.dist>=0?'+':''}${r.RF.dist} (フィルター幅: $${r.RF.filterRange})`;
-  const slowLabels={slow_bull:'<span class="slow-badge slow-bull">↗ Gradual Uptrend（じわ上げ）</span>',slow_bear:'<span class="slow-badge slow-bear">↘ Gradual Downtrend（じわ下げ）</span>',bull:'<span class="slow-badge slow-bull">↑ 上昇トレンド</span>',bear:'<span class="slow-badge slow-bear">↓ 下落トレンド</span>',neut:'<span class="slow-badge slow-neut">→ Neutral</span>'};
-  document.getElementById('rfSlowBadge').innerHTML=slowLabels[r.slowTrend]||'<span class="slow-badge slow-neut">→ --</span>';
+  // EV (simplified display)
+  const upPips=r.tpLevels?.[0]?.pips||Math.round(r.ATR/0.01);
+  const dnPips=Math.round(Math.abs((r.shortDir==='bull'?r.slLong:r.slShort)-r.price)/0.01);
+  $('evUp').textContent=`+${upPips} pips`;$('evDn').textContent=`-${dnPips} pips`;
+  $('evUpBar').style.width=Math.min(upPips/3,100)+'%';
+  $('evDnBar').style.width=Math.min(dnPips/3,100)+'%';
+  $('evRange').textContent=`$${(r.price-r.ATR*2).toFixed(0)}〜$${(r.price+r.ATR*2).toFixed(0)}`;
+  $('evState').textContent=r.shortDir==='bull'?`↑ 上方向優勢 (TP先到達${r.prob}%)`:r.shortDir==='bear'?`↓ 下方向優勢 (TP先到達${r.prob}%)`:'→ レンジ傾向';
+  $('evState').style.color=dc(r.shortDir);
 
-  // Expected value
-  document.getElementById('evUp').textContent=`+${r.EV.upPips} pips`;
-  document.getElementById('evDn').textContent=`-${r.EV.dnPips} pips`;
-  document.getElementById('evUpBar').style.width=Math.min(r.EV.upPips/3,100)+'%';
-  document.getElementById('evDnBar').style.width=Math.min(r.EV.dnPips/3,100)+'%';
-  const evRangePips=r.EV.upPips+r.EV.dnPips;
-  document.getElementById('evRange').textContent=`$${Math.round(r.EV.p5)}〜$${Math.round(r.EV.p95)}`;
-  document.getElementById('evRangeBar').style.width=Math.min(r.EV.upPct,100)+'%';
-  const evStateEl=document.getElementById('evState');
-  evStateEl.textContent=r.shortDir==='bull'?`↑ 上方向余地優勢 (上昇シナリオ ${r.EV.upPct}%)`:r.shortDir==='bear'?`↓ 下方向リスク優勢 (下落シナリオ ${r.EV.dnPct}%)`:
-    r.EV.upPips>r.EV.dnPips?'↑ 上方向余地がやや大きい':r.EV.dnPips>r.EV.upPips?'↓ 下方向リスクがやや大きい':'→ レンジ傾向（上下均等）';
-  evStateEl.style.color=r.shortDir==='bull'?'var(--gr)':r.shortDir==='bear'?'var(--rd)':'var(--tx2)';
-
-  // Reference zones
-  function refRows(refs,isLong,sl){
-    const col=isLong?'var(--gr)':'var(--rd)';
-    const rows=refs.map((r,i)=>`<div class="ref-row">
-      <div><span class="pill ${i===0?(isLong?'p-bull':'p-bear'):i===1?'p-info':'p-warn'}" style="font-size:8px">${r.label}</span><div class="ref-dist">${r.desc} · ${r.pips}pips · RR${r.rr}</div></div>
-      <div class="ref-price" style="color:${col}">$${r.price}</div>
-    </div>`).join('');
-    const slRow=`<div class="ref-row"><div><span class="pill p-bear" style="font-size:8px">参考SL</span><div class="ref-dist">参考リスクライン</div></div><div class="ref-price" style="color:var(--rd)">$${sl}</div></div>`;
-    return rows+slRow;
-  }
-  document.getElementById('refLong').innerHTML=refRows(r.refLong,true,r.slLong);
-  document.getElementById('refShort').innerHTML=refRows(r.refShort,false,r.slShort);
+  // Ref zones
+  const refRow=(items,isLong,sl)=>items.slice(0,3).map((tp,i)=>`<div class="ref-row">
+    <div><span class="pill ${i===0?(isLong?'p-bull':'p-bear'):'p-neut'}" style="font-size:8px;">${tp.label}</span><div class="ref-dist">${tp.desc} · ${tp.pips}pips</div></div>
+    <div class="ref-price" style="color:${isLong?'var(--gr)':'var(--rd)'};">$${tp.price}</div>
+  </div>`).join('')+`<div class="ref-row"><div><span class="pill p-bear" style="font-size:8px;">参考SL</span></div><div class="ref-price" style="color:var(--rd);">$${sl}</div></div>`;
+  $('refLong').innerHTML=refRow(r.tpLevels||[],true,r.slLong);
+  $('refShort').innerHTML=refRow(r.tpLevels||[],false,r.slShort);
 
   // TF cards
-  setTF('tf-ultra',r.ultraDir,`$${r.ultraTP.toFixed(1)}`,arrowTxt(r.ultraDir)+' '+biasTxt(r.ultraDir),`RSI ${r.rsiS} · 超短期傾向`);
-  setTF('tf-short',r.shortDir,r.shortTP?`$${r.shortTP.price}`:'--',arrowTxt(r.shortDir)+' '+biasTxt(r.shortDir),`買い${r.bPct}%/売り${r.sPct}%`);
-  setTF('tf-mid',r.midDir,`$${r.midTP}`,arrowTxt(r.midDir)+' '+biasTxt(r.midDir),`EMA75:$${Math.round(r.e75)}`);
-  setTF('tf-long',r.longDir,`$${r.longTP}`,arrowTxt(r.longDir)+' '+biasTxt(r.longDir),r.longDir==='bull'?'HH/HL継続':r.longDir==='bear'?'LH/LL継続':'横ばい');
+  const setTF=(id,dir,price,sub)=>{
+    $(id).className='tf-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
+    $(id+'-p').textContent='$'+price;$(id+'-p').style.color=dc(dir);
+    $(id+'-d').textContent=arrowTxt(dir)+' '+biasTxt(dir);$(id+'-d').style.color=dc(dir);
+    $(id+'-s').textContent=sub;
+  };
+  setTF('tf-ultra',r.ultraDir,r.ultraTP?.toFixed(1)||'--',`RSI${r.rsiS}`);
+  setTF('tf-short',r.shortDir,r.tpLevels?.[0]?.price||'--',`買い${r.bPct}%/売り${r.sPct}%`);
+  setTF('tf-mid',r.midDir,Math.round(r.midDir==='bull'?r.price+r.ATRM*8:r.price-r.ATRM*8),`EMA75:$${Math.round(r.e75)}`);
+  setTF('tf-long',r.longDir,Math.round(r.longDir==='bull'?r.price+r.ATRM*20:r.price-r.ATRM*20),r.MS.desc);
 
-  // Next scenarios
-  document.getElementById('nextItems').innerHTML=r.scenarios.map(s=>`<div class="next-item"><div class="ndot" style="background:${s.c}"></div><div style="flex:1"><div style="font-size:9px;color:var(--tx3);margin-bottom:2px">${s.cond}</div><div style="font-size:12px;font-weight:600;color:${s.c};margin-bottom:3px">${s.title}</div><div style="font-size:11px;color:var(--tx2);line-height:1.6">${s.body}</div></div></div>`).join('');
+  // Next items
+  $('nextItems').innerHTML=r.scenarios.map(s=>`<div class="next-item"><div class="ndot" style="background:${s.c}"></div><div style="flex:1"><div style="font-size:9px;color:var(--tx3);margin-bottom:2px">${s.cond}</div><div style="font-size:12px;font-weight:600;color:${s.c};margin-bottom:2px">${s.title}</div><div style="font-size:11px;color:var(--tx2);line-height:1.5">${s.body}</div></div></div>`).join('');
 
-  // Level map (OB + EMA levels)
+  // Level map
   const cur=`<div class="row-item"><span class="pill p-gold">現在値</span><span style="font-family:var(--mn);font-size:14px;font-weight:700">$${r.price.toFixed(1)}</span></div>`;
-  const allLevels=[
-    ...r.levels.map(x=>({p:x.p,html:`<div class="row-item"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span class="pill ${x.t==='bull'?'p-bull':x.t==='bear'?'p-bear':'p-neut'}">${x.l}</span><span style="font-size:10px;color:var(--tx2)">${x.d}</span></div><span style="font-family:var(--mn);font-size:12px">${x.p>=r.price?'+':'-'}${Math.abs(x.p-r.price).toFixed(1)} · $${x.p.toFixed(1)}</span></div>`})),
-    ...[...r.OB.above,...r.OB.below].map(o=>({p:o.mid,html:`<div class="row-item" style="background:${o.type==='bear'?'rgba(224,85,48,.04)':'rgba(27,174,130,.04)'}"><div style="display:flex;align-items:center;gap:5px"><span class="pill ${o.type==='bear'?'p-bear':'p-bull'}" style="font-size:8px">${o.label}</span><span style="font-size:10px;color:var(--tx2)">${o.type==='bear'?'売りOB（参考抵抗）':'買いOB（参考支持）'}</span></div><span style="font-family:var(--mn);font-size:12px">${o.mid>=r.price?'+':'-'}${Math.abs(o.mid-r.price).toFixed(1)} · $${o.mid}</span></div>`})),
-  ].sort((a,b)=>b.p-a.p);
-  document.getElementById('levelMap').innerHTML=cur+allLevels.map(x=>x.html).join('');
+  const lvls=(r.levels||[]).slice(0,10).map(x=>{
+    const p=x.p||x.mid||0;const dist=p-r.price;
+    const pc=x.t==='bull'||x.type==='bull'?'p-bull':x.t==='bear'||x.type==='bear'?'p-bear':'p-neut';
+    const label=x.l||x.label||'--';const desc=x.d||x.desc||'';
+    return `<div class="row-item"><div style="display:flex;align-items:center;gap:5px"><span class="pill ${pc}">${label}</span><span style="font-size:10px;color:var(--tx2)">${desc}</span></div><div style="font-size:12px;font-family:var(--mn)">${dist>=0?'+':''}${dist.toFixed(1)} · $${p.toFixed(1)}</div></div>`;
+  }).join('');
+  $('levelMap').innerHTML=cur+lvls;
+
+  // MS tab
+  $('msItems').innerHTML=`<div style="font-size:13px;font-weight:600;color:${dc(r.MS.trend)};margin-bottom:8px">${r.MS.desc}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="pill p-bull">HH${r.MS.hh}</span><span class="pill p-bull">HL${r.MS.hl}</span>
+      <span class="pill p-bear">LH${r.MS.lh}</span><span class="pill p-bear">LL${r.MS.ll}</span>
+    </div>`;
+  $('adxDetail').innerHTML=`<div style="display:grid;gap:6px">
+    <div class="row-item"><span style="font-size:12px;color:var(--tx2)">ADX</span><span style="font-family:var(--mn);font-size:14px;font-weight:700;color:${r.msColor}">${r.adxVal}</span></div>
+    <div class="row-item"><span style="font-size:12px;color:var(--tx2)">+DI</span><span style="font-family:var(--mn);font-size:14px;color:var(--gr)">${r.pdi}</span></div>
+    <div class="row-item"><span style="font-size:12px;color:var(--tx2)">-DI</span><span style="font-family:var(--mn);font-size:14px;color:var(--rd)">${r.ndi}</span></div>
+    <div style="font-size:11px;color:var(--tx2);margin-top:4px;line-height:1.7">ADX&lt;20＝レンジ　25以上＝トレンド　40以上＝強いトレンド</div>
+  </div>`;
 
   // Sentiment
-  const sm=(vi,bi,ti,sc,dir,lbl)=>{document.getElementById(vi).textContent=sc+'pt';document.getElementById(vi).style.color=dc(dir);document.getElementById(bi).style.width=sc+'%';document.getElementById(bi).style.background=dbc(dir);document.getElementById(ti).textContent=lbl;};
-  sm('techVal','techBar','techTag',r.techScore,r.techScore>57?'bull':r.techScore<43?'bear':'neut',`RSI${r.rsiS}·EMA${r.price>r.e20?'上':'下'}`);
-  sm('midTechVal','midTechBar','midTechTag',r.midTS,r.midTS>57?'bull':r.midTS<43?'bear':'neut',`EMA75${r.price>r.e75?'上':'下'}·EMA200${r.price>r.e200?'上':'下'}`);
-  document.getElementById('volVal').textContent=`ATR $${r.ATR.toFixed(1)}`;
-  document.getElementById('volTag').textContent=r.SQ.state==='squeeze'?'Squeeze Zone':r.SQ.expanding?'Expansion':'Normal';
-  document.getElementById('sessVal').textContent=r.sessInfo.name;
-  document.getElementById('sessTag').textContent=r.sessInfo.hot?'活発なセッション':'比較的静かなセッション';
+  const sm=(vi,bi,ti,sc,dir,lbl)=>{$(vi).textContent=sc+'pt';$(vi).style.color=dc(dir);$(bi).style.width=sc+'%';$(bi).style.background=dbc(dir);$(ti).textContent=lbl;};
+  sm('techVal','techBar','techTag',r.techScore,r.techScore>57?'bull':r.techScore<43?'bear':'neut',`RSI${r.rsiS}`);
+  sm('midTechVal','midTechBar','midTechTag',r.midTS,r.midTS>57?'bull':r.midTS<43?'bear':'neut',`EMA75${r.price>r.e75?'上':'下'}`);
+  $('volVal').textContent=`$${r.ATR.toFixed(1)}`;$('volTag').textContent=r.bbStateLabel||'Normal';
+  $('sessVal').textContent=r.sessName||'--';$('sessTag').textContent='';
 
+  // Analysis text panel
   renderAnalysisText(r);
 }
 
-// ==================== ANALYSIS TEXT ====================
 function renderAnalysisText(r){
   const dc2=d=>d==='bull'?'var(--gr)':d==='bear'?'var(--rd)':'var(--tx2)';
-  const ar=d=>d==='bull'?'↑':d==='bear'?'↓':'→';
+  $('at-short').textContent=`${arrowTxt(r.shortDir)} ${biasTxt(r.shortDir)}`;
+  $('at-short').style.color=dc2(r.shortDir);
+  $('at-short-sub').textContent=`買い${r.bPct}% / 売り${r.sPct}% · RSI${r.rsiS}`;
+  $('at-mid').textContent=`${arrowTxt(r.midDir)} ${biasTxt(r.midDir)}`;
+  $('at-mid').style.color=dc2(r.midDir);
+  $('at-mid-sub').textContent=`EMA75:$${Math.round(r.e75)} EMA200:$${Math.round(r.e200)}`;
+  $('at-vol').textContent=`$${r.ATR.toFixed(1)} ATR`;
+  $('at-vol').style.color=r.bbStateLabel?.includes('Squeeze')?'#E8C96A':'var(--tx2)';
+  $('at-vol-sub').textContent=r.bbStateLabel||'--';
 
-  // Short / Mid / Vol cards
-  const shortEl=document.getElementById('at-short');
-  const shortSub=document.getElementById('at-short-sub');
-  if(shortEl){
-    shortEl.textContent=`${ar(r.shortDir)} ${r.shortDir==='bull'?'Bullish Bias':r.shortDir==='bear'?'Bearish Bias':'Range / Neutral'}`;
-    shortEl.style.color=dc2(r.shortDir);
-    if(shortSub)shortSub.textContent=`買い${r.bPct}% / 売り${r.sPct}% · RSI ${r.rsiS}`;
-  }
-  const midEl=document.getElementById('at-mid');
-  const midSub=document.getElementById('at-mid-sub');
-  if(midEl){
-    midEl.textContent=`${ar(r.midDir)} ${r.midDir==='bull'?'Bullish Bias':r.midDir==='bear'?'Bearish Bias':'Range / Neutral'}`;
-    midEl.style.color=dc2(r.midDir);
-    if(midSub)midSub.textContent=`EMA75 $${Math.round(r.e75)} · EMA200 $${Math.round(r.e200)}`;
-  }
-  const volEl=document.getElementById('at-vol');
-  const volSub=document.getElementById('at-vol-sub');
-  if(volEl){
-    const sqTxt=r.SQ.state==='squeeze'?'⚡ Squeeze Zone':r.SQ.expanding?'📈 Expanding':'Normal';
-    volEl.textContent=`$${r.ATR.toFixed(1)} ATR`;
-    volEl.style.color=r.SQ.state==='squeeze'?'#E8C96A':r.SQ.expanding?'var(--pu)':'var(--tx2)';
-    if(volSub)volSub.textContent=`${sqTxt} · ADX ${r.adxVal}`;
-  }
+  const tp1=r.tpLevels?.[0];
+  const sl=r.shortDir==='bull'?r.slLong:r.slShort;
+  const nearOB=r.shortDir==='bull'?r.OB?.above?.[0]:r.OB?.below?.[0];
+  const lines=[];
+  if(r.adxVal<20)lines.push(`📊 ADX${r.adxVal}でレンジ相場。$${r.BB?Math.round(r.BB.l):Math.round(r.price-r.ATR*2)}〜$${r.BB?Math.round(r.BB.u):Math.round(r.price+r.ATR*2)}の範囲で推移。`);
+  else lines.push(`📊 $${r.price.toFixed(1)} · ${r.msLabel}(ADX${r.adxVal}) · ${biasTxt(r.shortDir)}。`);
+  const emaPos=r.price>r.e20&&r.price>r.e75?'EMA20・EMA75の上（強い）':r.price<r.e20&&r.price<r.e75?'EMA20・EMA75の下（弱い）':r.price>r.e20?`EMA20上($${Math.round(r.e20)})・EMA75($${Math.round(r.e75)})が上の壁`:`EMA20($${Math.round(r.e20)})が上の壁`;
+  lines.push(`📉 ${emaPos}。`);
+  if(nearOB)lines.push(`🟦 $${nearOB.mid}付近に${r.shortDir==='bull'?'売り':'買い'}OB。この水準での反発に注意。`);
+  if(tp1)lines.push(`🎯 参考TP1: $${tp1.price}（${tp1.pips}pips · ${tp1.desc}）· TP先到達確率${r.prob}%。`);
+  lines.push(`🛡️ 参考SL: $${sl}（${Math.round(Math.abs(sl-r.price)/0.01)}pips）。`);
+  if(r.bbStateLabel?.includes('Squeeze'))lines.push(`⚡ ${r.bbStateLabel}。次の大きな動きの前兆の可能性。`);
+  if(r.slowTrend==='slow_bull')lines.push(`↗ Gradual Uptrend — 緩やかな上昇傾向。`);
+  if(r.slowTrend==='slow_bear')lines.push(`↘ Gradual Downtrend — 緩やかな下落傾向。`);
+  $('at-body').innerHTML=lines.map(l=>`<div style="margin-bottom:5px">${l}</div>`).join('');
 
-  // 分析テキスト本文（構造化・読みやすく）
-  const bodyEl=document.getElementById('at-body');
-  if(bodyEl){
-    const price=r.price.toFixed(1);
-    const isRange=r.adxVal<20;
-    const tp1=r.shortDir==='bull'?r.refLong[0]:r.refShort[0];
-    const tp2=r.shortDir==='bull'?r.refLong[1]:r.refShort[1];
-    const sl=r.shortDir==='bull'?r.slLong:r.slShort;
-    const nearOB=r.shortDir==='bull'?r.OB.above[0]:r.OB.below[0];
-    const slowTxt=r.slowTrend==='slow_bull'?'緩やかな上昇傾向（Gradual Uptrend）も見られます。':
-                  r.slowTrend==='slow_bear'?'緩やかな下落傾向（Gradual Downtrend）も見られます。':'';
-
-    let lines=[];
-    // 1. 現在の状況
-    if(isRange){
-      const lo=r.BB?Math.round(r.BB.l):Math.round(r.price-r.ATR*2);
-      const hi=r.BB?Math.round(r.BB.u):Math.round(r.price+r.ATR*2);
-      lines.push(`📊 現在 $${price} は $${lo}〜$${hi} のレンジ内で推移しています。ADX ${r.adxVal}でトレンドは不明確です。${slowTxt}`);
-    }else{
-      const trendStr=r.shortDir==='bull'?'上方向優勢（Bullish Bias）':'下方向優勢（Bearish Bias）';
-      lines.push(`📊 現在 $${price}。短期は${trendStr}。ADX ${r.adxVal}（${r.msLabel}）、+DI ${r.pdi} / -DI ${r.ndi}。${slowTxt}`);
-    }
-    // 2. EMA状況
-    const emaPos=r.price>r.e20&&r.price>r.e75?'EMA20・EMA75の上にいて強い状態です。':
-                 r.price<r.e20&&r.price<r.e75?'EMA20・EMA75の下にいて弱い状態です。':
-                 r.price>r.e20?'EMA20の上にいますが、EMA75（$'+Math.round(r.e75)+'）が上の抵抗になっています。':
-                 'EMA20（$'+Math.round(r.e20)+'）が上の抵抗として機能しています。';
-    lines.push(`📉 ${emaPos}`);
-    // 3. OB・参考TP
-    if(nearOB){
-      const obDir=r.shortDir==='bull'?'上':'下';
-      lines.push(`🟦 $${nearOB.mid} 付近に${r.shortDir==='bull'?'売り':'買い'}のオーダーブロックがあります。この水準での反発に注意してください。`);
-    }
-    if(tp1){
-      const pips=Math.round(Math.abs(tp1.price-r.price)/0.01);
-      lines.push(`🎯 参考TP1: $${tp1.price}（現在値から ${pips}pips / ${tp1.desc}）${tp2?'　参考TP2: $'+tp2.price:''}。`);
-      lines.push(`🛡️ 参考SL: $${sl}（現在値から ${Math.round(Math.abs(sl-r.price)/0.01)}pips）。参考価格帯として活用してください。`);
-    }
-    // 4. スクイーズ
-    if(r.SQ.state==='squeeze'){
-      lines.push(`⚡ BB幅（$${r.SQ.bbW}）がKC幅（$${r.SQ.kcW}）より小さく、Squeeze Zoneです。次の大きな動きの前兆の可能性があります。方向が確定してから判断してください。`);
-    }else if(r.SQ.squeezeEnd){
-      lines.push(`🔓 スクイーズが終了し、ボラティリティが拡大し始めています。方向確認後、参考価格帯をご確認ください。`);
-    }
-    // 5. 期待値
-    lines.push(`📐 期待値目安: 上方向 +${r.EV.upPips}pips / 下方向 -${r.EV.dnPips}pips（想定レンジ $${Math.round(r.EV.p5)}〜$${Math.round(r.EV.p95)}）。`);
-
-    bodyEl.innerHTML=lines.map(l=>`<div style="margin-bottom:6px">${l}</div>`).join('');
-  }
-
-  // 参考価格帯インライン
-  const levelsEl=document.getElementById('at-levels');
-  if(levelsEl&&r.levels.length){
-    const near=[...r.levels].sort((a,b)=>Math.abs(a.p-r.price)-Math.abs(b.p-r.price)).slice(0,5);
-    levelsEl.innerHTML=near.map(lv=>{
-      const dist=lv.p-r.price;
-      const col=lv.t==='bull'?'#5DD4A5':lv.t==='bear'?'#F0A080':'var(--tx2)';
-      return `<div style="background:var(--bg3);border-radius:var(--rs);padding:5px 11px;border:0.5px solid var(--bo);font-size:11px;display:flex;gap:6px;align-items:center">
-        <span style="font-weight:600;color:${col}">${lv.l}</span>
-        <span style="font-family:var(--mn);color:var(--tx)">$${lv.p.toFixed(1)}</span>
-        <span style="color:var(--tx3)">${dist>=0?'+':''}${dist.toFixed(1)}</span>
-      </div>`;
-    }).join('');
-  }
+  const near=(r.levels||[]).sort((a,b)=>Math.abs((a.p||a.mid||0)-r.price)-Math.abs((b.p||b.mid||0)-r.price)).slice(0,4);
+  $('at-levels').innerHTML=near.map(lv=>{
+    const p=lv.p||lv.mid||0;const dist=p-r.price;
+    const col=lv.t==='bull'||lv.type==='bull'?'#5DD4A5':lv.t==='bear'||lv.type==='bear'?'#F0A080':'var(--tx2)';
+    return `<div style="background:var(--bg3);border-radius:var(--rs);padding:4px 10px;border:0.5px solid var(--bo);font-size:11px;display:flex;gap:6px;align-items:center"><span style="font-weight:600;color:${col}">${lv.l||lv.label}</span><span style="font-family:var(--mn)">$${p.toFixed(1)}</span><span style="color:var(--tx3)">${dist>=0?'+':''}${dist.toFixed(1)}</span></div>`;
+  }).join('');
 }
 
-function setDirCard(cardId,arrId,biasId,subId,pbBId,pbSId,dir,bias,sub,bPct){
-  document.getElementById(cardId).className='dir-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
-  document.getElementById(arrId).textContent=arrowTxt(dir);
-  document.getElementById(arrId).style.color=dc(dir);
-  document.getElementById(biasId).textContent=bias;
-  document.getElementById(biasId).style.color=dc(dir);
-  document.getElementById(subId).textContent=sub;
-  document.getElementById(pbBId).style.width=bPct+'%';
-  document.getElementById(pbSId).style.width=(100-bPct)+'%';
-}
+// ===== CHART (タブ内 - 簡易版) =====
+function drawChart(r){}
+function drawTacticalChart(r){}
 
-function setTF(id,dir,price,dirTxt,sub){
-  document.getElementById(id).className='tf-card '+(dir==='bull'?'bull':dir==='bear'?'bear':'');
-  document.getElementById(id+'-p').textContent=price;
-  document.getElementById(id+'-p').style.color=dc(dir);
-  document.getElementById(id+'-d').textContent=dirTxt;
-  document.getElementById(id+'-d').style.color=dc(dir);
-  document.getElementById(id+'-s').textContent=sub;
-}
-// ==================== CHART FUNCTIONS (削除済み - 軽量化) ====================
-let tacChart=null,countdownTimer=null,countdownSec=0;
-function drawTacticalChart(r){}  // チャート削除済み
-function drawChart(r){}  // チャート削除済み
-function startCountdown(sec){
-  countdownSec=sec;clearInterval(countdownTimer);
-  const sr=document.getElementById("statusRight");
-  const cc=document.getElementById("chartCountdown");
-  const upd=()=>{const t=countdownSec>0?"次回更新 "+countdownSec+"秒":"更新済み";if(sr)sr.textContent=t;if(cc)cc.textContent=t;};
-  upd();
-  countdownTimer=setInterval(()=>{countdownSec--;if(countdownSec<=0){clearInterval(countdownTimer);if(sr)sr.textContent="";if(cc)cc.textContent="更新済み";}else upd();},1000);
-}
-
-// ==================== TICK (後方互換用) ====================
-let tickErrorCount=0;
-async function runTick(){
-  await fetchAndUpdate();
-}
-
-// ==================== INIT ====================
+// ===== INIT =====
 window.speechSynthesis?.getVoices();
+
 </script>
 </body>
 </html>
