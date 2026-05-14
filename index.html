@@ -570,7 +570,7 @@ let avCacheData=null,avCacheTime=0,histCache=null,histCacheTime=0,avCallTime=0;
 let rfPrevFiltered=null,rfPrevDir='neut';
 let tacticShortDir='',tacticMidDir='',tacticPrice=0;
 let countdownTimer=null,countdownSec=0;
-let tvChart=null,tvSeries=null,tvLines=[];
+// tvTPLine vars declared in TV CHART section below
 let perfData={records:[],tp:0,sl:0};
 let narVariantIdx=0;
 let lastBigMoveTime=0;
@@ -1326,12 +1326,12 @@ function updateTVChart(r,d){
 
     // 凡例
     const legEl=document.getElementById('chartLegend');
-    if(legEl)legEl.innerHTML=`
-      <span class="cl-item" style="color:#E8C96A">$${r.price?.toFixed(1)}</span>
-      ${tp1?`<span class="cl-item" style="color:#3A8AE0">TP1 $${tp1.price}</span>`:''}
-      ${sl?`<span class="cl-item" style="color:#E05530">SL $${sl}</span>`:''}
-      <span class="cl-item" style="color:var(--gr)">${r.shortDir==='bull'?'↑':r.shortDir==='bear'?'↓':'→'} ${r.msLabel}</span>
-      <span class="cl-item" style="color:var(--tx3)">平均足</span>`;
+    if(legEl)legEl.innerHTML=
+      '<span class="cl-item" style="color:#E8C96A">$'+(r.price?.toFixed(1)||'--')+'</span>'+
+      (tp1?'<span class="cl-item" style="color:#3A8AE0">TP1 $'+tp1.price+'</span>':'')+
+      (sl?'<span class="cl-item" style="color:#E05530">SL $'+sl+'</span>':'')+
+      '<span class="cl-item" style="color:var(--gr)">'+(r.shortDir==='bull'?'↑':r.shortDir==='bear'?'↓':'→')+' '+r.msLabel+'</span>'+
+      '<span class="cl-item" style="color:var(--tx3)">平均足</span>';
 
     const infoEl=document.getElementById('chartInfo');
     if(infoEl)infoEl.textContent=`${d.source} | EMA20:$${Math.round(r.e20)} | ATR:$${r.ATR?.toFixed(1)}`;
@@ -1490,7 +1490,7 @@ function renderTPPanel(containerId,r,tpStart,tpEnd,mode){
         </div>
       </div>
     </div>
-    ${hfmOffset!==0?`<div style="font-size:10px;color:var(--am);margin-top:7px;padding:4px 8px;background:rgba(192,122,16,.08);border-radius:var(--rs);">HFM補正: TP $${hfmTP} / SL $${hfmSLv}（補正${hfmOffset>=0?'+':''}${hfmOffset.toFixed(1)}）</div>`:''}
+    ${hfmOffset!==0?'<div style="font-size:10px;color:var(--am);margin-top:7px;padding:4px 8px;background:rgba(192,122,16,.08);border-radius:var(--rs);">HFM補正: TP $'+hfmTP+' / SL $'+hfmSLv+'（補正'+(hfmOffset>=0?'+':'')+hfmOffset.toFixed(1)+'）</div>':''}
   `;
 }
 
@@ -1499,13 +1499,13 @@ function renderBeginnerTP(r){
   const sd=r.shortDir;const tp1=r.tpLevels?.[0];const sl=sd==='bull'?r.slLong:r.slShort;
   const arrow=sd==='bull'?'↑':sd==='bear'?'↓':'→';
   const color=dc(sd);
-  el.innerHTML=`<div style="text-align:center;padding:12px">
-    <div style="font-size:42px;margin-bottom:8px;color:${color}">${arrow}</div>
-    <div style="font-size:22px;font-weight:700;color:${color}">${bt(sd)}</div>
-    ${tp1?`<div style="font-size:14px;color:var(--up);margin-top:10px">参考TP: $${tp1.price} (+${tp1.pips}pips)</div>`:''}
-    <div style="font-size:14px;color:var(--dn);margin-top:4px">参考SL: $${sl}</div>
-    <div style="font-size:12px;color:var(--tx3);margin-top:8px">${r.Entry?.detail||'--'}</div>
-  </div>`;
+  el.innerHTML='<div style="text-align:center;padding:12px">'+
+    '<div style="font-size:42px;margin-bottom:8px;color:'+color+'">'+arrow+'</div>'+
+    '<div style="font-size:22px;font-weight:700;color:'+color+'">'+bt(sd)+'</div>'+
+    (tp1?'<div style="font-size:14px;color:var(--up);margin-top:10px">参考TP: $'+tp1.price+' (+'+tp1.pips+'pips)</div>':'')+
+    '<div style="font-size:14px;color:var(--dn);margin-top:4px">参考SL: $'+sl+'</div>'+
+    '<div style="font-size:12px;color:var(--tx3);margin-top:8px">'+(r.Entry?.detail||'--')+'</div>'+
+    '</div>';
 }
 
 function renderBeginnerSummary(r){
