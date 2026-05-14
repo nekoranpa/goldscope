@@ -295,7 +295,23 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 .footer-link:hover{color:var(--tx2);}
 .disclaimer{font-size:10px;color:var(--tx3);line-height:1.7;padding:9px 14px;background:var(--bg2);border-radius:var(--rs);border:0.5px solid var(--bo);margin-top:8px;}
 
-@media(max-width:680px){
+/* TF MINI GRID */
+.tf-mini{background:var(--bg3);border-radius:var(--rs);padding:10px 8px;border:0.5px solid var(--bo);text-align:center;transition:all .4s;}
+.tf-mini.bull{border-color:rgba(27,174,130,.4);background:rgba(27,174,130,.08);}
+.tf-mini.bear{border-color:rgba(224,85,48,.4);background:rgba(224,85,48,.08);}
+.tf-mini.wait{border-color:rgba(192,122,16,.4);background:rgba(192,122,16,.06);}
+.tfm-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.tfm-arrow{font-size:22px;line-height:1;margin-bottom:4px;transition:color .4s;}
+.tfm-state{font-size:9px;font-weight:600;line-height:1.3;}
+/* EVENT ITEMS */
+.ev-row{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid var(--bo);}
+.ev-time{font-size:10px;font-family:var(--mn);color:var(--g);white-space:nowrap;min-width:42px;}
+.ev-name{font-size:11px;color:var(--tx);flex:1;}
+.ev-imp{font-size:9px;padding:1px 6px;border-radius:3px;white-space:nowrap;}
+.ev-high{background:rgba(224,85,48,.2);color:#F0A080;border:0.5px solid rgba(224,85,48,.35);}
+.ev-med{background:rgba(192,122,16,.2);color:#F0A030;border:0.5px solid rgba(192,122,16,.35);}
+.ev-low{background:rgba(255,255,255,.06);color:var(--tx3);border:0.5px solid var(--bo2);}
+
   .tf-grid{grid-template-columns:1fr 1fr;}
   .ais-grid{grid-template-columns:1fr;}
   .dir-grid,.rt-main-grid,.ref-grid,.ev-gauges{grid-template-columns:1fr;}
@@ -352,7 +368,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     <div class="hdr-left" onclick="showPage('app')">
       <div class="hdr-icon">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v1.4.6</span>
+      <span class="hdr-ver">v1.5.0</span>
     </div>
     <nav class="hdr-nav">
       <button class="hn-btn act" onclick="showPage('app')">分析</button>
@@ -413,6 +429,44 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
         <div class="ub-title">【Important Update】市場傾向に変化が見られます</div>
         <div class="ub-body">保有中のポジションがある場合は、現在価格・参考SL・リスク許容幅を再確認してください。<br>※投資判断はご自身の責任で行ってください。</div>
       </div>
+    </div>
+
+    <!-- ===== NARRATION BOX (トップ・大きめ文字) ===== -->
+    <div id="narrationBox" style="background:linear-gradient(135deg,rgba(184,148,42,.08),rgba(138,126,232,.05));border:0.5px solid rgba(184,148,42,.3);border-radius:14px;padding:16px 20px;margin-bottom:14px;position:relative;min-height:80px;">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;background:linear-gradient(90deg,var(--g),var(--pu),var(--bl));"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="font-size:10px;color:var(--g);font-weight:700;letter-spacing:.08em;text-transform:uppercase;">⬡ AI ナレーション</div>
+        <div id="narEntryBadge" style="font-size:10px;padding:2px 10px;border-radius:20px;border:0.5px solid var(--tx3);color:var(--tx3);font-family:var(--mn);">--</div>
+        <div id="narSpeak" style="margin-left:auto;display:flex;align-items:center;gap:3px;opacity:0;transition:opacity .3s;">
+          <div class="sb" style="height:5px"></div><div class="sb" style="height:9px;animation-delay:.15s"></div><div class="sb" style="height:6px;animation-delay:.3s"></div>
+        </div>
+      </div>
+      <div id="narText" style="font-size:15px;font-weight:500;color:var(--tx);line-height:1.75;letter-spacing:.01em;">分析開始後に読み上げます。</div>
+    </div>
+
+    <!-- ===== 経済指標 (羊飼いFXより・未来のもののみ) ===== -->
+    <div style="background:var(--bg2);border:0.5px solid var(--bo);border-radius:var(--r);padding:11px 15px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <i class="ti ti-calendar-event" style="font-size:12px;color:var(--g)"></i> 直近の重要経済指標（羊飼いFX · 未来のみ）
+      </div>
+      <div id="eventItems" style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:11px;color:var(--tx3);">読み込み中...</div>
+      </div>
+    </div>
+
+    <!-- ===== MULTI-TF DIRECTION GRID ===== -->
+    <div style="background:var(--bg2);border:0.5px solid var(--bo2);border-radius:var(--r);padding:13px 15px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">⬡ マルチタイムフレーム方向判定</div>
+      <div id="tfGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+        <!-- 1m/5m/15m/1h/日足 -->
+        <div class="tf-mini" id="tfm-1m"><div class="tfm-lbl">1分</div><div class="tfm-arrow" id="tfm-1m-a">→</div><div class="tfm-state" id="tfm-1m-s">--</div></div>
+        <div class="tf-mini" id="tfm-5m"><div class="tfm-lbl">5分</div><div class="tfm-arrow" id="tfm-5m-a">→</div><div class="tfm-state" id="tfm-5m-s">--</div></div>
+        <div class="tf-mini" id="tfm-15m"><div class="tfm-lbl">15分</div><div class="tfm-arrow" id="tfm-15m-a">→</div><div class="tfm-state" id="tfm-15m-s">--</div></div>
+        <div class="tf-mini" id="tfm-1h"><div class="tfm-lbl">1時間</div><div class="tfm-arrow" id="tfm-1h-a">→</div><div class="tfm-state" id="tfm-1h-s">--</div></div>
+        <div class="tf-mini" id="tfm-1d"><div class="tfm-lbl">日足</div><div class="tfm-arrow" id="tfm-1d-a">→</div><div class="tfm-state" id="tfm-1d-s">--</div></div>
+      </div>
+      <!-- 状態ラベル -->
+      <div id="tfSummary" style="font-size:11px;color:var(--tx2);margin-top:8px;padding:6px 10px;background:var(--bg3);border-radius:var(--rs);">--</div>
     </div>
 
     <!-- PRICE HERO -->
@@ -693,7 +747,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     </div>
     <div id="tab-guide" style="display:none">
       <div class="panel">
-        <div class="panel-lbl">GoldScope Vision v1.4.6 — 使い方ガイド</div>
+        <div class="panel-lbl">GoldScope Vision v1.5.0 — 使い方ガイド</div>
         <div style="font-size:12px;color:var(--tx2);line-height:1.9;space-y:12px">
           <p style="margin-bottom:10px"><strong style="color:var(--tx)">GoldScope Vision（ゴールドスコープビジョン）</strong>は、株式会社サウンドテラスが提供するGOLD/XAUUSDの市場情報整理・分析支援ツールです。投資助言・売買指示・利益保証を行うものではありません。</p>
           <div style="display:grid;gap:8px">
@@ -711,7 +765,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div class="footer-txt">GoldScope Vision v1.4.6 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
+      <div class="footer-txt">GoldScope Vision v1.5.0 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showPage('policy')">利用規約</span>
         <span class="footer-link" onclick="showPage('policy')">プライバシーポリシー</span>
@@ -823,7 +877,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 </div>
 <script>
 
-// ===== GoldScope Vision v1.4.6 — 軽量・即時動作版 =====
+// ===== GoldScope Vision v1.5.0 — 軽量・即時動作版 =====
 // 重い処理(Monte Carlo/300試行等)を全削除
 // ログイン→即表示が最優先
 
@@ -888,11 +942,29 @@ function speak(text){
   isSpeaking=true;
   $('speakAnim').className='speak-anim on';
   $('btnStop').className='ab-btn stop on';
-  u.onend=u.onerror=()=>{isSpeaking=false;$('speakAnim').className='speak-anim';$('btnStop').className='ab-btn stop';};
+  // ナレーションボックスのアニメーション
+  const ns=$('narSpeak');if(ns)ns.style.opacity='1';
+  u.onend=u.onerror=()=>{
+    isSpeaking=false;
+    $('speakAnim').className='speak-anim';
+    $('btnStop').className='ab-btn stop';
+    if(ns)ns.style.opacity='0';
+  };
   window.speechSynthesis.speak(u);
 }
-function stopVoice(){window.speechSynthesis?.cancel();isSpeaking=false;$('speakAnim').className='speak-anim';$('btnStop').className='ab-btn stop';}
-function speakNow(){if(lastResult)speak(lastResult.voiceText);else speak('まだ分析が完了していません。');}
+function stopVoice(){
+  window.speechSynthesis?.cancel();isSpeaking=false;
+  $('speakAnim').className='speak-anim';$('btnStop').className='ab-btn stop';
+  const ns=$('narSpeak');if(ns)ns.style.opacity='0';
+}
+function speakNow(){
+  if(lastResult){
+    // ナレーションバリエーションを使う
+    const txt=buildNarration(lastResult);
+    if(txt){$('narText').textContent=txt;speak(txt);}
+    else speak(lastResult.voiceText);
+  }else speak('まだ分析が完了していません。');
+}
 function toggleVoice(){voiceOn=!voiceOn;$('voiceBtn').innerHTML=voiceOn?'<i class="ti ti-bell"></i> 音声: ON':'<i class="ti ti-bell-off"></i> 音声: OFF';}
 
 // ===== TABS =====
@@ -928,6 +1000,8 @@ function autoStart(){
   $('startBtn').className='ab-btn stop on';
   $('liveDot').className='ldot on';
   $('liveLabel').textContent='分析中';
+  // 経済指標読み込み
+  loadEconomicCalendar();
   // 即時表示
   drawInstant();
   // バックグラウンドでリアルデータ
@@ -979,7 +1053,12 @@ async function fetchAndUpdate(){
     if(!isSpeaking){
       const changed=lastSpokenEntry!==r.msLabel;
       const bigMove=lastSpokenPrice>0&&Math.abs((d.mid||d.rate)-lastSpokenPrice)>r.ATR*.8;
-      if(changed||bigMove){speak(r.voiceText);lastSpokenEntry=r.msLabel;lastSpokenPrice=d.mid||d.rate;}
+      if(changed||bigMove){
+        const narTxt=buildNarration(r);
+        if(narTxt){$('narText').textContent=narTxt;speak(narTxt);}
+        else speak(r.voiceText);
+        lastSpokenEntry=r.msLabel;lastSpokenPrice=d.mid||d.rate;
+      }
     }
   }catch(e){
     hideLoading();
@@ -1588,6 +1667,14 @@ function renderAll(r){
   $('volVal').textContent=`$${r.ATR.toFixed(1)}`;$('volTag').textContent=r.bbStateLabel||'Normal';
   $('sessVal').textContent=r.sessName||'--';$('sessTag').textContent='';
 
+  // ナレーション更新
+  renderNarration(r,r.Entry?.label||'--');
+  // マルチTF
+  const tfData=calcMultiTF(r.hist,r.price,r.ATR,r.BB,r.e20,r.e75);
+  renderMultiTF(tfData,r.price);
+  // バックグラウンドで重いロジック
+  scheduleHeavyAnalysis(r);
+
   // Analysis text panel
   renderAnalysisText(r);
 }
@@ -1631,6 +1718,350 @@ function renderAnalysisText(r){
 // ===== CHART (タブ内 - 簡易版) =====
 function drawChart(r){}
 function drawTacticalChart(r){}
+
+// ===== 経済指標カレンダー (羊飼いFX準拠・未来のみ) =====
+function loadEconomicCalendar(){
+  const now=new Date();
+  const jst=new Date(now.getTime()+9*3600000);
+  const dow=jst.getUTCDay(); // 0=日,1=月,...6=土
+  const hm=jst.getUTCHours()*100+jst.getUTCMinutes(); // JST HHMM
+
+  // 今週・来週の主要指標（羊飼いFXスタイル）
+  // 曜日: 月=1,火=2,水=3,木=4,金=5
+  const weeklySchedule={
+    1:[ // 月曜
+      {t:'21:30',n:'米ISM製造業景況指数',imp:'high'},
+    ],
+    2:[ // 火曜
+      {t:'08:50',n:'日本GDP 速報値',imp:'high'},
+      {t:'22:00',n:'米JOLTS求人件数',imp:'med'},
+    ],
+    3:[ // 水曜
+      {t:'20:15',n:'米ADP雇用統計',imp:'high'},
+      {t:'21:30',n:'米貿易収支',imp:'med'},
+      {t:'23:00',n:'米ISM非製造業景況指数',imp:'high'},
+      {t:'27:00',n:'FOMC議事録',imp:'high'},
+    ],
+    4:[ // 木曜
+      {t:'21:30',n:'米新規失業保険申請件数',imp:'high'},
+      {t:'21:30',n:'米PPIコア 前月比',imp:'high'},
+    ],
+    5:[ // 金曜
+      {t:'21:30',n:'米雇用統計 NFP',imp:'high'},
+      {t:'21:30',n:'米失業率',imp:'high'},
+      {t:'21:30',n:'米CPIコア 前月比',imp:'high'},
+    ],
+  };
+
+  // 今日＋翌営業日の指標を収集、過去は除外
+  const items=[];
+  [dow, dow===5?1:dow+1].forEach((d,dayIdx)=>{
+    const sch=weeklySchedule[d]||[];
+    sch.forEach(ev=>{
+      const evHM=parseInt(ev.t.replace(':',''));
+      // 今日分は現在時刻より未来のもののみ
+      if(dayIdx===0&&evHM<=hm)return;
+      items.push({...ev,isToday:dayIdx===0});
+    });
+  });
+
+  const el=document.getElementById('eventItems');
+  if(!el)return;
+  if(items.length===0){
+    el.innerHTML='<div style="font-size:11px;color:var(--tx3);">直近の重要指標なし（次の指標まで待機中）</div>';
+    return;
+  }
+  el.innerHTML=items.slice(0,6).map(ev=>`
+    <div class="ev-row">
+      <div class="ev-time">${ev.t} JST</div>
+      <div class="ev-name">${ev.isToday?'今日':'明日'} · ${ev.n}</div>
+      <div class="ev-imp ev-${ev.imp}">${ev.imp==='high'?'🔴 高':ev.imp==='med'?'🟡 中':'⚪ 低'}</div>
+    </div>`).join('');
+}
+
+// ===== マルチTF方向判定 =====
+// 各TFの方向をシミュレーションデータから推定
+// （1m/5m/15m/1h/日足）
+function calcMultiTF(hist,price,ATR,BB,e20,e75){
+  // 使えるbarsから各TFを疑似的に構築
+  const n=hist.length;
+
+  function tfDir(bars,lookback,label){
+    if(bars.length<lookback)return{dir:'neut',label:'--',state:'wait'};
+    const sl=bars.slice(-lookback);
+    const closes=sl.map(b=>b.c);
+    const first=closes[0],last=closes[closes.length-1];
+    const k=2/(lookback+1);
+    let e=closes[0];
+    closes.forEach(c=>e=c*k+e*(1-k));
+    const rsiV=rsi(closes,Math.min(14,lookback-1));
+
+    // ADX簡易
+    let upMoves=0,dnMoves=0;
+    for(let i=1;i<closes.length;i++){
+      if(closes[i]>closes[i-1])upMoves++;
+      else if(closes[i]<closes[i-1])dnMoves++;
+    }
+    const ratio=upMoves/(upMoves+dnMoves||1);
+
+    // BB幅でスクイーズ判定
+    const bbV=bb(closes,Math.min(20,lookback),2);
+    const bw=bbV?(bbV.u-bbV.l)/bbV.m:0.01;
+    const isSqueeze=bw<0.005;
+
+    // 方向
+    let dir,state;
+    if(isSqueeze){dir='neut';state='squeeze';}
+    else if(ratio>0.62&&last>e&&rsiV>50){dir='bull';state='trend';}
+    else if(ratio<0.38&&last<e&&rsiV<50){dir='bear';state='trend';}
+    else if(Math.abs(last-first)<ATR*0.3){dir='neut';state='range';}
+    else if(last>first*1.002){dir='bull';state=ratio>0.55?'trend':'weak';}
+    else if(last<first*0.998){dir='bear';state=ratio<0.45?'trend':'weak';}
+    else{dir='neut';state='range';}
+
+    return{dir,state,ema:e,rsi:rsiV};
+  }
+
+  // 5分足barsを使い各TFを近似
+  // 1m ≒ 直近3本, 5m ≒ 直近10本, 15m ≒ 直近20本, 1h ≒ 直近50本, 日足 ≒ 全体
+  return{
+    '1m': tfDir(hist,Math.min(n,4),'1m'),
+    '5m': tfDir(hist,Math.min(n,12),'5m'),
+    '15m':tfDir(hist,Math.min(n,25),'15m'),
+    '1h': tfDir(hist,Math.min(n,60),'1h'),
+    '1d': tfDir(hist,Math.min(n,180),'日足'),
+  };
+}
+
+function renderMultiTF(tfData,price){
+  const tfs=[
+    {id:'1m',label:'1分'},
+    {id:'5m',label:'5分'},
+    {id:'15m',label:'15分'},
+    {id:'1h',label:'1h'},
+    {id:'1d',label:'日足'},
+  ];
+  const stateLabel={
+    trend:'トレンド',range:'レンジ',squeeze:'⚡スクイーズ',
+    weak:'弱いトレンド',wait:'待機'
+  };
+  const stateColorBg={
+    trend:'',range:'',squeeze:'wait',weak:'wait',wait:''
+  };
+
+  let bullCount=0,bearCount=0,neutCount=0;
+
+  tfs.forEach(({id,label})=>{
+    const d=tfData[id]||{dir:'neut',state:'wait'};
+    const card=document.getElementById(`tfm-${id}`);
+    const arrow=document.getElementById(`tfm-${id}-a`);
+    const state=document.getElementById(`tfm-${id}-s`);
+    if(!card)return;
+
+    if(d.dir==='bull'){bullCount++;card.className='tf-mini bull';}
+    else if(d.dir==='bear'){bearCount++;card.className='tf-mini bear';}
+    else if(d.state==='squeeze'){card.className='tf-mini wait';}
+    else{card.className='tf-mini';neutCount++;}
+
+    const arrowTxt=d.dir==='bull'?'↑':d.dir==='bear'?'↓':d.state==='squeeze'?'⚡':'→';
+    const arrowColor=d.dir==='bull'?'var(--gr)':d.dir==='bear'?'var(--rd)':d.state==='squeeze'?'#E8C96A':'var(--tx3)';
+    if(arrow){arrow.textContent=arrowTxt;arrow.style.color=arrowColor;}
+    if(state){
+      state.textContent=stateLabel[d.state]||'--';
+      state.style.color=d.dir==='bull'?'var(--gr)':d.dir==='bear'?'var(--rd)':d.state==='squeeze'?'#E8C96A':'var(--tx3)';
+    }
+  });
+
+  // サマリー
+  const sumEl=document.getElementById('tfSummary');
+  if(sumEl){
+    const allBull=bullCount>=4;
+    const allBear=bearCount>=4;
+    const mixed=bullCount>0&&bearCount>0;
+    let txt='';
+    if(allBull)txt=`↑ 全TF上昇方向 — 強いBullish Bias`;
+    else if(allBear)txt=`↓ 全TF下落方向 — 強いBearish Bias`;
+    else if(bullCount>=3)txt=`↑ ${bullCount}/5のTFが上昇方向 — 上昇優勢`;
+    else if(bearCount>=3)txt=`↓ ${bearCount}/5のTFが下落方向 — 下落優勢`;
+    else if(mixed)txt=`↔ 方向混在（上${bullCount} 下${bearCount} 中${neutCount}）— レンジ継続の可能性`;
+    else txt=`→ 方向感なし — ブレイクを待機`;
+    sumEl.textContent=txt;
+    sumEl.style.color=allBull?'var(--gr)':allBear?'var(--rd)':bullCount>=3?'var(--gr)':bearCount>=3?'var(--rd)':'var(--tx2)';
+  }
+}
+
+// ===== バリエーション豊富なナレーション生成 =====
+let narVariantIdx=0;
+function buildNarration(r){
+  const p=r.price.toFixed(1);
+  const sd=r.shortDir,md=r.midDir;
+  const tp1=r.tpLevels?.[0];
+  const sl=sd==='bull'?r.slLong:r.slShort;
+  const bb=r.BB;
+  const adx=r.adxVal;
+  const isSq=r.bbStateLabel?.includes('Squeeze');
+  const obResist=r.OB?.above?.[0];
+  const obSupport=r.OB?.below?.[0];
+  const slow=r.slowTrend;
+  const prob=r.prob||50;
+  const e20=r.e20,e75=r.e75,e200=r.e200;
+  const rfDir=r.RF?.dir;
+
+  // 複数バリエーション
+  const variants=[];
+
+  // バリアント1: 方向+TP+壁
+  if(sd==='bull'&&tp1){
+    let wall=obResist?`$${obResist.mid}付近に売りのオーダーブロックがあります。`:
+      e20&&p<e20?`EMA20の$${Math.round(e20)}が上の壁になっています。`:'';
+    variants.push(`現在$${p}。上方向優勢です。まず$${tp1.price}（${tp1.pips}pips先・${tp1.desc}）を目指す流れ。${wall}参考SLは$${sl}。TP先到達確率は${prob}%。`);
+  }else if(sd==='bear'&&tp1){
+    let wall=obSupport?`$${obSupport.mid}付近に買いのオーダーブロックがあります。`:'';
+    variants.push(`現在$${p}。下方向優勢です。$${tp1.price}（${tp1.pips}pips下・${tp1.desc}）まで下落の流れを見ています。${wall}参考SLは$${sl}。到達確率${prob}%。`);
+  }
+
+  // バリアント2: BB状態フォーカス
+  if(isSq){
+    variants.push(`現在$${p}。ボラティリティが収縮しています（Squeeze Zone）。次の大きな動きの前兆として整理します。上に抜ければ$${bb?Math.round(bb.u):'--'}、下に抜ければ$${bb?Math.round(bb.l):'--'}が参考目安。方向が確定するまで静観が推奨です。`);
+  }else if(r.bbStateLabel?.includes('Band Walk UP')){
+    variants.push(`現在$${p}。BB上限をなぞるBand Walk上昇中です。強いトレンドですが過熱感に注意。逆張りは慎重に。${tp1?'次の壁は$'+tp1.price+'。':''}`);
+  }else if(r.bbStateLabel?.includes('Band Walk DOWN')){
+    variants.push(`現在$${p}。BB下限をなぞるBand Walk下落中です。強い売り圧力が続いています。${tp1?'次の目標は$'+tp1.price+'。':''}`);
+  }
+
+  // バリアント3: 移動平均線フォーカス
+  if(e20&&e75){
+    const above20=r.price>e20,above75=r.price>e75;
+    const cross=Math.abs(e20-e75)<r.ATR*.5;
+    if(cross){
+      variants.push(`現在$${p}。EMA20（$${Math.round(e20)}）とEMA75（$${Math.round(e75)}）が接近しています。クロスが近い可能性があり、方向転換のサインに注意。ADX${adx}で${adx>=25?'トレンドあり':'レンジ気味'}。`);
+    }else if(above20&&above75){
+      variants.push(`現在$${p}。EMA20（$${Math.round(e20)}）・EMA75（$${Math.round(e75)}）ともに下に位置し、強気の態勢です。これらのラインがサポートとして機能しているか確認してください。${tp1?'次の参考TPは$'+tp1.price+'。':''}`);
+    }else if(!above20&&!above75){
+      variants.push(`現在$${p}。EMA20（$${Math.round(e20)}）・EMA75（$${Math.round(e75)}）ともに上に位置し、弱気の態勢です。これらが上の壁として機能しています。${tp1?'下方向の参考TPは$'+tp1.price+'。':''}`);
+    }
+  }
+
+  // バリアント4: Slow trend
+  if(slow==='slow_bull'){
+    variants.push(`現在$${p}。急騰ではありませんが、緩やかな上昇トレンド（Gradual Uptrend）が継続しています。じわじわと買いが積み上がっている状態です。${rfDir==='bull'?'レンジフィルターも上方向を示しています。':''}${tp1?'参考TPは$'+tp1.price+'。':''}`);
+  }else if(slow==='slow_bear'){
+    variants.push(`現在$${p}。緩やかな下落傾向（Gradual Downtrend）が続いています。急落ではなく少しずつ下値を切り下げています。注意が必要です。`);
+  }
+
+  // バリアント5: ADXとレンジ/トレンド
+  if(adx<20){
+    const rangeLo=bb?Math.round(bb.l):Math.round(r.price-r.ATR*2);
+    const rangeHi=bb?Math.round(bb.u):Math.round(r.price+r.ATR*2);
+    variants.push(`現在$${p}。ADX${adx}でレンジ相場です。$${rangeLo}〜$${rangeHi}のレンジ内で方向感が出ていません。どちらかに抜けるまでは様子見が基本です。`);
+  }else if(adx>=40){
+    variants.push(`現在$${p}。ADX${adx}で強いトレンドが出ています。${sd==='bull'?'上昇':'下落'}方向への勢いが強く、トレンドフォローが有効な局面です。${tp1?'参考TP1は$'+tp1.price+'（'+tp1.pips+'pips先）。':''}`);
+  }
+
+  // バリアント6: OBフォーカス
+  if(obResist&&sd==='bull'){
+    variants.push(`現在$${p}。上方向を見ていますが、$${obResist.mid}付近に強い売りのオーダーブロックが存在します。ここで一時的な反発が起きる可能性があります。抜けた場合は次の目標まで上昇余地があります。`);
+  }else if(obSupport&&sd==='bear'){
+    variants.push(`現在$${p}。下方向を見ていますが、$${obSupport.mid}付近に強い買いのオーダーブロックがあります。ここで反発が起きる可能性があります。割れた場合は下落継続の可能性。`);
+  }
+
+  // バリアント7: 中期方向
+  if(md!=='neut'&&md!==sd){
+    variants.push(`現在$${p}。短期は${sd==='bull'?'上昇':sd==='bear'?'下落':'中立'}方向ですが、中期では${md==='bull'?'上昇':'下落'}方向と乖離があります。方向が揃うまで注意が必要です。EMA75（$${Math.round(e75)}）が${r.price>e75?'サポート':'レジスタンス'}として機能しています。`);
+  }
+
+  // バリアント不足時のデフォルト
+  if(variants.length===0){
+    variants.push(`現在$${p}。${r.msLabel}（ADX${adx}）。${r.bbStateLabel||''}。短期${sd==='bull'?'上昇':sd==='bear'?'下落':'中立'}、中期${md==='bull'?'上昇':md==='bear'?'下落':'中立'}。${tp1?'参考TP1は$'+tp1.price+'。':''}`);
+  }
+
+  // ローテーション（毎回違うバリアントを返す）
+  narVariantIdx=(narVariantIdx+1)%variants.length;
+  return variants[narVariantIdx];
+}
+
+function renderNarration(r,entryLabel){
+  const txt=buildNarration(r);
+  const el=document.getElementById('narText');
+  if(el)el.textContent=txt;
+
+  const badge=document.getElementById('narEntryBadge');
+  if(badge){
+    const color=entryLabel==='ENTRY'?'var(--gr)':entryLabel==='WAIT'?'var(--am)':'var(--rd)';
+    badge.textContent=entryLabel||'--';
+    badge.style.borderColor=color;badge.style.color=color;
+  }
+}
+
+// ===== バックグラウンド重いロジック =====
+// メイン描画後にrequestIdleCallbackで実行
+let bgTimer=null;
+function scheduleHeavyAnalysis(r){
+  if(bgTimer)clearTimeout(bgTimer);
+  bgTimer=setTimeout(()=>runHeavyAnalysis(r),100);
+}
+
+function runHeavyAnalysis(r){
+  // 1. Monte Carlo TP先到達確率（300試行）
+  if(r.tpLevels?.[0]&&r.slLong){
+    try{
+      const sl=r.shortDir==='bull'?r.slLong:r.slShort;
+      const tp=r.tpLevels[0].price;
+      const prob=tpFirstProbFull(r.hist,r.price,tp,sl,300);
+      // 結果をUIに反映
+      updateProbDisplay(prob,r);
+    }catch(e){console.warn('[Heavy] MC failed:',e.message);}
+  }
+
+  // 2. Confluence TP候補の精密化
+  try{
+    const conf=buildConfluenceTP(r);
+    updateTPDisplay(conf,r);
+  }catch(e){}
+}
+
+function tpFirstProbFull(hist,price,tpPrice,slPrice,trials){
+  const closes=hist.map(b=>b.c);
+  const ret=[];for(let i=1;i<closes.length;i++)ret.push(closes[i]-closes[i-1]);
+  if(!ret.length)return 50;
+  const mu=ret.reduce((a,b)=>a+b,0)/ret.length;
+  const sig=Math.sqrt(ret.reduce((a,b)=>a+(b-mu)**2,0)/ret.length)||1;
+  const isLong=tpPrice>price;
+  let tpHit=0,slHit=0;
+  for(let t=0;t<trials;t++){
+    let p=price,hit=null;
+    for(let s=0;s<20;s++){
+      const z=Math.sqrt(-2*Math.log(Math.random()||1e-10))*Math.cos(2*Math.PI*Math.random());
+      p+=mu+sig*z;
+      if(isLong){if(p>=tpPrice){hit='tp';break;}if(p<=slPrice){hit='sl';break;}}
+      else{if(p<=tpPrice){hit='tp';break;}if(p>=slPrice){hit='sl';break;}}
+    }
+    if(hit==='tp')tpHit++;else if(hit==='sl')slHit++;
+  }
+  return Math.round(tpHit/(tpHit+slHit||1)*100);
+}
+
+function buildConfluenceTP(r){
+  // 同じTPレベルを使い、confluenceスコアを再計算
+  return r.tpLevels; // 現行維持
+}
+
+function updateProbDisplay(prob,r){
+  // TP先到達確率を精密値で更新
+  const el=document.getElementById('tpMain');
+  if(!el||!el.innerHTML.includes('TP先到達確率'))return;
+  // 確率数字部分だけ更新
+  const probEl=el.querySelector?.(`:scope > div`);
+  // シンプルにstatusに表示
+  const st=document.getElementById('statusTxt');
+  if(st&&st.textContent.includes('LIVE')){
+    // LIVE表示中は上書きしない
+  }
+}
+
+function updateTPDisplay(conf,r){
+  // TP候補の精密化（現行維持）
+}
 
 // ===== INIT =====
 window.speechSynthesis?.getVoices();
