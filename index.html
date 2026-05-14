@@ -1,370 +1,220 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>GoldScope Vision</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoldScope AI</title>
 
-<style>
-:root{
-  --gold:#caa63a;
-  --bg:#050505;
-  --card:#0c1118;
-  --text:#f3f0ea;
-  --muted:#9b9b9b;
-  --line:rgba(255,255,255,.08);
-}
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
 
-*{
-  box-sizing:border-box;
-}
+    body{
+      font-family:sans-serif;
+      background:#0f172a;
+      color:white;
+      min-height:100vh;
+    }
 
-body{
-  margin:0;
-  background:
-    radial-gradient(circle at top, rgba(202,166,58,.14), transparent 40%),
-    var(--bg);
-  color:var(--text);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Helvetica Neue",
-    "Noto Sans JP",
-    sans-serif;
-}
+    .container{
+      max-width:1200px;
+      margin:auto;
+      padding:40px 20px;
+    }
 
-.wrap{
-  max-width:1200px;
-  margin:auto;
-  padding:28px;
-}
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:60px;
+    }
 
-.badge{
-  display:inline-block;
-  border:1px solid rgba(202,166,58,.35);
-  color:var(--gold);
-  padding:10px 18px;
-  border-radius:999px;
-  margin-bottom:30px;
-  font-size:14px;
-}
+    .logo{
+      font-size:28px;
+      font-weight:bold;
+      color:#f59e0b;
+    }
 
-h1{
-  font-size:88px;
-  line-height:.95;
-  margin:0 0 20px;
-  font-weight:900;
-  letter-spacing:-.05em;
-}
+    .hero{
+      text-align:center;
+      padding:80px 20px;
+    }
 
-.gold{
-  color:var(--gold);
-}
+    .hero h1{
+      font-size:56px;
+      margin-bottom:20px;
+    }
 
-.lead{
-  color:#b4b4b4;
-  font-size:22px;
-  line-height:1.7;
-  max-width:980px;
-}
+    .hero p{
+      color:#cbd5e1;
+      font-size:20px;
+      margin-bottom:40px;
+    }
 
-.grid{
-  margin-top:40px;
-  display:grid;
-  grid-template-columns:1.3fr .8fr;
-  gap:22px;
-}
+    .price-box{
+      background:#111827;
+      border-radius:20px;
+      padding:40px;
+      max-width:500px;
+      margin:40px auto;
+      box-shadow:0 10px 30px rgba(0,0,0,.4);
+    }
 
-.card{
-  background:rgba(10,14,20,.95);
-  border:1px solid var(--line);
-  border-radius:28px;
-  padding:34px;
-  backdrop-filter:blur(12px);
-}
+    .price-title{
+      color:#94a3b8;
+      margin-bottom:15px;
+      font-size:18px;
+    }
 
-.label{
-  color:#8e8e8e;
-  font-size:14px;
-  letter-spacing:.18em;
-  margin-bottom:20px;
-}
+    .price{
+      font-size:56px;
+      font-weight:bold;
+      color:#f59e0b;
+    }
 
-.price{
-  font-size:76px;
-  font-weight:900;
-  color:var(--gold);
-  line-height:1;
-  margin-bottom:16px;
-}
+    .source{
+      margin-top:15px;
+      color:#64748b;
+      font-size:14px;
+    }
 
-.status{
-  color:#9d9d9d;
-  font-size:15px;
-  margin-bottom:20px;
-}
+    .buttons{
+      margin-top:40px;
+      display:flex;
+      gap:20px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
 
-.notice{
-  border:1px solid rgba(202,166,58,.18);
-  background:rgba(202,166,58,.06);
-  border-radius:18px;
-  padding:18px;
-  color:#b7b7b7;
-  line-height:1.7;
-  margin-bottom:28px;
-}
+    .btn{
+      padding:14px 24px;
+      border-radius:12px;
+      text-decoration:none;
+      font-weight:bold;
+      transition:.2s;
+    }
 
-.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:14px;
-}
+    .btn-primary{
+      background:#f59e0b;
+      color:black;
+    }
 
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border-radius:999px;
-  padding:18px 28px;
-  text-decoration:none;
-  font-weight:800;
-  cursor:pointer;
-  border:none;
-  transition:.2s;
-  font-size:18px;
-}
+    .btn-secondary{
+      border:1px solid #334155;
+      color:white;
+    }
 
-.btn:hover{
-  transform:translateY(-1px);
-}
+    .btn:hover{
+      opacity:.9;
+      transform:translateY(-2px);
+    }
 
-.btn-primary{
-  background:linear-gradient(135deg,#d9b547,#8b690e);
-  color:#050505;
-}
+    footer{
+      text-align:center;
+      padding:40px;
+      color:#64748b;
+      margin-top:80px;
+    }
 
-.btn-secondary{
-  background:transparent;
-  border:1px solid rgba(255,255,255,.15);
-  color:white;
-}
-
-.table-row{
-  display:flex;
-  justify-content:space-between;
-  border-bottom:1px solid var(--line);
-  padding:18px 0;
-  font-size:18px;
-}
-
-.table-row span{
-  color:#9f9f9f;
-}
-
-.table-row b{
-  color:white;
-}
-
-.ok{
-  color:#32c48d;
-}
-
-.ng{
-  color:#ff6b4a;
-}
-
-@media(max-width:900px){
-
-  h1{
-    font-size:58px;
-  }
-
-  .grid{
-    grid-template-columns:1fr;
-  }
-
-  .price{
-    font-size:54px;
-  }
-
-  .lead{
-    font-size:18px;
-  }
-}
-</style>
+    .error{
+      color:#ef4444;
+      margin-top:15px;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="wrap">
+  <div class="container">
 
-  <div class="badge">
-    GoldScope Vision | AI Market Intelligence for GOLD (XAUUSD)
-  </div>
+    <header>
+      <div class="logo">GoldScope AI</div>
+    </header>
 
-  <h1>
-    ゴールド相場を予測するのではなく、<br>
-    <span class="gold">整理する。</span>
-  </h1>
+    <section class="hero">
 
-  <div class="lead">
-    このプレビューは、APIキーをブラウザに出さず、
-    <code>/api/gold</code> 経由で GOLD（XAUUSD）の価格を取得する修正版です。
-  </div>
+      <h1>リアルタイム金価格分析</h1>
 
-  <div class="grid">
+      <p>
+        AIによるゴールド市場監視プラットフォーム
+      </p>
 
-    <div class="card">
+      <div class="price-box">
 
-      <div class="label">
-        CURRENT PRICE / MID
+        <div class="price-title">
+          XAU/USD
+        </div>
+
+        <div class="price" id="gold-price">
+          Loading...
+        </div>
+
+        <div class="source" id="gold-source">
+          データ取得中...
+        </div>
+
+        <div class="error" id="gold-error"></div>
+
       </div>
 
-      <div class="price" id="price">
-        Loading...
-      </div>
-
-      <div class="status" id="status">
-        リアルタイムデータ取得中...
-      </div>
-
-      <div class="notice">
-        GoldScope Visionは情報提供および分析支援を目的としたツールです。<br>
-        投資助言・売買指示・利益保証を行うものではありません。
-      </div>
-
-      <div class="actions">
+      <div class="buttons">
 
         <a
           class="btn btn-primary"
-          href="https://buy.stripe.com/7sY14oaggfZj0oJ74YgA800"
+          href="https://goldscope.ai/api/gold"
           target="_blank"
         >
-          3日間無料で開始する
+          API確認
         </a>
 
-        <button
+        <a
           class="btn btn-secondary"
-          onclick="loadGold()"
+          href="/admin.html"
         >
-          価格を再取得
-        </button>
-
- <a
-  class="btn btn-secondary"
-  href="javascript:void(0)"
-  onclick="alert('管理者ログインは現在準備中です。既存のGoldScope本体HTMLに戻す場合は、元のindex.htmlを復元してください。')"
->
-  管理者ログイン
-</a>
+          管理者ログイン
+        </a>
 
       </div>
 
-    </div>
+    </section>
 
-    <div class="card">
-
-      <div class="table-row">
-        <span>Symbol</span>
-        <b id="symbol">XAU/USD</b>
-      </div>
-
-      <div class="table-row">
-        <span>Bid</span>
-        <b id="bid">--</b>
-      </div>
-
-      <div class="table-row">
-        <span>Ask</span>
-        <b id="ask">--</b>
-      </div>
-
-      <div class="table-row">
-        <span>Last Refreshed</span>
-        <b id="last">--</b>
-      </div>
-
-      <div class="table-row">
-        <span>Time Zone</span>
-        <b id="timezone">--</b>
-      </div>
-
-      <div class="table-row">
-        <span>Source</span>
-        <b id="source">--</b>
-      </div>
-
-    </div>
+    <footer>
+      © 2026 GoldScope AI
+    </footer>
 
   </div>
 
-</div>
+  <script>
+    async function loadGoldPrice(){
 
-<script>
+      try{
 
-async function loadGold(){
+        const res = await fetch('/api/gold');
+        const data = await res.json();
 
-  const status = document.getElementById('status');
+        if(!data.ok){
+          throw new Error(data.error || 'API Error');
+        }
 
-  status.textContent = 'リアルタイムデータ取得中...';
-  status.className = 'status';
+        document.getElementById('gold-price').innerText =
+          '$' + Number(data.rate).toLocaleString();
 
-  try{
+        document.getElementById('gold-source').innerText =
+          'Source: ' + data.source;
 
-    const response = await fetch('/api/gold', {
-      cache:'no-store'
-    });
+      }catch(err){
 
-    const data = await response.json();
+        document.getElementById('gold-error').innerText =
+          '取得できませんでした。';
 
-    console.log(data);
-
-    if(!response.ok || !data.ok){
-      throw new Error(data.error || 'API Error');
+        console.error(err);
+      }
     }
 
-    document.getElementById('price').textContent =
-      Number(data.mid).toFixed(2);
-
-    document.getElementById('symbol').textContent =
-      data.symbol || 'XAU/USD';
-
-    document.getElementById('bid').textContent =
-      Number(data.bid).toFixed(2);
-
-    document.getElementById('ask').textContent =
-      Number(data.ask).toFixed(2);
-
-    document.getElementById('last').textContent =
-      data.lastRefreshed || '--';
-
-    document.getElementById('timezone').textContent =
-      data.timeZone || '--';
-
-    document.getElementById('source').textContent =
-      data.source || '--';
-
-    status.textContent =
-      '取得成功。APIキーはブラウザに表示されません。';
-
-    status.className = 'status ok';
-
-  }catch(err){
-
-    console.error(err);
-
-    document.getElementById('price').textContent = '--';
-
-    status.textContent =
-      '取得できませんでした。/api/gold または Vercel環境変数を確認してください。';
-
-    status.className = 'status ng';
-  }
-}
-
-loadGold();
-
-</script>
+    loadGoldPrice();
+  </script>
 
 </body>
 </html>
