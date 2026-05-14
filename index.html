@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -351,7 +352,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     <div class="hdr-left" onclick="showPage('app')">
       <div class="hdr-icon">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v1.4.0</span>
+      <span class="hdr-ver">v1.4.1</span>
     </div>
     <nav class="hdr-nav">
       <button class="hn-btn act" onclick="showPage('app')">分析</button>
@@ -692,7 +693,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
     </div>
     <div id="tab-guide" style="display:none">
       <div class="panel">
-        <div class="panel-lbl">GoldScope Vision v1.4.0 — 使い方ガイド</div>
+        <div class="panel-lbl">GoldScope Vision v1.4.1 — 使い方ガイド</div>
         <div style="font-size:12px;color:var(--tx2);line-height:1.9;space-y:12px">
           <p style="margin-bottom:10px"><strong style="color:var(--tx)">GoldScope Vision（ゴールドスコープビジョン）</strong>は、株式会社サウンドテラスが提供するGOLD/XAUUSDの市場情報整理・分析支援ツールです。投資助言・売買指示・利益保証を行うものではありません。</p>
           <div style="display:grid;gap:8px">
@@ -710,7 +711,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--jp);-webkit-font-smo
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div class="footer-txt">GoldScope Vision v1.4.0 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
+      <div class="footer-txt">GoldScope Vision v1.4.1 · ゴールドスコープビジョン · 株式会社サウンドテラス · goldscope.ai</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showPage('policy')">利用規約</span>
         <span class="footer-link" onclick="showPage('policy')">プライバシーポリシー</span>
@@ -967,19 +968,32 @@ function startMonitoring(){
   autoStartOnLogin();
 }
 
-// 即時描画: リアルデータ不要、シミュレーションで即チャートと分析を表示
+// 即時描画: ログイン直後に0ms待ちで表示
 function drawInstant(){
-  const basePrice=lastResult?.price||(avCacheData?.mid)||3300;
-  const sh=growSimHistory(basePrice);
-  const simMeta={rate:basePrice,bid:basePrice-0.5,ask:basePrice+0.5,mid:basePrice,
-    lastRefreshed:'取得中...',timeZone:'--',
-    source:'分析中（価格取得中）',open:sh[0].c,live:false};
-  const r=analyze(basePrice,sh[0].c,sh,simMeta);
-  lastResult=r;
-  renderAll(r);
-  // ステータスバー
-  const txt=document.getElementById('statusTxt');
-  if(txt)txt.textContent='チャート表示完了 — リアル価格取得中...';
+  try{
+    // 現実的なベース価格（前回実績 > キャッシュ > デフォルト3300）
+    const basePrice=lastResult?.price||(avCacheData?.mid)||3300;
+    const sh=growSimHistory(basePrice);
+    const simMeta={
+      rate:basePrice,bid:basePrice-0.5,ask:basePrice+0.5,mid:basePrice,
+      lastRefreshed:'価格取得中...',timeZone:'--',
+      source:'シミュレーション（価格取得中）',open:sh[0]?.c||basePrice,live:false
+    };
+    const r=analyze(basePrice,sh[0]?.c||basePrice,sh,simMeta);
+    lastResult=r;
+    renderAll(r);
+    const txt=document.getElementById('statusTxt');
+    if(txt)txt.textContent='分析表示完了 — リアル価格取得中...';
+  }catch(e){
+    console.error('[GSV] drawInstant error:',e);
+    // エラーでもUIに最低限の表示を出す
+    const txt=document.getElementById('statusTxt');
+    if(txt)txt.textContent='表示エラー — 再試行中...';
+    const tpMain=document.getElementById('tpMain');
+    if(tpMain)tpMain.innerHTML='<div style="font-size:12px;color:var(--tx3);padding:12px;">分析データを準備中...</div>';
+    const atBody=document.getElementById('at-body');
+    if(atBody)atBody.textContent='価格データ取得後に表示されます。';
+  }
 }
 
 // バックグラウンドでリアルデータ取得・差し替え
@@ -1490,9 +1504,9 @@ function analyze(price,open,hist,spotMeta){
   const slShort=parseFloat((BB?BB.u+ATR*.3:price+ATR*1.5).toFixed(1));
   const activeSL=shortDir==='bull'?slLong:slShort;
 
-  // TP先到達確率計算
+  // TP先到達確率計算（初回は軽量30試行、バックグラウンドで精度向上）
   const tp1=tpCandidates[0],tp2=tpCandidates[1];
-  const tpProb=tp1?calcTPFirstProbability(hist,price,tp1.price,activeSL,300,20):{prob:50};
+  const tpProb=tp1?calcTPFirstProbability(hist,price,tp1.price,activeSL,30,12):{prob:50};
   const tp1Prob=tpProb.prob;
 
   // BB状態
@@ -1598,6 +1612,18 @@ function dc(d){return d==='bull'?'var(--gr)':d==='bear'?'var(--rd)':'var(--tx2)'
 function dbc(d){return d==='bull'?'#1BAE82':d==='bear'?'#E05530':'#4A4845';}
 
 function renderAll(r){
+  try{ _renderAll(r); }catch(e){
+    console.error('[GSV] renderAll error:',e);
+    // エラーでも最低限の価格表示は維持
+    try{
+      document.getElementById('priceDisp').textContent=r?.price?.toFixed(1)||'--';
+      const atBody=document.getElementById('at-body');
+      if(atBody)atBody.textContent='表示エラーが発生しました。しばらくお待ちください。';
+    }catch(_){}
+  }
+}
+
+function _renderAll(r){
   // ===== TP/SL パネル（最優先・最上部） =====
   const tpMainEl=document.getElementById('tpMain');
   if(tpMainEl&&r.Entry){
