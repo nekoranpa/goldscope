@@ -833,10 +833,37 @@ function triggerVoiceIfNeeded(r){
   }
 }
 
-// ==================== FETCH (v2.0から流用) ====================
+// ==================== FETCH (MT4優先) ====================
+// 優先順位: ① MT4/HFM直接 → ② Alpha Vantage → ③ Yahoo → ④ SIM
 function fetchTimeout(url,ms=6000){const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),ms);return fetch(url,{signal:ctrl.signal,cache:'no-store'}).finally(()=>clearTimeout(tid));}
+
+// ① MT4フィード（最優先・HFMと完全一致）
+async function fetchMT4(){
+  try{
+    const res=await fetchTimeout('/api/mt4feed',3000);
+    if(!res.ok) throw new Error('mt4feed HTTP '+res.status);
+    const d=await res.json();
+    if(!d.mid||d.mid<1000) throw new Error('invalid price '+d.mid);
+    // OHLCVをGoldScope形式に変換
+    const hist = d.ohlcv && d.ohlcv.length>=10
+      ? d.ohlcv.map(b=>({c:b.c,h:b.h,l:b.l,o:b.o,v:b.v||500,forming:b.forming}))
+      : null;
+    return{
+      rate:d.mid, bid:d.bid, ask:d.ask, mid:d.mid,
+      open:hist?hist[0].c:d.mid,
+      lastRefreshed:d.lastRefreshed||new Date().toLocaleTimeString('ja-JP'),
+      source:'MT4/HFM ✓', live:true, hist,
+      ageMs:d.ageMs||0,
+    };
+  }catch(e){
+    console.warn('[MT4]',e.message);
+    return null;
+  }
+}
+
+// ② Alpha Vantage（フォールバック）
 async function fetchSpot(){
-  if(Date.now()-avCallTime<3000&&avCacheData&&Date.now()-avCacheTime<8000)return{...avCacheData,source:'AV(cached)'};
+  if(Date.now()-avCallTime<3000&&avCacheData&&Date.now()-avCacheTime<8000)return{...avCacheData,source:'AV(cache)'};
   avCallTime=Date.now();
   try{
     const url=`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=XAU&to_currency=USD&apikey=${AV_KEY}`;
@@ -844,13 +871,15 @@ async function fetchSpot(){
     const j=await res.json();if(j.Note||j.Information)throw new Error('rate_limit');
     const r=j['Realtime Currency Exchange Rate'];if(!r)throw new Error('no_rate');
     const rate=parseFloat(r['5. Exchange Rate']);const bid=parseFloat(r['8. Bid Price'])||rate-.5;const ask=parseFloat(r['9. Ask Price'])||rate+.5;const mid=parseFloat(((bid+ask)/2).toFixed(2));
-    if(!mid||isNaN(mid)||mid<500)throw new Error('invalid '+mid);
-    const data={rate:mid,bid,ask,mid,open:mid,lastRefreshed:r['6. Last Refreshed'],source:'Alpha Vantage',live:true};
+    if(!mid||isNaN(mid)||mid<500)throw new Error('invalid');
+    const data={rate:mid,bid,ask,mid,open:mid,lastRefreshed:r['6. Last Refreshed'],source:'AV(フォールバック)',live:true};
     avCacheData=data;avCacheTime=Date.now();return data;
   }catch(e){console.warn('[AV]',e.message);}
-  try{const res=await fetchTimeout('/api/gold',3000);if(res.ok){const d=await res.json();if(d.mid&&d.mid>500)return{rate:d.mid,bid:d.bid||d.mid-.5,ask:d.ask||d.mid+.5,mid:d.mid,open:d.mid,lastRefreshed:d.lastRefreshed||'',source:'Vercel/API',live:true};}}catch{}
+  try{const res=await fetchTimeout('/api/gold',3000);if(res.ok){const d=await res.json();if(d.mid&&d.mid>500)return{rate:d.mid,bid:d.bid||d.mid-.5,ask:d.ask||d.mid+.5,mid:d.mid,open:d.mid,lastRefreshed:d.lastRefreshed||'',source:'Vercel/AV',live:true};}}catch{}
   return null;
 }
+
+// ③ ヒストリカル（MT4が持っていない場合のフォールバック）
 async function fetchHistory(){
   if(histCache&&Date.now()-histCacheTime<60000)return histCache;
   try{
@@ -863,15 +892,45 @@ async function fetchHistory(){
   }
   return null;
 }
+
+// メイン取得（MT4優先）
 async function fetchAll(){
-  const[spot,hist]=await Promise.allSettled([fetchSpot(),fetchHistory()]).then(r=>r.map(x=>x.status==='fulfilled'?x.value:null));
-  if(spot&&hist){const uh=[...hist];const lb=uh[uh.length-1];uh[uh.length-1]={c:spot.mid,h:Math.max(lb.h,spot.mid),l:Math.min(lb.l,spot.mid),v:lb.v};return{...spot,hist:uh};}
-  if(spot){simHistory.push({c:spot.mid,h:spot.mid+.4,l:spot.mid-.4,v:450});if(simHistory.length>300)simHistory=simHistory.slice(-300);return{...spot,hist:[...simHistory],source:spot.source+'/SIM'};}
-  if(hist){const p=hist[hist.length-1].c;return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:hist[0].c,lastRefreshed:new Date().toISOString(),source:'Yahoo',hist,live:false};}
+  // ① MT4から取得（OHLCVも込み）
+  const mt4=await fetchMT4();
+  if(mt4&&mt4.hist&&mt4.hist.length>=20){
+    // MT4のデータが揃っていればそのまま使う（最高精度）
+    histCache=mt4.hist;histCacheTime=Date.now();
+    const open=mt4.hist[0].c;
+    $('stTxt').textContent=`MT4/HFM ✓ $${mt4.mid.toFixed(1)} · 遅延${mt4.ageMs}ms`;
+    return{...mt4, open, source:'MT4/HFM ✓'};
+  }
+
+  // ② MT4は価格のみ取得できた場合 → ヒストリカルは別ソース
+  const[spot,hist]=await Promise.allSettled([
+    mt4 ? Promise.resolve(mt4) : fetchSpot(),
+    fetchHistory()
+  ]).then(r=>r.map(x=>x.status==='fulfilled'?x.value:null));
+
+  if(spot&&hist){
+    const uh=[...hist];const lb=uh[uh.length-1];
+    uh[uh.length-1]={c:spot.mid,h:Math.max(lb.h,spot.mid),l:Math.min(lb.l,spot.mid),v:lb.v};
+    const src=mt4?'MT4価格+AV履歴':spot.source;
+    return{...spot, hist:uh, source:src};
+  }
+  if(spot){
+    simHistory.push({c:spot.mid,h:spot.mid+.4,l:spot.mid-.4,v:450});
+    if(simHistory.length>300)simHistory=simHistory.slice(-300);
+    return{...spot,hist:[...simHistory],source:spot.source+'/SIM'};
+  }
+  if(hist){
+    const p=hist[hist.length-1].c;
+    return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:hist[0].c,lastRefreshed:new Date().toISOString(),source:'Yahoo',hist,live:false};
+  }
+  // ④ SIMモード
   const base=lastResult?.price||avCacheData?.mid||4700;
   const p=parseFloat((base+(Math.random()-.49)*.6).toFixed(2));
   simHistory.push({c:p,h:p+.4,l:p-.4,v:350});if(simHistory.length>300)simHistory=simHistory.slice(-300);
-  return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,lastRefreshed:new Date().toLocaleTimeString('ja-JP'),source:'SIM',hist:[...simHistory],live:false};
+  return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,lastRefreshed:new Date().toLocaleTimeString('ja-JP'),source:'SIM（MT4未接続）',hist:[...simHistory],live:false};
 }
 
 // ==================== INDICATORS ====================
