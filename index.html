@@ -1899,32 +1899,93 @@ function calcEntryGate(p){
   // ── OBリテスト = エントリー推奨シグナル ──────
   const obRetestSignal=SMC?.obRetest?.entrySignal;
 
+  // ── BB反発エントリー判定 ──────────────────────
+  // バンドウォーク中は除外（順張り優先）
+  // 条件: ADX20以下 + BB上限/下限タッチ + RSI過熱 + バンドウォークなし
+  let bbBounceSignal = null;
+  if(!bbWalkActive && BB && adx <= 22){
+    const bw   = (BB.u - BB.l) / BB.m;
+    const rsiV = p.rsiVal || 50;
+    const distFromUpper = Math.abs(price - BB.u);
+    const distFromLower = Math.abs(price - BB.l);
+    const nearUpper = distFromUpper < ATR * 0.4; // BB上限に超接近
+    const nearLower = distFromLower < ATR * 0.4; // BB下限に超接近
+    const touchUpper = price >= BB.u * 0.9995;
+    const touchLower = price <= BB.l * 1.0005;
+
+    // BB幅が十分（値幅$4以上取れそうか）
+    const bbWidth = BB.u - BB.l;
+    const worthBounce = bbWidth >= 4.0;
+
+    // 上限反発（売り）: BB上限タッチ + RSI高め + バンドウォークなし
+    if((touchUpper || nearUpper) && rsiV >= 62 && worthBounce){
+      // Strong Highと重なっていればさらに強い
+      const hasStrongH = SMC?.strongHighs?.some(s => Math.abs(s.price - BB.u) < ATR * 0.5);
+      const score = (rsiV >= 70 ? 3 : 1) + (hasStrongH ? 2 : 0) + (adx <= 15 ? 1 : 0);
+      bbBounceSignal = {
+        type: 'sell',
+        entryAt: parseFloat(BB.u.toFixed(1)),
+        target:  parseFloat(BB.m.toFixed(1)), // 中央バンドが目標
+        targetFull: parseFloat(BB.l.toFixed(1)), // 下限が最大目標
+        sl:      parseFloat((BB.u + ATR * 0.5).toFixed(1)),
+        pips:    Math.round((BB.u - BB.m) / 0.01),
+        fullPips:Math.round((BB.u - BB.l) / 0.01),
+        score,
+        strong:  score >= 3,
+        label:   hasStrongH
+          ? `🔴 BB上限+Strong High反発売り（スコア${score}）`
+          : `🟠 BB上限反発売り（スコア${score}）`,
+        slNote:  `SL: $${(BB.u + ATR * 0.5).toFixed(1)}（上限+ATR×0.5）`,
+        reason:  `ADX${adx}レンジ。BB上限$${BB.u.toFixed(1)}でRSI${rsiV}。中央$${BB.m.toFixed(1)}まで${Math.round((BB.u-BB.m)/0.01)}pips、下限$${BB.l.toFixed(1)}まで${Math.round((BB.u-BB.l)/0.01)}pipsの値幅あり。`
+      };
+    }
+    // 下限反発（買い）: BB下限タッチ + RSI低め + バンドウォークなし
+    else if((touchLower || nearLower) && rsiV <= 38 && worthBounce){
+      const hasStrongL = SMC?.strongLows?.some(s => Math.abs(s.price - BB.l) < ATR * 0.5);
+      const score = (rsiV <= 30 ? 3 : 1) + (hasStrongL ? 2 : 0) + (adx <= 15 ? 1 : 0);
+      bbBounceSignal = {
+        type: 'buy',
+        entryAt: parseFloat(BB.l.toFixed(1)),
+        target:  parseFloat(BB.m.toFixed(1)),
+        targetFull: parseFloat(BB.u.toFixed(1)),
+        sl:      parseFloat((BB.l - ATR * 0.5).toFixed(1)),
+        pips:    Math.round((BB.m - BB.l) / 0.01),
+        fullPips:Math.round((BB.u - BB.l) / 0.01),
+        score,
+        strong:  score >= 3,
+        label:   hasStrongL
+          ? `🟢 BB下限+Strong Low反発買い（スコア${score}）`
+          : `🔵 BB下限反発買い（スコア${score}）`,
+        slNote:  `SL: $${(BB.l - ATR * 0.5).toFixed(1)}（下限−ATR×0.5）`,
+        reason:  `ADX${adx}レンジ。BB下限$${BB.l.toFixed(1)}でRSI${rsiV}。中央$${BB.m.toFixed(1)}まで${Math.round((BB.m-BB.l)/0.01)}pips、上限$${BB.u.toFixed(1)}まで${Math.round((BB.u-BB.l)/0.01)}pipsの値幅あり。`
+      };
+    }
+  }
+
   // 禁止判定
   const criticalBlocked=blocked.filter(b=>b.severity==='critical').length>0;
   const highBlocked=blocked.filter(b=>b.severity==='high').length>0;
   const allowed = blocked.length===0;
-  const allowedWithWarn = blocked.length===0; // 警告のみならOK
 
-  // プライマリ理由（最も重要な禁止理由）
+  // プライマリ理由
   const primary=blocked.find(b=>b.severity==='critical')||blocked.find(b=>b.severity==='high')||blocked[0];
   const primaryReason=primary?.detail||'';
 
-  // ゆっくりトレンドのTP（フィボ使用）
+  // ゆっくりトレンドのTP
   let slowTrendTP=null;
   if(isSlowTrend&&TECH?.fibo){
     const entries=Object.entries(TECH.fibo);
-    slowTrendTP=dir==='dn'
-      ?entries.find(([k])=>k==='61.8%')||entries.find(([k])=>k==='50.0%')
-      :entries.find(([k])=>k==='61.8%')||entries.find(([k])=>k==='50.0%');
+    slowTrendTP=entries.find(([k])=>k==='61.8%')||entries.find(([k])=>k==='50.0%');
   }
 
   return{
     allowed, blocked, warnings, primaryReason,
     criticalBlocked, highBlocked,
-    obRetestSignal, bbWalkActive, isSlowTrend, slowTrendTP,
+    obRetestSignal, bbWalkActive, bbBounceSignal, isSlowTrend, slowTrendTP,
     dangerSH, dangerSL, sandwiched,
-    // エントリー推奨パターン
     entryPattern: obRetestSignal ? 'OB_RETEST'
+      : bbBounceSignal?.strong ? 'BB_BOUNCE_STRONG'
+      : bbBounceSignal ? 'BB_BOUNCE'
       : SMC?.choch ? 'CHOCH'
       : SMC?.bos&&allowed ? 'BOS_CLEAR'
       : bbWalkActive?.positive ? 'BAND_WALK'
@@ -2243,7 +2304,7 @@ function analyze(price,open,hist,spotMeta){
   const entryGate = calcEntryGate({
     price, ATR, ADX, signal, BB, SMC, bwNow, isTrueSqueeze,
     e20:e20v, e75:e75v, e80:e80v, e200:e200v,
-    sma320:sma320val, emaWalls, TECH, changePct
+    sma320:sma320val, emaWalls, TECH, changePct, rsiVal:rsiS
   });
 
   return{price,open,spotMeta,shortDir,midDir,
@@ -2301,6 +2362,27 @@ function buildNarration(r){
     if(primary.code==='MA_SANDWICH')
       return '⏸ 待機。80SMAと320SMAの間に挟まれています。どちらかを明確に抜けてから判断。';
     return '🚫 '+primary.detail;
+  }
+
+  // ── 🔵🔴 BB反発エントリー ────────────────────
+  if(gate?.bbBounceSignal&&gate.allowed){
+    const bb=gate.bbBounceSignal;
+    narVariant++;
+    if(bb.type==='sell'){
+      const phrases=[
+        `${bb.label}。現在$${p}。ボリンジャーバンド上限$${bb.entryAt}で反発狙いの売りチャンス。目標は中央バンド$${bb.target}（${bb.pips}ピップス）、余裕あれば下限$${bb.targetFull}（${bb.fullPips}ピップス）。${bb.slNote}。${bb.reason}`,
+        `ボリンジャーバンド上限反発。$${p}。${bb.strong?'Strong Highも重なり精度高め。':''}売りエントリー$${bb.entryAt}、目標$${bb.target}。${bb.slNote}。ADX${adx}のレンジ相場で有効なパターンです。`,
+        `レンジの上限に来ました。$${bb.entryAt}付近から売りで入れます。目標$${bb.target}まで${bb.pips}ピップス。${bb.slNote}。バンドウォークでないことを確認済み。`,
+      ];
+      return phrases[narVariant%phrases.length];
+    } else {
+      const phrases=[
+        `${bb.label}。現在$${p}。ボリンジャーバンド下限$${bb.entryAt}で反発狙いの買いチャンス。目標は中央バンド$${bb.target}（${bb.pips}ピップス）、余裕あれば上限$${bb.targetFull}（${bb.fullPips}ピップス）。${bb.slNote}。${bb.reason}`,
+        `ボリンジャーバンド下限反発。$${p}。${bb.strong?'Strong Lowも重なり精度高め。':''}買いエントリー$${bb.entryAt}、目標$${bb.target}。${bb.slNote}。ADX${adx}のレンジ相場で有効なパターンです。`,
+        `レンジの下限に来ました。$${bb.entryAt}付近から買いで入れます。目標$${bb.target}まで${bb.pips}ピップス。${bb.slNote}。バンドウォークでないことを確認済み。`,
+      ];
+      return phrases[narVariant%phrases.length];
+    }
   }
 
   // ── 🟢 OBリテスト ────────────────────────────
@@ -2683,6 +2765,14 @@ function renderScenario(r){
     smc?.fvg?.forEach(f=>pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid rgba(184,148,42,.3);color:var(--gl);">${f.label} $${f.mid?.toFixed(1)||'--'}</span>`));
     if(smc?.obRetest)pills.push(`<span style="font-size:10px;padding:2px 10px;border-radius:20px;border:1px solid ${smc.obRetest.entrySignal==='buy'?'var(--gr)':'var(--dn)'};color:${smc.obRetest.entrySignal==='buy'?'var(--gr)':'var(--dn)'};font-weight:700;background:${smc.obRetest.entrySignal==='buy'?'rgba(27,174,130,.12)':'rgba(224,85,48,.12)'};">${smc.obRetest.label}</span>`);
     if(smc?.bbWalk)pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid rgba(58,138,224,.4);color:var(--up);">${smc.bbWalk.label}</span>`);
+    // BB反発シグナル
+    if(gate?.bbBounceSignal){
+      const bbs=gate.bbBounceSignal;
+      const col=bbs.type==='sell'?'var(--dn)':'var(--up)';
+      const bg =bbs.type==='sell'?'rgba(224,85,48,.12)':'rgba(58,138,224,.12)';
+      const brd=bbs.type==='sell'?'rgba(224,85,48,.5)':'rgba(58,138,224,.5)';
+      pills.push(`<span style="font-size:10px;padding:2px 10px;border-radius:20px;border:1px solid ${brd};color:${col};font-weight:700;background:${bg};">${bbs.label}</span>`);
+    }
     smc?.strongHighs?.filter(s=>s.isWarn).forEach(s=>pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid rgba(224,85,48,.4);color:#F0A080;">⚠️ ${s.label} $${s.price}</span>`));
     smc?.strongLows?.filter(s=>s.isWarn).forEach(s=>pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid rgba(27,174,130,.4);color:#5DD4A5;">🛡️ ${s.label} $${s.price}</span>`));
     if(r.TECH?.triangleBreak)pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid rgba(138,126,232,.4);color:var(--pu);">${r.TECH.triangleBreak.label}</span>`);
