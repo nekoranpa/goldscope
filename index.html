@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -473,10 +472,11 @@ html,body{overflow-x:hidden;width:100%;}
   </div>
 
   <div class="tab-nav">
-    <button class="tnb act" onclick="switchTab('all')">📊 全て</button>
-    <button class="tnb" onclick="switchTab('scalp')">⚡ スキャル</button>
+    <button class="tnb act" onclick="switchTab('sec')">⚡ 秒スキャ</button>
+    <button class="tnb" onclick="switchTab('scalp')">📊 スキャル</button>
     <button class="tnb" onclick="switchTab('daytrade')">📈 デイトレ</button>
     <button class="tnb" onclick="switchTab('perf')">🏆 実績</button>
+    <button class="tnb" onclick="showPage('account')">👤 会員</button>
   </div>
 
   <div class="app-body">
@@ -486,14 +486,14 @@ html,body{overflow-x:hidden;width:100%;}
       <div class="st-right" id="stRight"></div>
     </div>
 
-    <!-- ========= TAB: 全て ========= -->
-    <div id="tab-all" class="tab-content act">
+    <!-- ========= TAB: 秒スキャ (1m) ========= -->
+    <div id="tab-sec" class="tab-content act">
 
       <!-- PRICE HERO -->
       <div class="price-hero">
         <div class="ph-row">
           <div>
-            <div class="ph-label">GOLD / XAUUSD · Current Price</div>
+            <div class="ph-label">GOLD / XAUUSD · ⚡ 秒スキャ（1分足）</div>
             <div class="ph-price" id="priceDisp">----.-</div>
             <div class="ph-chg" id="chgDisp">変動率 --</div>
           </div>
@@ -641,10 +641,10 @@ html,body{overflow-x:hidden;width:100%;}
       </div>
     </div>
 
-    <!-- ========= TAB: スキャル ========= -->
+    <!-- ========= TAB: スキャル (5m) ========= -->
     <div id="tab-scalp" class="tab-content">
       <div class="price-hero" style="margin-bottom:10px">
-        <div class="ph-label">GOLD / XAUUSD</div>
+        <div class="ph-label">GOLD / XAUUSD · 📊 スキャル（5分足）</div>
         <div class="ph-price" id="priceDisp2">----.-</div>
         <div class="ph-chg" id="chgDisp2">--</div>
       </div>
@@ -678,13 +678,14 @@ html,body{overflow-x:hidden;width:100%;}
       <div class="panel"><div class="panel-lbl">注意指標</div><div id="eventScalp">--</div></div>
     </div>
 
-    <!-- ========= TAB: デイトレ ========= -->
+    <!-- ========= TAB: デイトレ (1H) ========= -->
     <div id="tab-daytrade" class="tab-content">
       <div class="price-hero" style="margin-bottom:10px">
-        <div class="ph-label">GOLD / XAUUSD</div>
+        <div class="ph-label">GOLD / XAUUSD · 📈 デイトレ（1時間足）</div>
         <div class="ph-price" id="priceDisp3">----.-</div>
         <div class="ph-chg" id="chgDisp3">--</div>
       </div>
+
       <!-- ノイズフィルタ -->
       <div class="filter-bar">
         <span class="filter-label">ノイズフィルタ</span>
@@ -695,7 +696,8 @@ html,body{overflow-x:hidden;width:100%;}
         </div>
         <span class="filter-desc" id="filterDescDay">中期の流れに追従</span>
       </div>
-      <!-- デイトレ用シグナル -->
+
+      <!-- デイトレシグナル（15m/1H/日足） -->
       <div class="signal-hero none" id="signalHero3">
         <div class="sig-top">
           <div><div class="sig-label">📈 デイトレ 中期シグナル（15分・1時間・日足）</div><div class="sig-status neut" id="sigStatus3" style="margin-top:4px">--</div></div>
@@ -710,25 +712,45 @@ html,body{overflow-x:hidden;width:100%;}
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--up)">↑ 上昇優位</span><span id="upPct3" style="color:var(--up);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill up" id="upBar3" style="width:0%"></div></div></div>
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--dn)">↓ 下降優位</span><span id="dnPct3" style="color:var(--dn);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill dn" id="dnBar3" style="width:0%"></div></div></div>
         </div>
-        <div class="sig-comment" id="sigComment3" style="display:none">--</div>
       </div>
+
+      <!-- 🎯 デイトレ目標距離パネル（出来高・大口フロー・主要レベル） -->
+      <div class="panel" style="border-color:rgba(58,138,224,.3);background:linear-gradient(135deg,rgba(58,138,224,.05),transparent);">
+        <div class="panel-lbl" style="color:var(--up)">🎯 デイトレ目標距離（どこまで向かうか）</div>
+        <div id="dayTargetPanel" style="font-size:12px;color:var(--tx2)">分析後に表示</div>
+      </div>
+
+      <!-- 出来高・大口フロー -->
+      <div class="panel">
+        <div class="panel-lbl">📊 出来高・大口フロー分析</div>
+        <div id="volumeFlowPanel" style="font-size:12px;color:var(--tx2)">分析後に表示</div>
+      </div>
+
+      <!-- フィボナッチ・SMC -->
       <div class="panel"><div class="panel-lbl">フィボナッチ · SMC · トレンドライン</div><div id="fiboPanel" style="font-size:12px;color:var(--tx2);line-height:1.8">--</div></div>
     </div>
 
-    <!-- ========= TAB: 実績 ========= -->
+    <!-- ========= TAB: 実績・PF ========= -->
     <div id="tab-perf" class="tab-content">
       <div class="perf-box">
-        <div class="panel-lbl">実績トラッカー · Performance</div>
+        <div class="panel-lbl">🏆 実績トラッカー · プロフィットファクター</div>
         <div class="perf-stats">
           <div class="perf-stat"><div class="perf-num" id="perfTotal">0</div><div class="perf-lbl">総サイン数</div></div>
-          <div class="perf-stat"><div class="perf-num" id="perfHit" style="color:var(--gr)">0</div><div class="perf-lbl">上昇的中</div></div>
-          <div class="perf-stat"><div class="perf-num" id="perfMiss" style="color:var(--dn)">0</div><div class="perf-lbl">下降的中</div></div>
-          <div class="perf-stat"><div class="perf-num" id="perfWR" style="color:var(--g)">--%</div><div class="perf-lbl">方向一致率</div></div>
+          <div class="perf-stat"><div class="perf-num" id="perfHit" style="color:var(--gr)">0</div><div class="perf-lbl">的中</div></div>
+          <div class="perf-stat"><div class="perf-num" id="perfMiss" style="color:var(--dn)">0</div><div class="perf-lbl">ハズレ</div></div>
+          <div class="perf-stat"><div class="perf-num" id="perfWR" style="color:var(--g)">--%</div><div class="perf-lbl">勝率</div></div>
+          <div class="perf-stat"><div class="perf-num" id="perfPF" style="color:var(--g)">--</div><div class="perf-lbl">PF</div></div>
+          <div class="perf-stat"><div class="perf-num" id="perfExpected" style="color:var(--am)">--</div><div class="perf-lbl">期待値$</div></div>
+        </div>
+        <!-- PF評価 -->
+        <div id="pfEvalPanel" style="margin-bottom:10px;padding:10px 12px;border-radius:var(--rs);background:var(--bg3);border:0.5px solid var(--bo);">
+          <div style="font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">PF評価</div>
+          <div id="pfEvalText" style="font-size:12px;color:var(--tx2);line-height:1.7">記録が増えると自動評価されます。目標PF: 1.5以上。</div>
         </div>
         <div id="perfHistory" style="max-height:300px;overflow-y:auto;"></div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-          <button class="vb-btn" onclick="addPerfHit()">✅ 上昇一致</button>
-          <button class="vb-btn stop" onclick="addPerfMiss()">❌ 方向ハズレ</button>
+          <button class="vb-btn" onclick="addPerfEntry('win')">✅ 的中（利益$）<input type="number" id="winPips" placeholder="4" style="width:45px;background:var(--bg4);border:none;color:var(--tx);font-size:10px;margin-left:4px;border-radius:3px;padding:1px 4px;" onclick="event.stopPropagation()"></button>
+          <button class="vb-btn stop" onclick="addPerfEntry('loss')">❌ ハズレ（損失$）<input type="number" id="lossPips" placeholder="2" style="width:45px;background:var(--bg4);border:none;color:var(--tx);font-size:10px;margin-left:4px;border-radius:3px;padding:1px 4px;" onclick="event.stopPropagation()"></button>
           <button class="vb-btn" onclick="clearPerf()" style="margin-left:auto">🗑 リセット</button>
         </div>
       </div>
@@ -744,11 +766,67 @@ html,body{overflow-x:hidden;width:100%;}
   </footer>
 </div>
 
-<!-- POLICY / ACCOUNT pages (simplified) -->
+<!-- POLICY PAGE -->
 <div id="page-policy" class="page">
-  <header class="app-hdr"><div class="hdr-logo"><div class="logo-dot">⬡</div><span class="hdr-name">GoldScope <span>Vision</span></span></div><div class="hdr-right"><button class="hb" onclick="showPage('app')">← 戻る</button></div></header>
+  <header class="app-hdr">
+    <div class="hdr-logo"><div class="logo-dot">⬡</div><span class="hdr-name">GoldScope <span>Vision</span></span></div>
+    <div class="hdr-right"><button class="hb" onclick="showPage('app')">← 戻る</button></div>
+  </header>
   <div style="max-width:720px;margin:0 auto;padding:24px 16px;">
-    <div class="panel"><p style="font-size:12px;color:var(--tx2);line-height:1.9">GoldScope Visionは市場情報整理・分析支援ツールです。投資助言・売買指示・利益保証ではありません。月額¥15,000。解約: info@soundterrace.co.jp</p></div>
+    <div style="font-family:var(--sf);font-size:20px;font-weight:800;margin-bottom:14px;">利用規約・プライバシー・特定商取引法</div>
+    <div class="panel">
+      <p style="font-size:12px;color:var(--tx2);line-height:1.9">
+        GoldScope Vision（ゴールドスコープビジョン）は、市場情報整理・分析支援を目的としたツールです。<br>
+        <strong style="color:var(--dn)">投資助言・売買指示・利益保証を行うものではありません。</strong><br><br>
+        月額¥15,000（3日間無料トライアル）<br>
+        解約・お問い合わせ: info@soundterrace.co.jp<br><br>
+        販売者: 株式会社サウンドテラス<br>
+        サービス名: GoldScope Vision<br>
+        提供形態: Webアプリケーション（会員制）
+      </p>
+    </div>
+    <div style="background:rgba(184,148,42,.08);border:0.5px solid rgba(184,148,42,.25);border-radius:var(--r);padding:16px;margin-top:12px;">
+      <div style="font-size:13px;font-weight:700;color:var(--g);margin-bottom:6px;">🤝 代理店・紹介パートナー募集</div>
+      <p style="font-size:12px;color:var(--tx2);line-height:1.7">FXコミュニティ・メディア運営の方、ぜひご連絡ください。<br>info@soundterrace.co.jp</p>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT PAGE -->
+<div id="page-account" class="page">
+  <header class="app-hdr">
+    <div class="hdr-logo"><div class="logo-dot">⬡</div><span class="hdr-name">GoldScope <span>Vision</span></span></div>
+    <div class="hdr-right">
+      <button class="hb" onclick="showPage('app')">← 戻る</button>
+      <button class="hb" style="color:var(--dn);border-color:rgba(224,85,48,.3)" onclick="doLogout()">ログアウト</button>
+    </div>
+  </header>
+  <div style="max-width:720px;margin:0 auto;padding:24px 16px;">
+    <div class="panel">
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px;" id="accName">--</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="font-size:9px;padding:2px 9px;border-radius:20px;background:rgba(184,148,42,.18);color:var(--gl);border:0.5px solid rgba(184,148,42,.4);font-family:var(--mn)">GoldScope Vision 会員</span>
+        <span style="font-size:9px;padding:2px 9px;border-radius:20px;background:rgba(27,174,130,.15);color:#5DD4A5;border:0.5px solid rgba(27,174,130,.3);font-family:var(--mn)" id="accStatus">有効</span>
+      </div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.8;margin-bottom:12px">
+        プラン: GOLD / XAUUSD対応 · 複数デバイス同時利用可<br>
+        月額: ¥15,000 · 3日間無料トライアル
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="vb-btn" onclick="showPage('policy')">📋 利用規約を確認</button>
+        <button class="vb-btn" onclick="showPage('app')">📊 分析画面に戻る</button>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:10px;">
+      <div class="panel-lbl">🚀 自動売買ロードマップ</div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.9">
+        <div style="margin-bottom:6px">✅ <strong>Phase 1</strong>: MT4/HFM直接接続（完了）</div>
+        <div style="margin-bottom:6px">✅ <strong>Phase 2</strong>: 確定足ベース目線判定（完了）</div>
+        <div style="margin-bottom:6px">🔄 <strong>Phase 3</strong>: PF1.5以上のロジック精度向上（進行中）</div>
+        <div style="margin-bottom:6px">⏳ <strong>Phase 4</strong>: EA自動エントリー連携</div>
+        <div>⏳ <strong>Phase 5</strong>: 損益管理・リスク制御の自動化</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -833,14 +911,28 @@ document.addEventListener('DOMContentLoaded',()=>{
 function doLogout(){isRunning=false;clearInterval(tickTimer);stopVoice();currentUser=null;showPage('login');}
 
 // ==================== PAGES / TABS ====================
-function showPage(n){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));const t=document.getElementById('page-'+n);if(t)t.classList.add('active');}
-let currentTab='all';
+function showPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const t=document.getElementById('page-'+n);
+  if(t) t.classList.add('active');
+  // 会員ページ表示時にaccNameを更新
+  if(n==='account'&&currentUser){
+    const el=document.getElementById('accName');
+    if(el) el.textContent=currentUser.name+' 様';
+  }
+}
+let currentTab='sec';
 function switchTab(name){
   currentTab=name;
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('act'));
   document.querySelectorAll('.tnb').forEach(b=>b.classList.remove('act'));
-  const t=document.getElementById('tab-'+name);if(t)t.classList.add('act');
-  document.querySelectorAll('.tnb').forEach(b=>{if(b.textContent.includes(name==='all'?'全て':name==='scalp'?'スキャル':name==='daytrade'?'デイ':'実績'))b.classList.add('act');});
+  const t=document.getElementById('tab-'+name);
+  if(t)t.classList.add('act');
+  const labels={sec:'秒スキャ',scalp:'スキャル',daytrade:'デイ',perf:'実績'};
+  document.querySelectorAll('.tnb').forEach(b=>{
+    if(b.textContent.includes(labels[name]||name))b.classList.add('act');
+  });
+  if(lastResult) renderTabSpecific(lastResult);
 }
 
 // ==================== CLOCK ====================
@@ -1778,6 +1870,8 @@ function renderAll(r,d){
   renderTRPanel(r);
   // フィボ
   renderFiboPanel(r);
+  // タブ固有
+  renderTabSpecific(r);
 }
 
 function renderSignal(r,heroId,statusId,scoreId,badgeId,upBarId,dnBarId,upPctId,dnPctId,commentId,tfCardIds,tfKeys){
@@ -2361,6 +2455,228 @@ function renderEMAWalls(r){
   // 既存HTMLに追記（重複しないよう壁セクションは置換）
   const existing = el.innerHTML.replace(/<div style="margin-top:8px;border-top[\s\S]*?<\/div>\s*<\/div>\s*<\/div>$/,'');
   el.innerHTML = existing + wallSection;
+}
+
+// ==================== デイトレ 目標距離計算 ====================
+// 出来高・ATR・フィボ・主要レベルから「どこまで向かうか」を算出
+function calcDayTradeTarget(r){
+  const price = r.price;
+  const ATR   = r.ATR || 5;
+  const hist  = r.hist;
+  const sig   = r.signal;
+  const BB    = r.BB;
+  const dir   = r.conf1H?.dir || sig?.mainDir || 'neut';
+
+  // 出来高分析: 直近30本の出来高加重平均価格帯
+  const recent30 = hist.slice(-30);
+  const totalVol = recent30.reduce((a,b)=>a+(b.v||500),0)||1;
+  const vwapDay  = recent30.reduce((a,b)=>a+((b.h+b.l+b.c)/3*(b.v||500)),0)/totalVol;
+
+  // 大口フロー判定: 出来高が平均の1.5倍以上のバー
+  const avgVol = totalVol / 30;
+  const bigBars = recent30.filter(b=>(b.v||500)>avgVol*1.5);
+  const bigBullVol = bigBars.filter(b=>b.c>b.o||!b.o).reduce((a,b)=>a+(b.v||500),0);
+  const bigBearVol = bigBars.filter(b=>b.c<=(b.o||b.c)).reduce((a,b)=>a+(b.v||500),0);
+  const bigTotal = bigBullVol + bigBearVol || 1;
+  const institutBias = bigBullVol/bigTotal > 0.6 ? 'up' : bigBullVol/bigTotal < 0.4 ? 'dn' : 'neut';
+
+  // 目標距離候補
+  const targets = [];
+  const isUp = dir === 'up';
+
+  // ATRベース目標（デイトレは2〜5ATR）
+  [2, 3, 4, 5].forEach(m=>{
+    const tp = parseFloat((isUp ? price+ATR*m : price-ATR*m).toFixed(1));
+    targets.push({
+      label:`ATR×${m}`,
+      price:tp,
+      dist:parseFloat((ATR*m).toFixed(1)),
+      pips:Math.round(ATR*m/0.01),
+      basis:'ATRベース',
+      score:1
+    });
+  });
+
+  // BB基準
+  if(BB){
+    const bbT = isUp ? BB.u : BB.l;
+    const bbDist = Math.abs(bbT-price);
+    if(bbDist > ATR){
+      targets.push({label:'BB'+(isUp?'上限':'下限'),price:parseFloat(bbT.toFixed(1)),dist:parseFloat(bbDist.toFixed(1)),pips:Math.round(bbDist/0.01),basis:'ボリンジャー',score:2});
+    }
+  }
+
+  // フィボ基準
+  const recentH = Math.max(...recent30.map(b=>b.h));
+  const recentL = Math.min(...recent30.map(b=>b.l));
+  const swing   = recentH - recentL;
+  const fiboLevels = [0.382, 0.618, 1.0, 1.618].map(r=>({
+    ratio:r,
+    price:parseFloat((isUp ? recentL+swing*r : recentH-swing*r).toFixed(1))
+  }));
+  fiboLevels.forEach(f=>{
+    const dist = Math.abs(f.price-price);
+    if(dist > ATR*0.5 && dist < ATR*8){
+      targets.push({label:`Fibo${(f.ratio*100).toFixed(0)}%`,price:f.price,dist:parseFloat(dist.toFixed(1)),pips:Math.round(dist/0.01),basis:'フィボナッチ',score:f.ratio===0.618?3:2});
+    }
+  });
+
+  // ラウンドナンバー（$50刻み）
+  const base = Math.round(price/50)*50;
+  for(let i=1;i<=4;i++){
+    const rp = base + (isUp?i*50:-i*50);
+    const dist = Math.abs(rp-price);
+    if(dist>ATR) targets.push({label:`$${rp}`,price:rp,dist:parseFloat(dist.toFixed(1)),pips:Math.round(dist/0.01),basis:'ラウンドナンバー',score:2});
+  }
+
+  // スコアで並び替えて上位3つ
+  targets.sort((a,b)=>b.score-a.score||a.dist-b.dist);
+  const top3 = targets.slice(0,3);
+
+  // 最有力目標（Confluence最高）
+  const best = top3[0];
+
+  return {
+    dir, best, top3,
+    vwapDay:parseFloat(vwapDay.toFixed(1)),
+    institutBias,
+    bigBullPct:Math.round(bigBullVol/bigTotal*100),
+    bigBearPct:Math.round(bigBearVol/bigTotal*100),
+    avgVol:Math.round(avgVol),
+    sessTarget: dir==='neut' ? null : best,
+  };
+}
+
+// ==================== renderTabSpecific ====================
+function renderTabSpecific(r){
+  if(currentTab==='daytrade') renderDayTradeTab(r);
+}
+
+function renderDayTradeTab(r){
+  // 目標距離パネル
+  const el = document.getElementById('dayTargetPanel');
+  if(!el) return;
+  const dt = calcDayTradeTarget(r);
+  const dirColor = dt.dir==='up'?'var(--up)':dt.dir==='dn'?'var(--dn)':'var(--tx3)';
+  const dirArrow = dt.dir==='up'?'↑':dt.dir==='dn'?'↓':'→';
+
+  if(!dt.best || dt.dir==='neut'){
+    el.innerHTML='<div style="color:var(--tx3);font-size:12px">方向感なし。目標設定見送り。</div>';
+  } else {
+    const rows = dt.top3.map((t,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${i===0?'rgba(58,138,224,.08)':'var(--bg3)'};border-radius:var(--rs);border:0.5px solid ${i===0?'rgba(58,138,224,.4)':'var(--bo)'};margin-bottom:4px;">
+        <span style="font-size:10px;color:var(--tx3);min-width:60px">${t.label}</span>
+        <span style="font-size:9px;color:var(--tx3);flex:1">${t.basis}</span>
+        <span style="font-family:var(--mn);font-size:15px;font-weight:700;color:${dirColor}">$${t.price}</span>
+        <span style="font-size:10px;color:var(--tx3);font-family:var(--mn)">+${t.pips}p</span>
+      </div>`).join('');
+
+    el.innerHTML=`
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:14px;font-weight:700;color:${dirColor}">${dirArrow} ${dt.dir==='up'?'上昇目標':'下降目標'}</span>
+        <span style="font-family:var(--mn);font-size:20px;font-weight:800;color:${dirColor}">$${dt.best.price}</span>
+        <span style="font-size:11px;color:var(--tx3)">(${dt.best.pips}pips · ${dt.best.basis})</span>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:8px">VWAP: $${dt.vwapDay} · 目標候補一覧:</div>
+      ${rows}`;
+  }
+
+  // 出来高フローパネル
+  const vEl = document.getElementById('volumeFlowPanel');
+  if(!vEl) return;
+  const bColor = dt.institutBias==='up'?'var(--up)':dt.institutBias==='dn'?'var(--dn)':'var(--tx3)';
+  const bLabel = dt.institutBias==='up'?'↑ 大口 買い優勢':dt.institutBias==='dn'?'↓ 大口 売り優勢':'→ 大口 中立';
+  vEl.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-size:13px;font-weight:700;color:${bColor}">${bLabel}</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <div style="flex:1;background:rgba(58,138,224,.1);border-radius:var(--rs);padding:6px 10px;border:0.5px solid rgba(58,138,224,.3);">
+        <div style="font-size:9px;color:var(--tx3);margin-bottom:2px">大口 買い</div>
+        <div style="font-family:var(--mn);font-size:16px;font-weight:700;color:var(--up)">${dt.bigBullPct}%</div>
+      </div>
+      <div style="flex:1;background:rgba(224,85,48,.1);border-radius:var(--rs);padding:6px 10px;border:0.5px solid rgba(224,85,48,.3);">
+        <div style="font-size:9px;color:var(--tx3);margin-bottom:2px">大口 売り</div>
+        <div style="font-family:var(--mn);font-size:16px;font-weight:700;color:var(--dn)">${dt.bigBearPct}%</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:6px 10px;border:0.5px solid var(--bo);">
+        <div style="font-size:9px;color:var(--tx3);margin-bottom:2px">平均出来高</div>
+        <div style="font-family:var(--mn);font-size:14px;font-weight:700;color:var(--g)">${dt.avgVol}</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--tx3)">※出来高ベースの大口フロー推定。MT4の実際の出来高と連動します。</div>`;
+}
+
+// ==================== PF強化版 Performance Tracker ====================
+function loadPerf(){try{const d=localStorage.getItem('gsv_perf3');if(d)perfData=JSON.parse(d);}catch{}renderPerf();}
+function savePerf(){try{localStorage.setItem('gsv_perf3',JSON.stringify(perfData));}catch{}}
+
+function addPerfEntry(type){
+  if(!lastResult) return;
+  const winEl = document.getElementById('winPips');
+  const lossEl= document.getElementById('lossPips');
+  const dollars = type==='win'
+    ? parseFloat(winEl?.value||'4')
+    : parseFloat(lossEl?.value||'2');
+  perfData.records.unshift({
+    type, dollars,
+    dir:lastResult.signal?.mainDir||'--',
+    price:lastResult.price,
+    time:new Date().toLocaleString('ja-JP'),
+    state:lastResult.signal?.state||'--',
+    tab:currentTab,
+  });
+  if(perfData.records.length>200) perfData.records=perfData.records.slice(0,200);
+  savePerf();renderPerf();
+}
+function addPerfHit(){ addPerfEntry('win'); } // 後方互換
+function addPerfMiss(){ addPerfEntry('loss'); }
+
+function clearPerf(){if(confirm('実績データをリセットしますか？')){perfData={records:[]};savePerf();renderPerf();}}
+
+function renderPerf(){
+  const recs = perfData.records;
+  const total = recs.length;
+  const wins  = recs.filter(r=>r.type==='win').length;
+  const wr    = total>0?Math.round(wins/total*100):0;
+  // PF計算（実際の$で）
+  const grossWin  = recs.filter(r=>r.type==='win').reduce((a,b)=>a+(b.dollars||4),0);
+  const grossLoss = recs.filter(r=>r.type==='loss').reduce((a,b)=>a+(b.dollars||2),0);
+  const pf = grossLoss>0?(grossWin/grossLoss).toFixed(2):'∞';
+  const expected = total>0?((grossWin-grossLoss)/total).toFixed(2):'--';
+
+  const pfNum = parseFloat(pf);
+  const pfColor = pfNum>=1.5?'var(--gr)':pfNum>=1.0?'var(--am)':'var(--dn)';
+
+  document.getElementById('perfTotal').textContent=total;
+  document.getElementById('perfHit').textContent=wins;
+  document.getElementById('perfMiss').textContent=total-wins;
+  document.getElementById('perfWR').textContent=total>0?wr+'%':'--%';
+  document.getElementById('perfPF').textContent=pf;
+  document.getElementById('perfPF').style.color=pfColor;
+  document.getElementById('perfExpected').textContent=total>0?(parseFloat(expected)>=0?'+':'')+expected+'$':'--';
+
+  // PF評価テキスト
+  const pfEval = document.getElementById('pfEvalText');
+  if(pfEval){
+    if(total<10) pfEval.textContent='まだデータが少ないです（10件以上で評価）。記録を積み上げましょう。';
+    else if(pfNum>=2.0) pfEval.textContent=`✅ 優秀！PF${pf}。自動売買化を検討できるレベルです。このロジックを維持してください。`;
+    else if(pfNum>=1.5) pfEval.textContent=`🟡 良好。PF${pf}。安定していますが、さらに精度を上げましょう。エントリー条件の絞り込みを推奨。`;
+    else if(pfNum>=1.0) pfEval.textContent=`⚠️ 普通。PF${pf}。プラスですがPF1.5未満は自動売買向きではありません。見送り基準を厳しくしてください。`;
+    else pfEval.textContent=`❌ 要改善。PF${pf}。損失が利益を上回っています。エントリーを大幅に絞るか、利確幅を広げてください。`;
+  }
+
+  const histEl=document.getElementById('perfHistory');
+  if(histEl){
+    histEl.innerHTML=recs.slice(0,30).map(r=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg3);border-radius:var(--rs);margin-bottom:3px;font-size:11px;flex-wrap:wrap;">
+        <span style="color:var(--tx3);font-size:10px">${r.time}</span>
+        <span style="color:${r.dir==='up'?'var(--up)':'var(--dn)'}">${r.dir==='up'?'↑':'↓'}</span>
+        <span style="font-family:var(--mn);color:var(--tx2)">$${r.price?.toFixed(1)||'--'}</span>
+        <span style="color:var(--tx3);flex:1;font-size:10px">${r.tab||''}</span>
+        <span style="font-family:var(--mn);font-weight:700;color:${r.type==='win'?'var(--gr)':'var(--dn)'}">${r.type==='win'?'+':'−'}$${r.dollars||'--'}</span>
+      </div>`).join('')||'<div style="font-size:11px;color:var(--tx3);padding:8px 0">まだ記録がありません</div>';
+  }
 }
 
 // ==================== ECONOMIC CALENDAR ====================
