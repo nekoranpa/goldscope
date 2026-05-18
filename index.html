@@ -449,7 +449,7 @@ html,body{overflow-x:hidden;width:100%;}
   </div>
 
   <div class="voice-bar">
-    <button class="vb-btn primary" id="startBtn" onclick="startMonitoring()">▶ 開始</button>
+    <button class="vb-btn primary" id="startBtn" onclick="unlockAudio();startMonitoring()">▶ 開始</button>
     <div class="vb-sep"></div>
     <button class="vb-btn" onclick="speakNow()">🔊 再読み上げ</button>
     <button class="vb-btn stop" id="btnStop" onclick="stopVoice()">⏸ 中断</button>
@@ -468,8 +468,8 @@ html,body{overflow-x:hidden;width:100%;}
       style="width:70px;accent-color:var(--g);cursor:pointer;"
       oninput="setVoiceVolume(this.value)">
     <span id="volLabel" style="font-size:10px;font-family:var(--mn);color:var(--tx3);min-width:24px">100%</span>
-    <button class="vb-btn" id="muteBtn" onclick="toggleMute()" style="padding:4px 8px">🔔</button>
-    <button class="vb-btn" id="voiceBtn" onclick="toggleVoice()" style="margin-left:auto">音声: ON</button>
+    <button class="vb-btn" id="muteBtn" onclick="unlockAudio();toggleMute()" style="padding:4px 8px">🔔</button>
+    <button class="vb-btn" id="voiceBtn" onclick="unlockAudio();toggleVoice()" style="margin-left:auto">音声: ON</button>
   </div>
 
   <div class="tab-nav">
@@ -860,6 +860,7 @@ function updateSessions(){
 // ==================== VOICE ====================
 let voiceVolume = 1.0;
 let isMuted = false;
+let audioCtxUnlocked = false; // iOS Autoplay解除フラグ
 
 function setVoiceRate(v){ voiceRate = parseFloat(v); }
 
@@ -879,94 +880,117 @@ function toggleMute(){
   if(isMuted) window.speechSynthesis?.cancel();
 }
 
-function speak(text){
-  if(!text) return;
-  if(isMuted) return;
-  if(!window.speechSynthesis){ console.warn('[Voice] speechSynthesis未対応'); return; }
+// iOS Safari用: ユーザー操作時にAudioContextを解除
+function unlockAudio(){
+  if(audioCtxUnlocked) return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume().then(()=>{ audioCtxUnlocked=true; ctx.close(); });
+  }catch(e){}
+  // speechSynthesisも初回操作で解除
+  if(window.speechSynthesis){
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
+    audioCtxUnlocked = true;
+  }
+}
 
+function speak(text){
+  if(!text || isMuted) return;
+  if(!window.speechSynthesis){
+    console.warn('[Voice] speechSynthesis非対応');
+    return;
+  }
+
+  // iOS Safari: paused状態の場合resume
+  if(window.speechSynthesis.paused){
+    window.speechSynthesis.resume();
+  }
   window.speechSynthesis.cancel();
 
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang   = 'ja-JP';
-  u.rate   = voiceRate;
-  u.volume = voiceVolume;
-  u.pitch  = 1.0;
+  // 100文字超は分割（Chrome長文バグ対策）
+  const chunks = text.length > 80
+    ? (text.match(/[^。、！？!?]{1,80}[。、！？!?]?/g) || [text])
+    : [text];
 
-  // 日本語音声を探す（見つからなくても発話する）
   const voices = window.speechSynthesis.getVoices();
-  if(voices.length > 0){
-    const pref =
-      voices.find(v => v.name.includes('Kyoko')) ||
-      voices.find(v => v.name.includes('O-ren')) ||
-      voices.find(v => v.name.includes('Otoya')) ||
-      voices.find(v => v.lang === 'ja-JP') ||
-      voices.find(v => v.lang.startsWith('ja')) ||
-      voices[0]; // 何もなければデフォルト音声
-    if(pref) u.voice = pref;
-  }
+  const pref = voices.find(v=>v.name.includes('Kyoko'))
+    || voices.find(v=>v.name.includes('O-ren'))
+    || voices.find(v=>v.name.includes('Otoya'))
+    || voices.find(v=>v.lang==='ja-JP')
+    || voices.find(v=>v.lang.startsWith('ja'))
+    || (voices.length > 0 ? voices[0] : null);
 
+  let idx = 0;
   isSpeaking = true;
-  $('speakAnim').className = 'speak-wave on';
-  const narWaveEl = document.getElementById('narWave');
-  if(narWaveEl) narWaveEl.className = 'speak-wave on';
+  const wa = document.getElementById('speakAnim');
+  const wn = document.getElementById('narWave');
+  if(wa) wa.className='speak-wave on';
+  if(wn) wn.className='speak-wave on';
 
-  u.onend = u.onerror = () => {
-    isSpeaking = false;
-    $('speakAnim').className = 'speak-wave';
-    if(narWaveEl) narWaveEl.className = 'speak-wave';
-  };
-
-  // Chrome bug対策: 長文は途中で止まるので分割
-  if(text.length > 100){
-    const chunks = text.match(/.{1,80}[。、!！?？\s]|.{1,80}/g) || [text];
-    let idx = 0;
-    const speakChunk = () => {
-      if(idx >= chunks.length || isMuted){ isSpeaking=false; return; }
-      const cu = new SpeechSynthesisUtterance(chunks[idx++]);
-      cu.lang = 'ja-JP'; cu.rate = voiceRate; cu.volume = voiceVolume;
-      if(u.voice) cu.voice = u.voice;
-      cu.onend = speakChunk;
-      cu.onerror = () => { isSpeaking=false; };
-      window.speechSynthesis.speak(cu);
+  const speakNext = () => {
+    if(idx >= chunks.length || isMuted){
+      isSpeaking = false;
+      if(wa) wa.className='speak-wave';
+      if(wn) wn.className='speak-wave';
+      return;
+    }
+    const u = new SpeechSynthesisUtterance(chunks[idx++]);
+    u.lang   = 'ja-JP';
+    u.rate   = voiceRate;
+    u.volume = voiceVolume;
+    u.pitch  = 1.0;
+    if(pref) u.voice = pref;
+    u.onend  = speakNext;
+    u.onerror = (e) => {
+      console.warn('[Voice] error:', e.error);
+      isSpeaking = false;
+      if(wa) wa.className='speak-wave';
+      if(wn) wn.className='speak-wave';
     };
-    speakChunk();
-  } else {
     window.speechSynthesis.speak(u);
-  }
-  console.log('[Voice] 発話:', text.slice(0, 30) + '...');
+  };
+  speakNext();
+  console.log('[Voice] 発話開始:', text.slice(0,40)+'...');
 }
 
 function stopVoice(){
   window.speechSynthesis?.cancel();
   isSpeaking = false;
-  $('speakAnim').className = 'speak-wave';
-  const nw = document.getElementById('narWave');
-  if(nw) nw.className = 'speak-wave';
+  const wa=document.getElementById('speakAnim');
+  const wn=document.getElementById('narWave');
+  if(wa) wa.className='speak-wave';
+  if(wn) wn.className='speak-wave';
 }
 
 function toggleVoice(){
   voiceOn = !voiceOn;
   const btn = document.getElementById('voiceBtn');
-  if(btn) btn.textContent = voiceOn ? '音声: ON' : '音声: OFF';
-  btn.style.color = voiceOn ? 'var(--gr)' : 'var(--tx3)';
+  if(btn){
+    btn.textContent = voiceOn ? '音声: ON' : '音声: OFF';
+    btn.style.color = voiceOn ? 'var(--gr)' : 'var(--tx3)';
+  }
 }
 
 function speakNow(){
-  // 音声コンテキスト初期化（ユーザー操作必須）
-  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
-  const text = lastResult ? buildNarration(lastResult) : 'ゴールドスコープ、準備中です。';
+  unlockAudio(); // iOS対策: ユーザー操作で解除
+  const text = lastResult
+    ? buildNarration(lastResult)
+    : 'ゴールドスコープ、準備中です。';
   speak(text);
 }
 
-// 音声エンジン初期化（voices読み込み待ち）
 function initVoices(){
-  if(window.speechSynthesis){
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => {
-      const v = window.speechSynthesis.getVoices();
-      console.log('[Voice] 利用可能な音声:', v.length, '個');
-    };
-  }
+  if(!window.speechSynthesis) return;
+  // voiceschangedイベントで音声リストを取得
+  const load = () => {
+    const v = window.speechSynthesis.getVoices();
+    console.log('[Voice] 音声数:', v.length,
+      '| 日本語:', v.filter(x=>x.lang.startsWith('ja')).map(x=>x.name).join(', '));
+  };
+  window.speechSynthesis.onvoiceschanged = load;
+  load();
 }
 
 // ==================== MONITORING ====================
