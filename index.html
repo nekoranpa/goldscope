@@ -815,21 +815,31 @@ async function fetchAndUpdate(){
   }
 }
 
-// 音声: エントリー条件が変化した時のみ（$4以上条件ベース）
+// 読み上げバリエーション管理
+let narVariant = 0;
+let lastNarSpoken = 0;
+const NAR_INTERVAL = 30000; // 通常30秒ごとに読み上げ
+
+// 音声: 定期読み上げ＋エントリー時即座
 function triggerVoiceIfNeeded(r){
   if(!voiceOn||isSpeaking) return;
   const now  = Date.now();
   const eq   = r.entryQuality;
   const stab = stabilizeEntry(eq||{canEntry:false,watchEntry:false});
 
-  // 'can'になった時だけ音声（waitやwatchは音声なし）
+  // エントリー推奨→即座に「今です」
   if(stab === 'can' && stab !== lastSpokenSignal){
-    const txt = buildNarration(r);
-    speak(txt);
+    speak(buildNarration(r));
     lastSpokenSignal = stab;
-    lastSpokenTime   = now;
-  } else if(stab !== 'can'){
-    lastSpokenSignal = stab; // 状態は更新するが音声は出さない
+    lastNarSpoken    = now;
+    return;
+  }
+  lastSpokenSignal = stab;
+
+  // 通常: 30秒ごとに定期読み上げ
+  if(now - lastNarSpoken > NAR_INTERVAL){
+    speak(buildNarration(r));
+    lastNarSpoken = now;
   }
 }
 
@@ -1367,57 +1377,109 @@ function analyze(price,open,hist,spotMeta){
     changePct,sessName,bbStateLabel,hist:hist.slice(-120)};
 }
 
-// ==================== NARRATION（統合・厳格版） ====================
-// $4以上取れる条件が揃った時だけエントリーを促す
-// それ以外は「待機」「様子見」のみ
+// ==================== NARRATION（バラエティ豊富版） ====================
 function buildNarration(r){
-  const p   = r.price?.toFixed(1);
-  const eq  = r.entryQuality;
-  const tr  = r.trState;
-  const sig = r.signal;
-  const adx = r.ADX?.adx || 20;
-
-  // EMA壁（最近接）
+  const p    = r.price?.toFixed(1);
+  const eq   = r.entryQuality;
+  const tr   = r.trState;
+  const sig  = r.signal;
+  const adx  = r.ADX?.adx || 20;
+  const rsi  = r.rsiS || 50;
+  const atr  = r.ATR?.toFixed(1) || '--';
+  const sess = r.sessName || '';
+  const chg  = r.changePct?.toFixed(2) || '0';
+  const conf = r.conf1H;
+  const fvg  = r.fvgData;
   const wall = r.emaWalls?.[0];
-  const wallTxt = wall?.isCrit
-    ? `${wall.label}$${wall.val}が${Math.abs(wall.distPips)}pips先に壁。突破${wall.breakProb}%。`
+  const stab = stabilizeEntry(eq||{canEntry:false,watchEntry:false});
+
+  // セッション情報
+  const sessInfo = sess.includes('ロンドン') ? 'ロンドン時間、欧州勢が動き出す時間帯です。' :
+                   sess.includes('NY')       ? 'ニューヨーク時間、一番ボラが出やすい時間帯です。' :
+                   'アジア時間、比較的動きが少ない時間帯です。';
+
+  // 方向感
+  const dir1H = conf?.dir || 'neut';
+  const dirTxt = dir1H==='up' ? '上昇目線' : dir1H==='dn' ? '下降目線' : '中立';
+
+  // RSI状態
+  const rsiTxt = rsi >= 70 ? '買われすぎゾーンです。' :
+                 rsi <= 30 ? '売られすぎゾーンです。' :
+                 rsi >= 60 ? 'RSIは高め、勢いがあります。' :
+                 rsi <= 40 ? 'RSIは低め、売り圧力があります。' : '';
+
+  // FVG
+  const fvgTxt = fvg?.nearFVG?.approach
+    ? `${fvg.nearFVG.type==='bull'?'支持':'抵抗'}帯${fvg.nearFVG.low}から${fvg.nearFVG.high}ドルのFVGが近くにあります。反発確率${fvg.bounceProb}パーセント。`
     : '';
 
-  // フェーズ
-  const trTxt = tr?.phase ? `${tr.phase}。` : '';
+  // EMA壁
+  const wallTxt = wall?.isCrit
+    ? `${wall.label}の${wall.role==='resist'?'抵抗':'支持'}が${Math.abs(wall.distPips)}ピップス先にあります。突破確率${wall.breakProb}パーセント。`
+    : wall?.isWarn
+    ? `${wall.label}が近づいています。`
+    : '';
 
-  // ── エントリー推奨（$4以上・条件揃い）──────────
-  if(eq?.canEntry){
-    const stab = stabilizeEntry(eq);
-    if(stab === 'can'){
-      const dir = eq.dir;
-      const exp = eq.expectedMove.toFixed(1);
-      if(dir === 'up')
-        return `▲ エントリーチャンス。現在$${p}、上昇方向で$${exp}以上の値幅を想定。${trTxt}${wallTxt}TF${eq.matchCount}本一致。ADX${adx}。`;
-      if(dir === 'dn')
-        return `▼ エントリーチャンス。現在$${p}、下降方向で$${exp}以上の値幅を想定。${trTxt}${wallTxt}TF${eq.matchCount}本一致。ADX${adx}。`;
-    }
-  }
+  // トレンド
+  const trTxt = tr?.phase ? tr.phase + '。' : '';
 
-  // ── 注視段階（もう少し）──────────────────────
-  if(eq?.watchEntry){
+  // ── エントリー推奨（$4以上・今入って）────────────────
+  if(stab === 'can'){
     const dir = eq.dir;
-    return `⚠️ 注視。現在$${p}。${trTxt}あと一歩で条件成立。${dir==='up'?'上昇':'下降'}方向だが、まだ待機を。${wallTxt}`;
+    const exp = eq.expectedMove?.toFixed(0) || '4';
+    narVariant++;
+
+    const entryPhrases = dir==='up' ? [
+      `今です！現在${p}ドル。上昇方向でエントリーのタイミングです。${exp}ドル以上の値幅を狙えます。${fvgTxt}${wallTxt}${sessInfo}`,
+      `上昇エントリーのチャンスです。${p}ドルから買いで入ってください。期待値${exp}ドル以上。${trTxt}${rsiTxt}${sessInfo}`,
+      `条件が揃いました。${p}ドル、上です。今入って。${fvgTxt}${dir1H==='up'?'1時間足も上昇目線です。':''}${sessInfo}`,
+      `ゴールド、上昇局面です。${p}ドルから入れます。${exp}ドル幅を想定。ADX${adx}でトレンド確認。${wallTxt}`,
+      `買いで入るタイミングです。現在${p}ドル。${trTxt}${fvgTxt}${sessInfo}`,
+    ] : [
+      `今です！現在${p}ドル。下降方向でエントリーのタイミングです。${exp}ドル以上の値幅を狙えます。${fvgTxt}${wallTxt}${sessInfo}`,
+      `下降エントリーのチャンスです。${p}ドルから売りで入ってください。期待値${exp}ドル以上。${trTxt}${rsiTxt}${sessInfo}`,
+      `条件が揃いました。${p}ドル、下です。今入って。${fvgTxt}${dir1H==='dn'?'1時間足も下降目線です。':''}${sessInfo}`,
+      `ゴールド、下落局面です。${p}ドルから入れます。${exp}ドル幅を想定。ADX${adx}でトレンド確認。${wallTxt}`,
+      `売りで入るタイミングです。現在${p}ドル。${trTxt}${fvgTxt}${sessInfo}`,
+    ];
+    return entryPhrases[narVariant % entryPhrases.length];
   }
 
-  // ── レンジボラ取りチャンス（別枠）──────────────
+  // ── 注視段階 ──────────────────────────────
+  if(stab === 'watch'){
+    narVariant++;
+    const watchPhrases = [
+      `現在${p}ドル。もう少しで条件が揃います。焦らず待ちましょう。${trTxt}${sessInfo}`,
+      `${p}ドル、注視中。あと一歩で入れます。${fvgTxt}${rsiTxt}`,
+      `待機中。${p}ドル。${dirTxt}で準備中です。${wallTxt}${sessInfo}`,
+    ];
+    return watchPhrases[narVariant % watchPhrases.length];
+  }
+
+  // ── レンジボラ取り ────────────────────────
   if(tr?.canVola){
-    return `↔ レンジ内ボラ取り可。上限$${tr.rangeTop}付近から売り（推奨$${tr.sellEntry}）、下限$${tr.rangeBot}付近から買い（推奨$${tr.buyEntry}）。幅${tr.rangeWidthPips}p。危険承知で。`;
+    narVariant++;
+    const volaPhrases = [
+      `レンジ相場です。上限${tr.rangeTop}ドル付近で売り、下限${tr.rangeBot}ドル付近で買い。幅は${tr.rangeWidthPips}ピップスあります。リスク承知の上で。`,
+      `ボラを取れる局面です。${tr.rangeBot}から${tr.rangeTop}のレンジ。推奨は上限${tr.sellEntry}で売り、下限${tr.buyEntry}で買い。危険度${tr.riskLabel}。`,
+      `レンジ内での往来狙いです。現在${p}ドル、レンジ内の${tr.curPct}パーセントの位置にいます。${tr.curPct>=70?'上限圏、売り有利。':''}${tr.curPct<=30?'下限圏、買い有利。':''}`,
+    ];
+    return volaPhrases[narVariant % volaPhrases.length];
   }
 
-  // ── 待機（条件不足）────────────────────────
-  // 理由を簡潔に
-  const waitReason = eq?.reason || '条件不足。';
-  if(tr?.phaseType === 'squeeze')
-    return `⚡ スクイーズ中。現在$${p}。方向が出るまで待機。${waitReason}`;
-  if(adx < 18)
-    return `⏸ レンジ待機。現在$${p}。ADX${adx}で方向感なし。${waitReason}`;
-  return `⏸ 待機。現在$${p}。${trTxt}${waitReason}`;
+  // ── 待機（定期読み上げ・バラエティ）────────────────
+  narVariant++;
+  const waitPhrases = [
+    // 相場状況を詳しく
+    `現在${p}ドル。${dirTxt}、${trTxt}${sessInfo}${rsiTxt}${fvgTxt}エントリー条件はまだ揃っていません。待機してください。`,
+    `ゴールド${p}ドル。${chg>=0?'前日比プラス':'前日比マイナス'}${Math.abs(chg)}パーセント。${trTxt}ADX${adx}、${adx>=25?'トレンドが出ています。':'方向感は弱めです。'}${sessInfo}`,
+    `${p}ドル。${sessInfo}${dirTxt}の局面。${wallTxt}${fvgTxt}条件が揃うまで見送りです。`,
+    `現在${p}ドル。ATRは${atr}ドル。${tr?.phaseType==='squeeze'?'スクイーズ中、ブレイク待ちです。':tr?.phaseType==='range'?'レンジ相場。上限'+tr.rangeTop+'、下限'+tr.rangeBot+'ドルです。':''}${sessInfo}`,
+    `ゴールド${p}ドル。${dirTxt}。${rsiTxt}${fvgTxt}今は見送りが正解です。チャンスを待ちましょう。`,
+    `${p}ドル。1時間足${dir1H==='up'?'上昇':'dir1H==="dn"?下降':'中立'}目線。${trTxt}${wallTxt}エントリーはまだです。`,
+    `現在${p}ドル。${sessInfo}${trTxt}${fvgTxt}ADX${adx}、RSI${rsi}。条件不足のため待機中。`,
+  ];
+  return waitPhrases[narVariant % waitPhrases.length];
 }
 
 // ==================== TV CHART ====================
