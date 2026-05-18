@@ -2364,13 +2364,22 @@ function buildSyntheticIdeas(){
   const fvg = r.fvgData;
   const bb = r.BB;
 
+  const dirLabel = dir==='up' ? '上昇目線。EMA上位でBullish Bias。'
+    : dir==='dn' ? '下降目線。EMA下位でBearish Bias。'
+    : '中立レンジ相場。';
+  const communityView = dir==='up'
+    ? '多くのトレーダーが上昇方向でエントリーを狙っている局面。主なターゲットは直近高値とフィボ161.8%。'
+    : dir==='dn'
+    ? '多くのトレーダーが下降方向を想定。主なターゲットは直近安値とBB下限。'
+    : '方向感が定まらずレンジ内での動きが続く見方が多い。上下どちらへのブレイクアウトも想定。';
+
   return `XAUUSD現在価格$${p}。
-${dir==='up'?'上昇目線。EMA上位でBullish Bias。':'dir==="dn"?'下降目線。EMA下位でBearish Bias。':'中立レンジ相場。'}
+${dirLabel}
 ADX${adx}、${tr?.phase||''}。
 ${fvg?.fvgLabel||'FVGなし'}。
 BB上限$${bb?.u?.toFixed(1)||'--'} 下限$${bb?.l?.toFixed(1)||'--'}。
 RSI${r.rsiS}。
-コミュニティ全般の見方: ${dir==='up'?'多くのトレーダーが上昇方向でエントリーを狙っている局面。主なターゲットは直近高値とフィボ161.8%。':'dir==="dn"?'多くのトレーダーが下降方向を想定。主なターゲットは直近安値とBB下限。':'方向感が定まらずレンジ内での動きが続く見方が多い。上下どちらへのブレイクアウトも想定。'}`;
+コミュニティ全般の見方: ${communityView}`;
 }
 
 // Claude APIでアイデアを分析
