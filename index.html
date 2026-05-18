@@ -265,6 +265,19 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 .range-pos-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gr),var(--pu));}
 .range-pos-cursor{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--gl);border:2px solid var(--bg);transform:translateX(-50%);transition:left .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 6px rgba(232,201,106,.5);}
 
+/* ===== モニタリングバー ===== */
+.monitor-bar{background:var(--bg2);border-bottom:0.5px solid var(--bo2);padding:7px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.monitor-status{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:0.5px solid var(--bo2);background:var(--bg3);white-space:nowrap;}
+.monitor-status.running{border-color:var(--gr);background:rgba(27,174,130,.12);color:var(--gr);}
+.monitor-status.stopped{border-color:var(--bo2);color:var(--tx3);}
+
+/* 音声バー */
+.voice-bar{background:var(--bg3);border-bottom:0.5px solid var(--bo);padding:6px 14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.voice-status-badge{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--bo2);background:var(--bg4);white-space:nowrap;min-width:100px;}
+.voice-status-badge.speaking{border-color:var(--gr);background:rgba(27,174,130,.1);color:var(--gr);}
+.voice-status-badge.waiting{border-color:var(--bo2);color:var(--tx3);}
+.voice-status-badge.muted{border-color:var(--dn);color:var(--dn);background:rgba(224,85,48,.08);}
+
 /* ===== ノイズフィルタ ===== */
 .filter-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid var(--bo);margin-bottom:10px;flex-wrap:wrap;}
 .filter-label{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
@@ -447,28 +460,45 @@ html,body{overflow-x:hidden;width:100%;}
     </div>
   </div>
 
-  <div class="voice-bar">
-    <button class="vb-btn primary" id="startBtn" onclick="unlockAudio();startMonitoring()">▶ 開始</button>
+  <!-- ① モニタリングバー（価格取得のみ） -->
+  <div class="monitor-bar">
+    <div class="monitor-status" id="monitorStatus">
+      <div class="ldot" id="liveDot2"></div>
+      <span id="monitorLabel">停止中</span>
+    </div>
+    <button class="vb-btn primary" id="startBtn" onclick="startMonitoring()" style="min-width:90px">▶ 開始</button>
+    <div style="font-size:10px;color:var(--tx3)" id="stTxt2">開始ボタンを押してください</div>
     <div class="vb-sep"></div>
-    <button class="vb-btn" onclick="speakNow()">🔊 再読み上げ</button>
-    <button class="vb-btn stop" id="btnStop" onclick="stopVoice()">⏸ 中断</button>
+    <div id="hfmInfo" style="color:var(--am);font-family:var(--mn);font-size:10px;margin-left:auto">HFM: --</div>
+    <div class="st-right" id="stRight" style="font-size:10px;color:var(--tx3)"></div>
+  </div>
+
+  <!-- ② 音声バー（モニタリングと独立） -->
+  <div class="voice-bar">
+    <!-- 音声状態バッジ -->
+    <div class="voice-status-badge" id="voiceStatusBadge">
+      <span class="speak-wave" id="speakAnim"><div class="sw"></div><div class="sw"></div><div class="sw"></div></span>
+      <span id="voiceStatusLabel">🔔 音声待機</span>
+    </div>
+    <div class="vb-sep"></div>
+    <button class="vb-btn" onclick="unlockAudio();speakNow()" style="white-space:nowrap">🔊 読み上げ</button>
+    <button class="vb-btn stop" id="btnStop" onclick="stopVoice()">⏹ 中断</button>
     <div class="vb-sep"></div>
     <span style="font-size:10px;color:var(--tx3)">速度</span>
-    <select id="voiceSpeed" style="font-size:10px;padding:3px 7px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);outline:none;cursor:pointer;" onchange="setVoiceRate(this.value)">
+    <select id="voiceSpeed" style="font-size:10px;padding:3px 6px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);outline:none;cursor:pointer;" onchange="setVoiceRate(this.value)">
       <option value="0.8">0.8×</option>
       <option value="0.9">0.9×</option>
       <option value="1.0" selected>1.0×</option>
       <option value="1.2">1.2×</option>
       <option value="1.5">1.5×</option>
     </select>
-    <div class="vb-sep"></div>
     <span style="font-size:10px;color:var(--tx3)">音量</span>
     <input type="range" id="voiceVolume" min="0" max="1" step="0.1" value="1"
-      style="width:70px;accent-color:var(--g);cursor:pointer;"
+      style="width:60px;accent-color:var(--g);cursor:pointer;"
       oninput="setVoiceVolume(this.value)">
     <span id="volLabel" style="font-size:10px;font-family:var(--mn);color:var(--tx3);min-width:24px">100%</span>
     <button class="vb-btn" id="muteBtn" onclick="unlockAudio();toggleMute()" style="padding:4px 8px">🔔</button>
-    <button class="vb-btn" id="voiceBtn" onclick="unlockAudio();toggleVoice()" style="margin-left:auto">音声: ON</button>
+    <button class="vb-btn" id="voiceBtn" onclick="unlockAudio();toggleVoice()" style="margin-left:auto;white-space:nowrap">音声: ON</button>
   </div>
 
   <div class="tab-nav">
@@ -480,10 +510,10 @@ html,body{overflow-x:hidden;width:100%;}
   </div>
 
   <div class="app-body">
-    <div class="status-bar">
+    <div class="status-bar" style="display:none">
       <div class="st-icon" id="stIcon">⟳</div>
-      <div class="st-txt" id="stTxt">ログイン完了 — 開始ボタンを押してください</div>
-      <div class="st-right" id="stRight"></div>
+      <div class="st-txt" id="stTxt"></div>
+      <div class="st-right-old"></div>
     </div>
 
     <!-- ========= TAB: 秒スキャ (1m) ========= -->
@@ -980,7 +1010,25 @@ let voiceVolume = 1.0;
 let isMuted = false;
 let audioCtxUnlocked = false; // iOS Autoplay解除フラグ
 
-function setVoiceRate(v){ voiceRate = parseFloat(v); }
+// 音声ステータスバッジ更新
+function updateVoiceStatusBadge(state){
+  const badge = document.getElementById('voiceStatusBadge');
+  const label = document.getElementById('voiceStatusLabel');
+  if(!badge||!label) return;
+  if(isMuted){
+    badge.className='voice-status-badge muted';
+    label.textContent='🔇 消音中';
+  } else if(!voiceOn){
+    badge.className='voice-status-badge waiting';
+    label.textContent='🔕 音声OFF';
+  } else if(state==='speaking'||isSpeaking){
+    badge.className='voice-status-badge speaking';
+    label.textContent='🔊 読み上げ中';
+  } else {
+    badge.className='voice-status-badge waiting';
+    label.textContent='🔔 音声待機';
+  }
+}
 
 function setVoiceVolume(v){
   voiceVolume = parseFloat(v);
@@ -1042,6 +1090,7 @@ function speak(text){
 
   let idx = 0;
   isSpeaking = true;
+  updateVoiceStatusBadge('speaking');
   const wa = document.getElementById('speakAnim');
   const wn = document.getElementById('narWave');
   if(wa) wa.className='speak-wave on';
@@ -1076,6 +1125,7 @@ function speak(text){
 function stopVoice(){
   window.speechSynthesis?.cancel();
   isSpeaking = false;
+  updateVoiceStatusBadge('waiting');
   const wa=document.getElementById('speakAnim');
   const wn=document.getElementById('narWave');
   if(wa) wa.className='speak-wave';
@@ -1089,6 +1139,7 @@ function toggleVoice(){
     btn.textContent = voiceOn ? '音声: ON' : '音声: OFF';
     btn.style.color = voiceOn ? 'var(--gr)' : 'var(--tx3)';
   }
+  updateVoiceStatusBadge();
 }
 
 function speakNow(){
@@ -1112,23 +1163,59 @@ function initVoices(){
 }
 
 // ==================== MONITORING ====================
-function autoStart(){if(isRunning)return;isRunning=true;$('startBtn').textContent='⏹ 停止';$('startBtn').className='vb-btn stop';$('liveDot').className='ldot on';$('liveLabel').textContent='分析中';loadEconomicCalendar();fetchAndUpdate();tickTimer=setInterval(fetchAndUpdate,5000);}
+function autoStart(){
+  if(isRunning) return;
+  isRunning=true;
+  // モニタリングバー更新
+  const btn = document.getElementById('startBtn');
+  if(btn){ btn.textContent='⏹ 停止'; btn.className='vb-btn stop'; }
+  const ms = document.getElementById('monitorStatus');
+  if(ms){ ms.className='monitor-status running'; }
+  const ml = document.getElementById('monitorLabel');
+  if(ml) ml.textContent='🟢 モニタリング中';
+  const ld = document.getElementById('liveDot2');
+  if(ld) ld.className='ldot on';
+  // ヘッダーのliveDot/liveLabel（後方互換）
+  $('liveDot').className='ldot on';
+  $('liveLabel').textContent='LIVE';
+  loadEconomicCalendar();
+  fetchAndUpdate();
+  tickTimer=setInterval(fetchAndUpdate,5000);
+}
 function startMonitoring(){
-  if(isRunning){isRunning=false;clearInterval(tickTimer);$('startBtn').textContent='▶ 開始';$('startBtn').className='vb-btn primary';$('liveDot').className='ldot';$('liveLabel').textContent='停止';return;}
+  if(isRunning){
+    isRunning=false; clearInterval(tickTimer);
+    const btn=document.getElementById('startBtn');
+    if(btn){ btn.textContent='▶ 開始'; btn.className='vb-btn primary'; }
+    const ms=document.getElementById('monitorStatus');
+    if(ms) ms.className='monitor-status stopped';
+    const ml=document.getElementById('monitorLabel');
+    if(ml) ml.textContent='⏸ 停止中';
+    const ld=document.getElementById('liveDot2');
+    if(ld) ld.className='ldot';
+    $('liveDot').className='ldot';
+    $('liveLabel').textContent='停止';
+    updateVoiceStatusBadge();
+    return;
+  }
   autoStart();
 }
 function startCountdown(s){countdownSec=s;clearInterval(countdownTimer);const upd=()=>{const t=countdownSec>0?`次回 ${countdownSec}秒`:'';$('stRight').textContent=t;};upd();countdownTimer=setInterval(()=>{countdownSec--;if(countdownSec<=0){clearInterval(countdownTimer);$('stRight').textContent='';}else upd();},1000);}
 
 async function fetchAndUpdate(){
-  $('stIcon').style.opacity='1';$('stTxt').textContent='価格データ取得中...';
+  const stTxt2 = document.getElementById('stTxt2');
+  if(stTxt2) stTxt2.textContent = '価格データ取得中...';
+  $('stIcon').style.opacity='1';
   try{
     const d=await fetchAll();
     $('stIcon').style.opacity='0';
     const r=analyze(d.mid||d.rate,d.open||d.rate,d.hist,d);
     lastResult=r;renderAll(r,d);
-    $('liveLabel').textContent=d.live?'LIVE':'SIM';
+    const ml=document.getElementById('monitorLabel');
+    if(ml) ml.textContent=d.live?'🟢 モニタリング中 · MT4/HFM':'🟢 モニタリング中 · SIM';
+    const stTxt2=document.getElementById('stTxt2');
+    if(stTxt2) stTxt2.textContent=d.live?`$${(d.mid).toFixed(1)} · ${d.source}`:`${d.source}`;
     startCountdown(5);
-    $('stTxt').textContent=d.live?`LIVE $${(d.mid).toFixed(1)} · ${d.source}`:d.source;
     triggerVoiceIfNeeded(r);
     updateTVChart(r,d);
   }catch(e){
@@ -1664,8 +1751,8 @@ function analyze(price,open,hist,spotMeta){
   // トレンド/レンジ判定
   const trState=calcTrendRange(hist,price,ATR,BB,ADX,rsiS);
 
-  // EMA壁検知
-  const emaWalls=calcEMAWalls(price,e20v,e75v,e200v,ATR,ADX,rsiS,buyPressure(sh),signal);
+  // EMA壁検知（320SMA含む）
+  const emaWalls=calcEMAWalls(price,e20v,e75v,e200v,ATR,ADX,rsiS,buyPressure(sh),signal,hist);
 
   // 確定足ベース 1H目線（形成中バー除外）
   const conf1H=updateConfirmed1H(hist,price,ATR);
@@ -1699,9 +1786,13 @@ function analyze(price,open,hist,spotMeta){
   const bw=BB?(BB.u-BB.l)/BB.m:0;
   const bbStateLabel=bw<0.004?'⚡ Squeeze Zone':bw>0.022?'📈 Expansion':'Normal';
 
+  // 320SMA値を取り出しておく（表示・音声用）
+  const sma320Wall = emaWalls.find(w=>w.label==='320SMA');
+  const sma320val  = sma320Wall?.val || null;
+
   return{price,open,spotMeta,shortDir,midDir,
     bp,rsiS,e20:e20v,e75:e75v,e200:e200v,VW,BB,ATR,ADX,OB,SMC,TECH,
-    tfBias,signal,trState,emaWalls,entryQuality,conf1H,fvgData,midScen,
+    tfBias,signal,trState,emaWalls,sma320:sma320val,entryQuality,conf1H,fvgData,midScen,
     changePct,sessName,bbStateLabel,hist:hist.slice(-120)};
 }
 
@@ -1748,6 +1839,14 @@ function buildNarration(r){
     ? `${wall.label}が近づいています。`
     : '';
 
+  // 15分足320SMA専用コメント（特別に言及）
+  const sma320w = r.emaWalls?.find(w=>w.label==='320SMA');
+  const sma320Txt = sma320w?.isCrit
+    ? `警戒。15分足320SMAの$${sma320w.val}にほぼ到達。強い反発ポイントです。`
+    : sma320w?.isWarn
+    ? `注意。15分足320SMAが$${sma320w.val}、${Math.abs(sma320w.distPips)}ピップス先。反発しやすいゾーンです。`
+    : '';
+
   // トレンド
   const trTxt = tr?.phase ? tr.phase + '。' : '';
 
@@ -1758,17 +1857,17 @@ function buildNarration(r){
     narVariant++;
 
     const entryPhrases = dir==='up' ? [
-      `今です！現在${p}ドル。上昇方向でエントリーのタイミングです。${exp}ドル以上の値幅を狙えます。${fvgTxt}${wallTxt}${sessInfo}`,
-      `上昇エントリーのチャンスです。${p}ドルから買いで入ってください。期待値${exp}ドル以上。${trTxt}${rsiTxt}${sessInfo}`,
-      `条件が揃いました。${p}ドル、上です。今入って。${fvgTxt}${dir1H==='up'?'1時間足も上昇目線です。':''}${sessInfo}`,
-      `ゴールド、上昇局面です。${p}ドルから入れます。${exp}ドル幅を想定。ADX${adx}でトレンド確認。${wallTxt}`,
-      `買いで入るタイミングです。現在${p}ドル。${trTxt}${fvgTxt}${sessInfo}`,
+      `今です！現在${p}ドル。上昇方向でエントリーのタイミングです。${exp}ドル以上の値幅を狙えます。${fvgTxt}${sma320Txt}${wallTxt}${sessInfo}`,
+      `上昇エントリーのチャンスです。${p}ドルから買いで入ってください。期待値${exp}ドル以上。${trTxt}${rsiTxt}${sma320Txt}${sessInfo}`,
+      `条件が揃いました。${p}ドル、上です。今入って。${fvgTxt}${dir1H==='up'?'1時間足も上昇目線です。':''}${sma320Txt}${sessInfo}`,
+      `ゴールド、上昇局面です。${p}ドルから入れます。${exp}ドル幅を想定。ADX${adx}でトレンド確認。${sma320Txt}${wallTxt}`,
+      `買いで入るタイミングです。現在${p}ドル。${trTxt}${fvgTxt}${sma320Txt}${sessInfo}`,
     ] : [
-      `今です！現在${p}ドル。下降方向でエントリーのタイミングです。${exp}ドル以上の値幅を狙えます。${fvgTxt}${wallTxt}${sessInfo}`,
-      `下降エントリーのチャンスです。${p}ドルから売りで入ってください。期待値${exp}ドル以上。${trTxt}${rsiTxt}${sessInfo}`,
-      `条件が揃いました。${p}ドル、下です。今入って。${fvgTxt}${dir1H==='dn'?'1時間足も下降目線です。':''}${sessInfo}`,
-      `ゴールド、下落局面です。${p}ドルから入れます。${exp}ドル幅を想定。ADX${adx}でトレンド確認。${wallTxt}`,
-      `売りで入るタイミングです。現在${p}ドル。${trTxt}${fvgTxt}${sessInfo}`,
+      `今です！現在${p}ドル。下降方向でエントリーのタイミングです。${exp}ドル以上の値幅を狙えます。${fvgTxt}${sma320Txt}${wallTxt}${sessInfo}`,
+      `下降エントリーのチャンスです。${p}ドルから売りで入ってください。期待値${exp}ドル以上。${trTxt}${rsiTxt}${sma320Txt}${sessInfo}`,
+      `条件が揃いました。${p}ドル、下です。今入って。${fvgTxt}${dir1H==='dn'?'1時間足も下降目線です。':''}${sma320Txt}${sessInfo}`,
+      `ゴールド、下落局面です。${p}ドルから入れます。${exp}ドル幅を想定。ADX${adx}でトレンド確認。${sma320Txt}${wallTxt}`,
+      `売りで入るタイミングです。現在${p}ドル。${trTxt}${fvgTxt}${sma320Txt}${sessInfo}`,
     ];
     return entryPhrases[narVariant % entryPhrases.length];
   }
@@ -1798,14 +1897,13 @@ function buildNarration(r){
   // ── 待機（定期読み上げ・バラエティ）────────────────
   narVariant++;
   const waitPhrases = [
-    // 相場状況を詳しく
-    `現在${p}ドル。${dirTxt}、${trTxt}${sessInfo}${rsiTxt}${fvgTxt}エントリー条件はまだ揃っていません。待機してください。`,
-    `ゴールド${p}ドル。${chg>=0?'前日比プラス':'前日比マイナス'}${Math.abs(chg)}パーセント。${trTxt}ADX${adx}、${adx>=25?'トレンドが出ています。':'方向感は弱めです。'}${sessInfo}`,
-    `${p}ドル。${sessInfo}${dirTxt}の局面。${wallTxt}${fvgTxt}条件が揃うまで見送りです。`,
-    `現在${p}ドル。ATRは${atr}ドル。${tr?.phaseType==='squeeze'?'スクイーズ中、ブレイク待ちです。':tr?.phaseType==='range'?'レンジ相場。上限'+tr.rangeTop+'、下限'+tr.rangeBot+'ドルです。':''}${sessInfo}`,
-    `ゴールド${p}ドル。${dirTxt}。${rsiTxt}${fvgTxt}今は見送りが正解です。チャンスを待ちましょう。`,
-    `${p}ドル。1時間足${dir1H==='up'?'上昇':dir1H==='dn'?'下降':'中立'}目線。${trTxt}${wallTxt}エントリーはまだです。`,
-    `現在${p}ドル。${sessInfo}${trTxt}${fvgTxt}ADX${adx}、RSI${rsi}。条件不足のため待機中。`,
+    `現在${p}ドル。${dirTxt}、${trTxt}${sessInfo}${rsiTxt}${sma320Txt}${fvgTxt}エントリー条件はまだ揃っていません。待機してください。`,
+    `ゴールド${p}ドル。${chg>=0?'前日比プラス':'前日比マイナス'}${Math.abs(chg)}パーセント。${trTxt}ADX${adx}、${adx>=25?'トレンドが出ています。':'方向感は弱めです。'}${sma320Txt}${sessInfo}`,
+    `${p}ドル。${sessInfo}${dirTxt}の局面。${sma320Txt}${wallTxt}${fvgTxt}条件が揃うまで見送りです。`,
+    `現在${p}ドル。ATRは${atr}ドル。${tr?.phaseType==='squeeze'?'スクイーズ中、ブレイク待ちです。':tr?.phaseType==='range'?'レンジ相場。上限'+tr.rangeTop+'、下限'+tr.rangeBot+'ドルです。':''}${sma320Txt}${sessInfo}`,
+    `ゴールド${p}ドル。${dirTxt}。${rsiTxt}${sma320Txt}${fvgTxt}今は見送りが正解です。チャンスを待ちましょう。`,
+    `${p}ドル。1時間足${dir1H==='up'?'上昇':dir1H==='dn'?'下降':'中立'}目線。${trTxt}${sma320Txt}${wallTxt}エントリーはまだです。`,
+    `現在${p}ドル。${sessInfo}${trTxt}${sma320Txt}${fvgTxt}ADX${adx}、RSI${rsi}。条件不足のため待機中。`,
   ];
   return waitPhrases[narVariant % waitPhrases.length];
 }
@@ -2059,72 +2157,83 @@ function renderFiboPanel(r){
   el.innerHTML=lines.map(l=>`<div style="margin-bottom:5px">${l}</div>`).join('');
 }
 
-// ==================== EMA壁検知 (NEW) ====================
+// ==================== EMA壁検知 + 15分足320SMA ====================
 // 突破確率: ADX・買い圧・乖離・RSIから算出
-function calcEMAWalls(price, e20, e75, e200, ATR, ADX, rsiVal, bp, signal){
+// 320SMA: 15分足の長期MAとして機能する強い反発ライン
+function calcEMAWalls(price, e20, e75, e200, ATR, ADX, rsiVal, bp, signal, hist){
   const adx = ADX?.adx||20;
   const pdi = ADX?.pdi||20;
   const ndi = ADX?.ndi||20;
   const mainDir = signal?.mainDir||'neut';
   const walls = [];
 
-  // ATRベースの「近い」判定: ATR×1.5以内を警戒ゾーン
   const WARN_DIST = ATR * 1.5;
-  const CRIT_DIST = ATR * 0.5; // ATR×0.5以内は超接近
+  const CRIT_DIST = ATR * 0.5;
 
-  const emas = [{label:'EMA20', val:e20, weight:1},{label:'EMA75', val:e75, weight:2},{label:'EMA200', val:e200, weight:3}];
+  // 15分足320SMAを計算（5分足histから擬似的に算出: 5分足×96本≒15分足×32本≒320SMA的な長さ）
+  // ※5分足データで320本分のSMAを計算 → 15分足の320SMAに近似
+  let sma320 = null;
+  if(hist && hist.length >= 100){
+    // 利用可能な分だけで計算（最大320本）
+    const smaLen = Math.min(320, hist.length);
+    const smaSlice = hist.slice(-smaLen);
+    sma320 = parseFloat((smaSlice.reduce((a,b)=>a+b.c,0)/smaSlice.length).toFixed(1));
+  }
 
-  emas.forEach(({label, val, weight}) => {
+  // EMA20/75/200 + 320SMA
+  const levels = [
+    {label:'EMA20',   val:e20,    weight:1, isSMA:false},
+    {label:'EMA75',   val:e75,    weight:2, isSMA:false},
+    {label:'EMA200',  val:e200,   weight:3, isSMA:false},
+    {label:'320SMA',  val:sma320, weight:4, isSMA:true},  // 最重要: weight4
+  ];
+
+  levels.forEach(({label, val, weight, isSMA}) => {
     if(!val || isNaN(val)) return;
-    const dist = val - price; // 正=上にある, 負=下にある
+    const dist    = val - price;
     const absDist = Math.abs(dist);
-    const distPips = Math.round(absDist / 0.01);
+    const distPips= Math.round(absDist / 0.01);
 
-    if(absDist > WARN_DIST * 2) return; // 遠すぎ → スキップ
+    if(absDist > WARN_DIST * (isSMA ? 4 : 2)) return; // 320SMAは少し広めに
 
-    const isAbove = dist > 0; // EMAが価格の上にある
-    const isBelow = dist < 0; // EMAが価格の下にある
-    const isCrit = absDist < CRIT_DIST;
-    const isWarn = absDist < WARN_DIST;
+    const isAbove = dist > 0;
+    const isCrit  = absDist < CRIT_DIST;
+    const isWarn  = absDist < WARN_DIST;
 
-    // 役割判定
-    let role = '';
-    if(mainDir === 'up' && isAbove) role = 'resist'; // 上昇方向の抵抗壁
-    else if(mainDir === 'dn' && isBelow) role = 'support'; // 下降方向の支持壁
-    else if(isAbove) role = 'resist';
-    else role = 'support';
+    let role = (mainDir==='up' && isAbove) ? 'resist'
+             : (mainDir==='dn' && !isAbove) ? 'support'
+             : isAbove ? 'resist' : 'support';
 
-    // 突破確率計算
-    // 要素: ADX(勢い), 買い圧(方向一致), RSI(過熱), 距離(近さ), EMAの重み
     let breakProb = 50;
-
-    if(role === 'resist') {
-      // 上抜け確率
-      breakProb = 50;
-      breakProb += (adx >= 35 ? 15 : adx >= 25 ? 8 : adx >= 18 ? 2 : -5); // 強トレンドは突破しやすい
-      breakProb += (bp >= 65 ? 15 : bp >= 55 ? 8 : bp >= 45 ? 0 : -10); // 買い圧
-      breakProb += (rsiVal >= 65 ? -12 : rsiVal >= 55 ? 3 : 5); // RSI過熱は突破困難
-      breakProb += (pdi > ndi ? 8 : -8); // PDI優位
-      breakProb -= weight * 5; // EMA200は突破困難
-      breakProb += (isCrit ? 5 : isWarn ? 0 : -5); // 近いほど今すぐ試される
-      breakProb += (signal?.perfect && mainDir==='up' ? 12 : signal?.strong && mainDir==='up' ? 6 : 0);
+    if(role === 'resist'){
+      breakProb += (adx>=35?15:adx>=25?8:adx>=18?2:-5);
+      breakProb += (bp>=65?15:bp>=55?8:bp>=45?0:-10);
+      breakProb += (rsiVal>=65?-12:rsiVal>=55?3:5);
+      breakProb += (pdi>ndi?8:-8);
+      breakProb -= weight * 5; // 320SMAは-20: 非常に突破困難
+      breakProb += (isCrit?5:isWarn?0:-5);
+      breakProb += (signal?.perfect&&mainDir==='up'?12:signal?.strong&&mainDir==='up'?6:0);
+      // 320SMAは追加ペナルティ（歴史的に強い反発ライン）
+      if(isSMA) breakProb -= 10;
     } else {
-      // 下抜け確率（support）
-      breakProb = 50;
-      breakProb += (adx >= 35 ? 15 : adx >= 25 ? 8 : adx >= 18 ? 2 : -5);
-      breakProb += (bp <= 35 ? 15 : bp <= 45 ? 8 : bp <= 55 ? 0 : -10); // 売り圧
-      breakProb += (rsiVal <= 35 ? -12 : rsiVal <= 45 ? 3 : 5); // RSI売られすぎは下抜け困難
-      breakProb += (ndi > pdi ? 8 : -8);
+      breakProb += (adx>=35?15:adx>=25?8:adx>=18?2:-5);
+      breakProb += (bp<=35?15:bp<=45?8:bp<=55?0:-10);
+      breakProb += (rsiVal<=35?-12:rsiVal<=45?3:5);
+      breakProb += (ndi>pdi?8:-8);
       breakProb -= weight * 5;
-      breakProb += (isCrit ? 5 : isWarn ? 0 : -5);
-      breakProb += (signal?.perfect && mainDir==='dn' ? 12 : signal?.strong && mainDir==='dn' ? 6 : 0);
+      breakProb += (isCrit?5:isWarn?0:-5);
+      breakProb += (signal?.perfect&&mainDir==='dn'?12:signal?.strong&&mainDir==='dn'?6:0);
+      if(isSMA) breakProb -= 10;
     }
     breakProb = Math.max(5, Math.min(95, Math.round(breakProb)));
 
-    walls.push({label, val:parseFloat(val.toFixed(1)), dist:parseFloat(dist.toFixed(1)), absDist, distPips, role, isCrit, isWarn, breakProb, weight});
+    walls.push({
+      label, val:parseFloat(val.toFixed(1)),
+      dist:parseFloat(dist.toFixed(1)), absDist, distPips,
+      role, isCrit, isWarn, breakProb, weight, isSMA
+    });
   });
 
-  // 近い順にソート
   walls.sort((a,b) => a.absDist - b.absDist);
   return walls;
 }
@@ -2652,21 +2761,30 @@ function renderFVGPanel(r){
   el.innerHTML=`<div style="margin-bottom:6px;font-size:11px;font-weight:600;color:${fd.nearFVG?.approach?(fd.nearFVG.type==='bull'?'var(--up)':'var(--dn)'):'var(--tx2)'};">${fd.fvgLabel}</div>${rows}`;
 }
 
-// ==================== renderEMAWalls (NEW) ====================
+// ==================== renderEMAWalls ====================
 function renderEMAWalls(r){
   const walls = r.emaWalls;
   if(!walls||!walls.length) return;
   const el = $('at-body');
   if(!el||el.innerHTML===undefined) return;
 
-  // at-bodyの既存内容に壁情報を追記
-  const wallLines = walls.slice(0,4).map(w => {
+  const wallLines = walls.slice(0,5).map(w => {
     const roleLabel = w.role==='resist' ? '⚠️ 抵抗壁' : '🛡️ 支持壁';
-    const distStr = w.dist > 0 ? `+$${w.dist.toFixed(1)}上` : `-$${Math.abs(w.dist).toFixed(1)}下`;
-    const critMark = w.isCrit ? '🔴 超接近！' : w.isWarn ? '🟡 接近中' : '';
+    const distStr   = w.dist > 0 ? `+$${w.dist.toFixed(1)}上` : `-$${Math.abs(w.dist).toFixed(1)}下`;
+    const critMark  = w.isCrit ? '🔴 超接近！' : w.isWarn ? '🟡 接近中' : '';
     const probColor = w.breakProb>=70?'#5DD4A5':w.breakProb>=50?'#E8C96A':'#F0A080';
-    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:${w.role==='resist'?'rgba(224,85,48,.07)':'rgba(58,138,224,.07)'};border-radius:var(--rs);border:0.5px solid ${w.role==='resist'?'rgba(224,85,48,.3)':'rgba(58,138,224,.3)'};margin-bottom:3px;">
-      <span style="font-size:10px;font-weight:700;color:${w.role==='resist'?'var(--dn)':'var(--up)'};min-width:54px">${w.label}</span>
+    // 320SMAは特別スタイル
+    const is320 = w.isSMA;
+    const borderCol = is320
+      ? (w.role==='resist'?'rgba(138,126,232,.6)':'rgba(27,174,130,.6)')
+      : (w.role==='resist'?'rgba(224,85,48,.3)':'rgba(58,138,224,.3)');
+    const bgCol = is320
+      ? (w.role==='resist'?'rgba(138,126,232,.1)':'rgba(27,174,130,.08)')
+      : (w.role==='resist'?'rgba(224,85,48,.07)':'rgba(58,138,224,.07)');
+    const labelColor = is320 ? 'var(--pu)' : (w.role==='resist'?'var(--dn)':'var(--up)');
+
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:${bgCol};border-radius:var(--rs);border:0.5px solid ${borderCol};margin-bottom:3px;${is320?'border-width:1px;':''}">
+      <span style="font-size:10px;font-weight:700;color:${labelColor};min-width:54px">${w.label}${is320?' ★':''}</span>
       <span style="font-size:10px;color:var(--tx3)">$${w.val}</span>
       <span style="font-size:10px;color:var(--tx2)">${distStr} (${w.distPips}pips)</span>
       <span style="font-size:9px">${critMark}</span>
@@ -2676,11 +2794,10 @@ function renderEMAWalls(r){
   }).join('');
 
   const wallSection = `<div style="margin-top:8px;border-top:0.5px solid var(--bo);padding-top:7px;">
-    <div style="font-size:9px;color:var(--g);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">⬡ EMA壁 検知</div>
+    <div style="font-size:9px;color:var(--g);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">⬡ EMA壁 + 15m 320SMA（★）</div>
     ${wallLines}
   </div>`;
 
-  // 既存HTMLに追記（重複しないよう壁セクションは置換）
   const existing = el.innerHTML.replace(/<div style="margin-top:8px;border-top[\s\S]*?<\/div>\s*<\/div>\s*<\/div>$/,'');
   el.innerHTML = existing + wallSection;
 }
