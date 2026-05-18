@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
-<title>GoldScope Vision v2.2 — AI Market Intelligence XAUUSD</title>
+<title>GoldScope Vision v2.3 — AI Market Intelligence XAUUSD</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -399,7 +399,7 @@ html,body{overflow-x:hidden;width:100%;}
   <div class="login-wrap">
     <div class="login-logo">
       <div class="logo-name">GoldScope <span>Vision</span></div>
-      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · v2.2</div>
+      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · v2.3</div>
     </div>
     <div class="login-card">
       <div style="font-size:13px;font-weight:600;margin-bottom:4px;">会員ログイン</div>
@@ -419,7 +419,7 @@ html,body{overflow-x:hidden;width:100%;}
     <div class="hdr-logo">
       <div class="logo-dot">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v2.1</span>
+      <span class="hdr-ver">v2.3</span>
     </div>
     <div class="hdr-right">
       <div class="live-pill">
@@ -509,6 +509,17 @@ html,body{overflow-x:hidden;width:100%;}
           <div style="background:var(--bg3);border-radius:var(--rs);padding:5px 10px;border:0.5px solid var(--bo);"><div style="font-size:8px;color:var(--tx3);text-transform:uppercase">ATR</div><div style="font-family:var(--mn);font-size:12px;font-weight:600;color:var(--g)" id="atrDisp">--</div></div>
           <div style="background:var(--bg3);border-radius:var(--rs);padding:5px 10px;border:0.5px solid var(--bo);"><div style="font-size:8px;color:var(--tx3);text-transform:uppercase">HFM推定</div><div style="font-family:var(--mn);font-size:12px;font-weight:600;color:var(--am)" id="hfmPrice">--</div></div>
         </div>
+      </div>
+
+      <!-- ノイズフィルタ（メイン） -->
+      <div class="filter-bar">
+        <span class="filter-label">ノイズフィルタ</span>
+        <div class="filter-btns">
+          <button class="fbtn sens act" onclick="setFilter('main','sens',this)">敏感</button>
+          <button class="fbtn norm" onclick="setFilter('main','norm',this)">標準</button>
+          <button class="fbtn slow" onclick="setFilter('main','slow',this)">スロー</button>
+        </div>
+        <span class="filter-desc" id="filterDescMain">1分足に即反応</span>
       </div>
 
       <!-- ★ AIナレーション（ここ1箇所のみ・価格直下） -->
@@ -658,15 +669,18 @@ html,body{overflow-x:hidden;width:100%;}
         </div>
         <span class="filter-desc" id="filterDescScalp">短期シグナルに即反応</span>
       </div>
-      <!-- スキャル用シグナル -->
+      <!-- スキャル用シグナル（メインと同じ5TF） -->
       <div class="signal-hero none" id="signalHero2">
         <div class="sig-top">
-          <div><div class="sig-label">⚡ スキャル 短期シグナル（1分・5分）</div><div class="sig-status neut" id="sigStatus2" style="margin-top:4px">--</div></div>
-          <div class="sig-score-wrap"><div class="sig-score-num neut" id="sigScore2">--</div><div class="sig-score-label">短期TF<br>一致</div></div>
+          <div><div class="sig-label">📊 スキャル シグナル（5分足ベース・全5TF）</div><div class="sig-status neut" id="sigStatus2" style="margin-top:4px">--</div></div>
+          <div class="sig-score-wrap"><div class="sig-score-num neut" id="sigScore2">--</div><div class="sig-score-label">TF<br>一致</div></div>
         </div>
-        <div class="tf-align-grid" style="grid-template-columns:repeat(2,1fr);max-width:200px;">
+        <div class="tf-align-grid">
           <div class="tf-card neut" id="tfc2-1m"><div class="tf-name">1分</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
           <div class="tf-card neut" id="tfc2-5m"><div class="tf-name">5分</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
+          <div class="tf-card neut" id="tfc2-15m"><div class="tf-name">15分</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
+          <div class="tf-card neut" id="tfc2-1h"><div class="tf-name">1時間</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
+          <div class="tf-card neut" id="tfc2-1d"><div class="tf-name">日足</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
         </div>
         <div class="power-bars" style="margin-top:10px;">
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--up)">↑ 上昇</span><span id="upPct2" style="color:var(--up);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill up" id="upBar2" style="width:0%"></div></div></div>
@@ -728,6 +742,18 @@ html,body{overflow-x:hidden;width:100%;}
 
       <!-- フィボナッチ・SMC -->
       <div class="panel"><div class="panel-lbl">フィボナッチ · SMC · トレンドライン</div><div id="fiboPanel" style="font-size:12px;color:var(--tx2);line-height:1.8">--</div></div>
+
+      <!-- 🌐 TradingViewコミュニティ AI分析パネル -->
+      <div class="panel" style="border-color:rgba(138,126,232,.3);background:linear-gradient(135deg,rgba(138,126,232,.05),transparent);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <div class="panel-lbl" style="margin-bottom:0;color:var(--pu)">🌐 コミュニティ相場観 AI分析</div>
+          <button class="vb-btn" onclick="fetchTVIdeas()" id="tvIdeasBtn" style="font-size:10px;padding:3px 10px">🔄 最新取得</button>
+        </div>
+        <!-- AI図解エリア -->
+        <div id="tvIdeasPanel" style="font-size:12px;color:var(--tx2)">
+          <div style="color:var(--tx3);padding:10px 0">「最新取得」を押すとTradingViewの最新シナリオをAIが分析・図解します。</div>
+        </div>
+      </div>
     </div>
 
     <!-- ========= TAB: 実績・PF ========= -->
@@ -760,7 +786,7 @@ html,body{overflow-x:hidden;width:100%;}
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div>GoldScope Vision v2.1 · 株式会社サウンドテラス</div>
+      <div>GoldScope Vision v2.3 · 株式会社サウンドテラス</div>
     </div>
     <div class="disclaimer" style="max-width:900px;margin:7px auto 0">⚠️ 投資助言・売買指示・利益保証ではありません。投資判断はご自身の責任で行ってください。</div>
   </footer>
@@ -831,7 +857,7 @@ html,body{overflow-x:hidden;width:100%;}
 </div>
 
 <script>
-// ==================== GoldScope Vision v2.1 ====================
+// ==================== GoldScope Vision v2.3 ====================
 // 設計刷新: TP/SL → 方向優位性シグナル（5TF一致判定）
 const $=id=>document.getElementById(id)||{textContent:'',style:{},className:'',innerHTML:'',value:'',addEventListener:()=>{}};
 const ACCOUNTS={'soundterrace':{pass:'0000',name:'soundterrace'},'basic_test':{pass:'1111',name:'Basic User'},'user001':{pass:'gold2026',name:'User001'}};
@@ -847,7 +873,7 @@ let hfmOffset=0.5;
 let perfData={records:[]};
 let countdownTimer=null,countdownSec=0;
 // ノイズフィルタ設定
-let filterMode={scalp:'sens',day:'norm'};
+let filterMode={main:'sens',scalp:'sens',day:'norm'};
 // シグナル安定化: 直近Nサイクル分のシグナルを保持して多数決
 const FILTER_BUF={sens:1,norm:3,slow:6};
 let signalBuffer=[];  // 全体用
@@ -1908,25 +1934,39 @@ function renderSignal(r,heroId,statusId,scoreId,badgeId,upBarId,dnBarId,upPctId,
 
 function renderSignalScalp(r){
   const sig2El=$('signalHero2');const tf=r.tfBias;
-  const s1=tf['1m'],s2=tf['5m'];
-  const upC=(s1.dir==='up'?1:0)+(s2.dir==='up'?1:0);
-  const dnC=(s1.dir==='dn'?1:0)+(s2.dir==='dn'?1:0);
+  // 5TF全て使用（メインと同じ）
+  const tfs=['1m','5m','15m','1h','1d'];
+  const upC=tfs.filter(k=>tf[k].dir==='up').length;
+  const dnC=tfs.filter(k=>tf[k].dir==='dn').length;
   const mainD=upC>dnC?'up':dnC>upC?'dn':'neut';
-  const cls=upC===2?'perfect-up':dnC===2?'perfect-dn':upC===1&&mainD==='up'?'weak':dnC===1&&mainD==='dn'?'weak':'none';
+  const cls=upC===5?'perfect-up':dnC===5?'perfect-dn':upC>=4?'strong-up':dnC>=4?'strong-dn':upC>=3?'weak':dnC>=3?'weak':'none';
   if(sig2El.className!==undefined)sig2El.className='signal-hero '+cls;
-  $('sigStatus2').textContent=upC===2?'🎯 短期完全一致！上昇':dnC===2?'🎯 短期完全一致！下降':mainD==='up'?'↑ 短期上昇優位':mainD==='dn'?'↓ 短期下降優位':'→ 方向感なし';
+  $('sigStatus2').textContent=upC===5?'🎯 全TF一致！上昇':dnC===5?'🎯 全TF一致！下降':upC>=4?'⬡ 上昇優位（'+upC+'/5）':dnC>=4?'⬡ 下降優位（'+dnC+'/5）':mainD==='up'?'↑ 上昇傾向':mainD==='dn'?'↓ 下降傾向':'→ 方向感なし';
   $('sigStatus2').className='sig-status '+(mainD==='up'?'up':mainD==='dn'?'dn':'neut');
-  $('sigScore2').textContent=(upC>dnC?upC:dnC)+'/2';$('sigScore2').className='sig-score-num '+(mainD==='up'?'up':mainD==='dn'?'dn':'neut');
-  // bars
-  const up2Pct=Math.round((s1.str*(s1.dir==='up'?1:0)+s2.str*(s2.dir==='up'?1:0))/(s1.str+s2.str||1)*100);
+  $('sigScore2').textContent=(upC>dnC?upC:dnC)+'/5';
+  $('sigScore2').className='sig-score-num '+(mainD==='up'?'up':mainD==='dn'?'dn':'neut');
+  // パワーバー
+  const totalStr=tfs.reduce((a,k)=>a+tf[k].str,0)||1;
+  const upStr=tfs.filter(k=>tf[k].dir==='up').reduce((a,k)=>a+tf[k].str,0);
+  const up2Pct=Math.round(upStr/totalStr*100);
   $('upBar2').style.width=up2Pct+'%';$('dnBar2').style.width=(100-up2Pct)+'%';
   $('upPct2').textContent=up2Pct+'%';$('dnPct2').textContent=(100-up2Pct)+'%';
-  // cards
-  ['tfc2-1m','tfc2-5m'].forEach((id,i)=>{const b=i===0?s1:s2;const card=$(id);if(!card||card.className===undefined)return;card.className='tf-card '+(b.dir==='up'?'up':b.dir==='dn'?'dn':'neut');card.innerHTML=`<div class="tf-name">${i===0?'1分':'5分'}</div><div class="tf-arrow">${b.dir==='up'?'↑':b.dir==='dn'?'↓':'→'}</div><div class="tf-strength">${b.str}%</div>`;});
-  $('sigComment2').textContent=upC===2?`1分・5分とも上昇向き。短期上昇バイアス強。`:dnC===2?`1分・5分とも下降向き。短期下降バイアス強。`:mainD==='up'?'短期は上昇優位だが、揃いは不完全。中期との整合性を確認。':mainD==='dn'?'短期は下降優位だが、揃いは不完全。':'短期は方向感なし。様子見推奨。';
+  // TFカード（5つ）
+  [['tfc2-1m','1m'],['tfc2-5m','5m'],['tfc2-15m','15m'],['tfc2-1h','1h'],['tfc2-1d','1d']].forEach(([id,key])=>{
+    const b=tf[key];const card=$(id);
+    if(!card||card.className===undefined)return;
+    card.className='tf-card '+(b.dir==='up'?'up':b.dir==='dn'?'dn':'neut');
+    card.innerHTML=`<div class="tf-name">${key}</div><div class="tf-arrow">${b.dir==='up'?'↑':b.dir==='dn'?'↓':'→'}</div><div class="tf-strength">${b.str}%</div>`;
+  });
   // SMC
   const smcEl=$('smcScalp');
-  if(smcEl&&smcEl.innerHTML!==undefined){const pills=[];if(r.SMC?.bos)pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid ${r.SMC.bos.type==='bull'?'rgba(58,138,224,.4)':'rgba(224,85,48,.4)'};color:${r.SMC.bos.type==='bull'?'var(--up)':'var(--dn)'};">${r.SMC.bos.label}</span>`);if(r.SMC?.choch)pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid var(--am);color:var(--am);">${r.SMC.choch.label}</span>`);if(!pills.length)pills.push('<span style="font-size:10px;color:var(--tx3)">SMCサインなし</span>');smcEl.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:5px">'+pills.join('')+'</div>';}
+  if(smcEl&&smcEl.innerHTML!==undefined){
+    const pills=[];
+    if(r.SMC?.bos)pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid ${r.SMC.bos.type==='bull'?'rgba(58,138,224,.4)':'rgba(224,85,48,.4)'};color:${r.SMC.bos.type==='bull'?'var(--up)':'var(--dn)'};">${r.SMC.bos.label}</span>`);
+    if(r.SMC?.choch)pills.push(`<span style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid var(--am);color:var(--am);">${r.SMC.choch.label}</span>`);
+    if(!pills.length)pills.push('<span style="font-size:10px;color:var(--tx3)">SMCサインなし</span>');
+    smcEl.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:5px">'+pills.join('')+'</div>';
+  }
 }
 
 function renderSignalDaytrade(r){
@@ -2089,7 +2129,7 @@ function calcEMAWalls(price, e20, e75, e200, ATR, ADX, rsiVal, bp, signal){
   return walls;
 }
 
-// ==================== トレンド/レンジ フェーズ判定 + レンジボラ取り (NEW v2.2) ====================
+// ==================== トレンド/レンジ フェーズ判定 + レンジボラ取り (NEW v2.3) ====================
 function calcTrendRange(hist, price, ATR, BB, ADX, rsiVal){
   const adx = ADX?.adx||20;
   const pdi = ADX?.pdi||20;
@@ -2243,7 +2283,186 @@ function setFilter(tab, mode, btn){
   if(descEl.textContent !== undefined) descEl.textContent = descMap[tab][mode];
 }
 
-// シグナルをバッファに追加して安定化（多数決）
+function setFilter(tab, mode, btn){
+  filterMode[tab] = mode;
+  const container = btn.parentElement;
+  container.querySelectorAll('.fbtn').forEach(b => {
+    b.className = 'fbtn ' + (b === btn ? mode+' act' : b.textContent==='敏感'?'sens':b.textContent==='標準'?'norm':'slow');
+  });
+  const descMap = {
+    main:  {sens:'1分足に即反応', norm:'3回確認後に更新', slow:'6回確認後に更新（荒れ相場向け）'},
+    scalp: {sens:'短期シグナルに即反応', norm:'3回確認後に更新', slow:'6回確認後に更新（荒れ相場向け）'},
+    day:   {sens:'中期シグナルに即反応', norm:'中期の流れに追従', slow:'大きな流れのみ追う'},
+  };
+  const idMap = {main:'filterDescMain', scalp:'filterDescScalp', day:'filterDescDay'};
+  const descEl = document.getElementById(idMap[tab]||'');
+  if(descEl) descEl.textContent = descMap[tab]?.[mode]||'';
+}
+
+// ==================== TradingView コミュニティ AI分析 ====================
+// TVのXAUUSDアイデアページを取得 → Claude APIで上昇/下降/レンジパターンを分析 → 図解+音声
+let tvIdeasCache = null;
+let tvIdeasCacheTime = 0;
+
+async function fetchTVIdeas(){
+  const btn = document.getElementById('tvIdeasBtn');
+  const panel = document.getElementById('tvIdeasPanel');
+  if(!panel) return;
+
+  // ローディング
+  if(btn) btn.textContent = '⏳ 取得中...';
+  panel.innerHTML = '<div style="color:var(--tx3);padding:10px 0">TradingViewのシナリオを取得・分析中...</div>';
+
+  // 5分以内のキャッシュがあれば再利用
+  if(tvIdeasCache && Date.now()-tvIdeasCacheTime < 300000){
+    renderTVIdeas(tvIdeasCache);
+    if(btn) btn.textContent = '🔄 最新取得';
+    return;
+  }
+
+  try{
+    // Vercel API経由でTVページをフェッチ（CORSバイパス）
+    const res = await fetchTimeout('/api/tvfeed', 8000);
+    let ideasText = '';
+
+    if(res && res.ok){
+      const d = await res.json();
+      ideasText = d.text || '';
+    }
+
+    // /api/tvfeedがなければフロントから直接（CORSエラーになる場合が多い）
+    if(!ideasText){
+      // フォールバック: 現在の価格分析からシナリオを自動生成
+      ideasText = buildSyntheticIdeas();
+    }
+
+    // Claude APIでパターン分析
+    const analysis = await analyzeIdeasWithClaude(ideasText);
+    tvIdeasCache = analysis;
+    tvIdeasCacheTime = Date.now();
+    renderTVIdeas(analysis);
+
+  }catch(e){
+    console.warn('[TVIdeas]', e.message);
+    // フォールバック: 自前の分析で代替
+    const fallback = buildSyntheticIdeas();
+    const analysis = await analyzeIdeasWithClaude(fallback).catch(()=>null);
+    if(analysis){ tvIdeasCache=analysis; tvIdeasCacheTime=Date.now(); renderTVIdeas(analysis); }
+    else panel.innerHTML = '<div style="color:var(--dn);padding:8px 0">取得失敗。現在の相場分析から代替シナリオを生成します。再度お試しください。</div>';
+  }
+  if(btn) btn.textContent = '🔄 最新取得';
+}
+
+// 現在の相場分析からTVアイデア風のテキストを生成（フォールバック）
+function buildSyntheticIdeas(){
+  if(!lastResult) return 'データなし';
+  const r = lastResult;
+  const p = r.price?.toFixed(1);
+  const dir = r.conf1H?.dir||r.signal?.mainDir||'neut';
+  const adx = r.ADX?.adx||20;
+  const tr = r.trState;
+  const fvg = r.fvgData;
+  const bb = r.BB;
+
+  return `XAUUSD現在価格$${p}。
+${dir==='up'?'上昇目線。EMA上位でBullish Bias。':'dir==="dn"?'下降目線。EMA下位でBearish Bias。':'中立レンジ相場。'}
+ADX${adx}、${tr?.phase||''}。
+${fvg?.fvgLabel||'FVGなし'}。
+BB上限$${bb?.u?.toFixed(1)||'--'} 下限$${bb?.l?.toFixed(1)||'--'}。
+RSI${r.rsiS}。
+コミュニティ全般の見方: ${dir==='up'?'多くのトレーダーが上昇方向でエントリーを狙っている局面。主なターゲットは直近高値とフィボ161.8%。':'dir==="dn"?'多くのトレーダーが下降方向を想定。主なターゲットは直近安値とBB下限。':'方向感が定まらずレンジ内での動きが続く見方が多い。上下どちらへのブレイクアウトも想定。'}`;
+}
+
+// Claude APIでアイデアを分析
+async function analyzeIdeasWithClaude(text){
+  const prompt = `以下はゴールド(XAUUSD)の相場情報・コミュニティ分析です。
+これを分析して以下のJSON形式で回答してください。日本語で。
+
+${text}
+
+回答形式（JSONのみ、マークダウン不要）:
+{
+  "consensus": "bull" または "bear" または "range",
+  "bullPct": 数値(0-100),
+  "bearPct": 数値(0-100),
+  "rangePct": 数値(0-100),
+  "mainScenario": "メインシナリオを2文で",
+  "subScenario": "サブシナリオを1文で",
+  "keyLevel": "注目すべき価格帯（例: $4750付近）",
+  "risk": "主なリスク要因を1文で",
+  "voiceComment": "30文字以内の音声コメント（例: 上昇目線多数。4750が鍵）"
+}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:500,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  const d = await res.json();
+  const txt = d.content?.find(c=>c.type==='text')?.text||'{}';
+  const clean = txt.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+// TradingViewアイデア分析結果を図解表示
+function renderTVIdeas(a){
+  const panel = document.getElementById('tvIdeasPanel');
+  if(!panel||!a) return;
+
+  const cColor = a.consensus==='bull'?'var(--up)':a.consensus==='bear'?'var(--dn)':'var(--am)';
+  const cLabel = a.consensus==='bull'?'↑ 上昇優位':'↓ 下降優位'||a.consensus==='range'?'↔ レンジ':'--';
+  const cIcon  = a.consensus==='bull'?'🟢':a.consensus==='bear'?'🔴':'🟡';
+
+  panel.innerHTML = `
+    <!-- コンセンサスサマリー -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <span style="font-size:20px">${cIcon}</span>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:${cColor}">${a.consensus==='bull'?'上昇優位':a.consensus==='bear'?'下降優位':'レンジ・様子見'}</div>
+        <div style="font-size:10px;color:var(--tx3)">コミュニティ相場観</div>
+      </div>
+      <div style="margin-left:auto;font-size:10px;color:var(--tx3)">注目: <span style="color:var(--gl);font-family:var(--mn)">${a.keyLevel||'--'}</span></div>
+    </div>
+
+    <!-- 3択バー図解 -->
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-bottom:3px;">
+        <span style="color:var(--up)">↑ 上昇 ${a.bullPct||33}%</span>
+        <span style="color:var(--am)">↔ レンジ ${a.rangePct||34}%</span>
+        <span style="color:var(--dn)">↓ 下降 ${a.bearPct||33}%</span>
+      </div>
+      <div style="height:12px;border-radius:6px;overflow:hidden;display:flex;">
+        <div style="width:${a.bullPct||33}%;background:rgba(58,138,224,.7);transition:width .8s;"></div>
+        <div style="width:${a.rangePct||34}%;background:rgba(192,122,16,.6);transition:width .8s;"></div>
+        <div style="width:${a.bearPct||33}%;background:rgba(224,85,48,.7);transition:width .8s;"></div>
+      </div>
+    </div>
+
+    <!-- メイン・サブシナリオ -->
+    <div style="padding:8px 10px;background:rgba(0,0,0,.2);border-radius:var(--rs);border-left:3px solid ${cColor};margin-bottom:8px;">
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:3px">メインシナリオ</div>
+      <div style="font-size:12px;color:var(--tx);line-height:1.6">${a.mainScenario||'--'}</div>
+    </div>
+    <div style="padding:6px 10px;background:rgba(0,0,0,.15);border-radius:var(--rs);margin-bottom:8px;">
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">サブシナリオ</div>
+      <div style="font-size:11px;color:var(--tx2)">${a.subScenario||'--'}</div>
+    </div>
+    <div style="font-size:10px;color:var(--am);padding:5px 8px;background:rgba(192,122,16,.08);border-radius:var(--rs);">
+      ⚠️ リスク: ${a.risk||'--'}
+    </div>
+    <div style="font-size:9px;color:var(--tx3);margin-top:6px;text-align:right">
+      AI分析 · ${new Date().toLocaleTimeString('ja-JP')}
+    </div>`;
+
+  // 音声コメント
+  if(a.voiceComment && voiceOn && !isMuted){
+    setTimeout(()=>speak(`コミュニティ分析。${a.voiceComment}`), 500);
+  }
+}
 function applyNoiseFilter(newVal, buffer, mode){
   const size = FILTER_BUF[mode]||1;
   buffer.push(newVal);
@@ -2255,7 +2474,7 @@ function applyNoiseFilter(newVal, buffer, mode){
   return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
 }
 
-// ==================== renderTRPanel (v2.2 完全刷新) ====================
+// ==================== renderTRPanel (v2.3 完全刷新) ====================
 function renderTRPanel(r){
   const tr = r.trState;
   if(!tr) return;
