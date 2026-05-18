@@ -675,7 +675,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 <script>
 // ==================== GoldScope Vision v2.1 ====================
 // 設計刷新: TP/SL → 方向優位性シグナル（5TF一致判定）
-const $=id=>document.getElementById(id)||{textContent:'',style:{},className:'',innerHTML:''};
+const $=id=>document.getElementById(id)||{textContent:'',style:{},className:'',innerHTML:'',value:'',addEventListener:()=>{}};
 const ACCOUNTS={'soundterrace':{pass:'0000',name:'soundterrace'},'basic_test':{pass:'1111',name:'Basic User'},'user001':{pass:'gold2026',name:'User001'}};
 const AV_KEY='KQ0JM9V617AQX62W';
 
@@ -725,15 +725,27 @@ let midScenario = {
 
 // ==================== AUTH ====================
 function doLogin(){
-  const uid=($('inp-id').value||'').trim().toLowerCase(),pw=($('inp-pw').value||'');
-  const acc=ACCOUNTS[uid];
-  if(acc&&acc.pass===pw){currentUser={id:uid,name:acc.name};$('login-err').style.display='none';showPage('app');setTimeout(autoStart,60);}
-  else{$('login-err').style.display='block';}
+  const uidEl = document.getElementById('inp-id');
+  const pwEl  = document.getElementById('inp-pw');
+  const errEl = document.getElementById('login-err');
+  if(!uidEl||!pwEl) return;
+  const uid = (uidEl.value||'').trim().toLowerCase();
+  const pw  = (pwEl.value||'');
+  const acc = ACCOUNTS[uid];
+  if(acc&&acc.pass===pw){
+    currentUser={id:uid,name:acc.name};
+    if(errEl) errEl.style.display='none';
+    showPage('app');
+    setTimeout(autoStart,60);
+  } else {
+    if(errEl) errEl.style.display='block';
+  }
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  const pw=$('inp-pw'),id=$('inp-id');
-  if(pw.addEventListener)pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  if(id.addEventListener)id.addEventListener('keydown',e=>{if(e.key==='Enter')pw.focus?.();});
+  const pw=document.getElementById('inp-pw');
+  const id=document.getElementById('inp-id');
+  if(pw) pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  if(id) id.addEventListener('keydown',e=>{if(e.key==='Enter')pw?.focus();});
   startClock();loadPerf();
   hfmOffset=parseFloat(localStorage.getItem('hfm_offset')||'0.5');
   window.speechSynthesis?.getVoices();
