@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>GoldScope Vision v2.1 — AI Market Intelligence XAUUSD</title>
+<title>GoldScope Vision v2.2 — AI Market Intelligence XAUUSD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -230,6 +230,86 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 .footer-link{cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
 .footer-link:hover{color:var(--tx2);}
 .disclaimer{font-size:10px;color:var(--tx3);line-height:1.7;padding:8px 12px;background:var(--bg2);border-radius:var(--rs);border:0.5px solid var(--bo);margin-top:7px;}
+/* ===== トレンド/レンジ判定パネル ===== */
+.tr-panel{border-radius:12px;padding:14px 16px;margin-bottom:10px;position:relative;overflow:hidden;}
+.tr-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0;}
+.tr-panel.trend-up-strong{background:linear-gradient(135deg,rgba(58,138,224,.13),rgba(27,174,130,.06));border:1.5px solid rgba(58,138,224,.5);}
+.tr-panel.trend-up-strong::before{background:linear-gradient(90deg,var(--up),var(--gr));}
+.tr-panel.trend-up-weak{background:rgba(58,138,224,.07);border:0.5px solid rgba(58,138,224,.3);}
+.tr-panel.trend-up-weak::before{background:var(--up);}
+.tr-panel.trend-dn-strong{background:linear-gradient(135deg,rgba(224,85,48,.13),rgba(224,85,48,.05));border:1.5px solid rgba(224,85,48,.5);}
+.tr-panel.trend-dn-strong::before{background:linear-gradient(90deg,var(--dn),#C04020);}
+.tr-panel.trend-dn-weak{background:rgba(224,85,48,.07);border:0.5px solid rgba(224,85,48,.3);}
+.tr-panel.trend-dn-weak::before{background:var(--dn);}
+.tr-panel.range-top{background:rgba(138,126,232,.08);border:0.5px solid rgba(138,126,232,.35);}
+.tr-panel.range-top::before{background:var(--pu);}
+.tr-panel.range-bottom{background:rgba(27,174,130,.07);border:0.5px solid rgba(27,174,130,.3);}
+.tr-panel.range-bottom::before{background:var(--gr);}
+.tr-panel.range-mid{background:var(--bg2);border:0.5px solid var(--bo2);}
+.tr-panel.range-mid::before{background:var(--tx3);}
+.tr-panel.squeeze{background:rgba(184,148,42,.08);border:1px solid rgba(184,148,42,.4);}
+.tr-panel.squeeze::before{background:linear-gradient(90deg,var(--g),var(--gl));}
+.tr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.tr-icon{font-size:28px;line-height:1;}
+.tr-main{flex:1;}
+.tr-state{font-family:var(--sf);font-size:16px;font-weight:800;line-height:1.2;margin-bottom:3px;}
+.tr-sub{font-size:11px;color:var(--tx2);line-height:1.6;}
+.tr-meters{display:flex;gap:8px;flex-wrap:wrap;}
+.tr-meter{background:var(--bg3);border-radius:var(--rs);padding:6px 10px;border:0.5px solid var(--bo);text-align:center;flex:1;min-width:60px;}
+.tr-meter-lbl{font-size:8px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.tr-meter-val{font-family:var(--mn);font-size:13px;font-weight:700;}
+/* レンジ位置バー */
+.range-pos-wrap{margin-top:8px;}
+.range-pos-label{display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-bottom:3px;}
+.range-pos-track{height:6px;background:var(--bg4);border-radius:3px;position:relative;overflow:visible;}
+.range-pos-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gr),var(--pu));}
+.range-pos-cursor{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--gl);border:2px solid var(--bg);transform:translateX(-50%);transition:left .6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 6px rgba(232,201,106,.5);}
+
+/* ===== ノイズフィルタ ===== */
+.filter-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:0.5px solid var(--bo);margin-bottom:10px;flex-wrap:wrap;}
+.filter-label{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+.filter-btns{display:flex;gap:3px;}
+.fbtn{font-size:11px;padding:4px 12px;border-radius:20px;border:0.5px solid var(--bo2);background:transparent;color:var(--tx3);cursor:pointer;font-family:var(--jp);transition:all .2s;white-space:nowrap;}
+.fbtn:hover{background:var(--bg4);color:var(--tx2);}
+.fbtn.act{font-weight:700;}
+.fbtn.act.sens{background:rgba(224,85,48,.2);border-color:rgba(224,85,48,.5);color:var(--dn);}
+.fbtn.act.norm{background:rgba(184,148,42,.2);border-color:rgba(184,148,42,.5);color:var(--gl);}
+.fbtn.act.slow{background:rgba(58,138,224,.2);border-color:rgba(58,138,224,.5);color:var(--up);}
+.filter-desc{font-size:10px;color:var(--tx3);margin-left:auto;}
+
+/* ===== レンジボラ取りパネル ===== */
+.vola-panel{border-radius:var(--rs);overflow:hidden;border:0.5px solid;}
+.vola-panel.can-trade{border-color:rgba(184,148,42,.5);background:rgba(184,148,42,.06);}
+.vola-panel.no-trade{border-color:rgba(255,255,255,.1);background:rgba(0,0,0,.2);}
+.vola-header{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:0.5px solid rgba(255,255,255,.06);}
+.vola-verdict{font-family:var(--sf);font-size:13px;font-weight:800;}
+.vola-verdict.can{color:var(--gl);}
+.vola-verdict.no{color:var(--tx3);}
+.vola-risk-badge{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;font-family:var(--mn);}
+.vola-risk-low{background:rgba(27,174,130,.2);color:#5DD4A5;border:0.5px solid rgba(27,174,130,.4);}
+.vola-risk-mid{background:rgba(192,122,16,.2);color:#E8C96A;border:0.5px solid rgba(192,122,16,.4);}
+.vola-risk-high{background:rgba(224,85,48,.2);color:#F0A080;border:0.5px solid rgba(224,85,48,.4);}
+.vola-body{padding:10px 12px;}
+.vola-range-row{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:10px;}
+.vola-side{border-radius:var(--rs);padding:8px 10px;text-align:center;}
+.vola-side.sell-side{background:rgba(224,85,48,.08);border:0.5px solid rgba(224,85,48,.3);}
+.vola-side.buy-side{background:rgba(58,138,224,.08);border:0.5px solid rgba(58,138,224,.3);}
+.vola-side-label{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
+.sell-side .vola-side-label{color:var(--dn);}
+.buy-side .vola-side-label{color:var(--up);}
+.vola-limit{font-family:var(--mn);font-size:11px;color:var(--tx3);margin-bottom:2px;}
+.vola-entry{font-family:var(--mn);font-size:16px;font-weight:700;}
+.sell-side .vola-entry{color:var(--dn);}
+.buy-side .vola-entry{color:var(--up);}
+.vola-pips{font-size:9px;color:var(--tx3);font-family:var(--mn);margin-top:2px;}
+.vola-mid-arrow{text-align:center;font-size:18px;color:var(--tx3);}
+.vola-range-bar{height:10px;border-radius:5px;background:var(--bg4);position:relative;overflow:hidden;margin-bottom:8px;}
+.vola-range-fill{position:absolute;height:100%;border-radius:5px;background:linear-gradient(90deg,rgba(58,138,224,.4),rgba(184,148,42,.3),rgba(224,85,48,.4));}
+.vola-range-cursor{position:absolute;top:-2px;width:14px;height:14px;border-radius:50%;background:var(--gl);border:2px solid var(--bg);transform:translateX(-50%);transition:left .5s;}
+.vola-note{font-size:11px;color:var(--tx2);line-height:1.65;padding:7px 10px;background:rgba(0,0,0,.15);border-radius:var(--rs);}
+.vola-score-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.vola-score-chip{font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mn);}
+
 @media(max-width:600px){
   .ph-price{font-size:32px;}
   .scenario-grid{grid-template-columns:1fr;}
@@ -247,7 +327,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
   <div class="login-wrap">
     <div class="login-logo">
       <div class="logo-name">GoldScope <span>Vision</span></div>
-      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · v2.1</div>
+      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · v2.2</div>
     </div>
     <div class="login-card">
       <div style="font-size:13px;font-weight:600;margin-bottom:4px;">会員ログイン</div>
@@ -350,7 +430,17 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         </div>
       </div>
 
-      <!-- 🎯 狙い目シグナル (NEW MAIN FEATURE) -->
+      <!-- ★ AIナレーション（ここ1箇所のみ・価格直下） -->
+      <div class="nar-box" id="mainNarBox">
+        <div class="nar-hdr">
+          <span class="nar-title">⬡ AI ナレーション</span>
+          <span id="narBadge" class="nar-badge" style="border-color:var(--tx3);color:var(--tx3)">--</span>
+          <span class="speak-wave" id="narWave"><div class="sw"></div><div class="sw"></div><div class="sw"></div></span>
+        </div>
+        <div class="nar-text" id="narText">分析開始後に表示されます。</div>
+      </div>
+
+      <!-- 🎯 方向優位性シグナル -->
       <div class="signal-hero none" id="signalHero">
         <div class="sig-top">
           <div>
@@ -365,8 +455,6 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
             <div class="sig-score-label">一致TF数<br>/5</div>
           </div>
         </div>
-
-        <!-- 5TF方向グリッド -->
         <div class="tf-align-grid" id="tfGrid">
           <div class="tf-card neut" id="tfc-1m"><div class="tf-name">1分</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
           <div class="tf-card neut" id="tfc-5m"><div class="tf-name">5分</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
@@ -374,8 +462,6 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
           <div class="tf-card neut" id="tfc-1h"><div class="tf-name">1時間</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
           <div class="tf-card neut" id="tfc-1d"><div class="tf-name">日足</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
         </div>
-
-        <!-- パワーバー -->
         <div class="power-bars">
           <div class="power-bar-wrap">
             <div class="power-bar-label"><span style="color:var(--up)">↑ 上昇優位</span><span id="upPct" style="color:var(--up);font-family:var(--mn)">--%</span></div>
@@ -386,11 +472,9 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
             <div class="power-bar-track"><div class="power-bar-fill dn" id="dnBar" style="width:0%"></div></div>
           </div>
         </div>
-
-        <div class="sig-comment" id="sigComment">分析開始後に表示されます。</div>
       </div>
 
-      <!-- 方向優位性 TF別詳細 (旧TP/SL置き換え) -->
+      <!-- 方向優位性 TF別詳細 -->
       <div class="bias-panel">
         <div class="bias-title">⬡ タイムフレーム別 方向優位性</div>
         <div class="bias-tf-list" id="biasList">
@@ -398,14 +482,28 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         </div>
       </div>
 
-      <!-- NARRATION -->
-      <div class="nar-box">
-        <div class="nar-hdr">
-          <span class="nar-title">⬡ AI ナレーション</span>
-          <span id="narBadge" class="nar-badge" style="border-color:var(--tx3);color:var(--tx3)">--</span>
-          <span class="speak-wave" id="narWave"><div class="sw"></div><div class="sw"></div><div class="sw"></div></span>
+      <!-- 📊 トレンド/レンジ判定パネル (NEW) -->
+      <div class="tr-panel range-mid" id="trPanel">
+        <div class="tr-top">
+          <div class="tr-icon" id="trIcon">📊</div>
+          <div class="tr-main">
+            <div class="tr-state" id="trState">分析待ち</div>
+            <div class="tr-sub" id="trSub">--</div>
+          </div>
         </div>
-        <div class="nar-text" id="narText">分析開始後に表示されます。</div>
+        <div class="tr-meters">
+          <div class="tr-meter"><div class="tr-meter-lbl">ADX</div><div class="tr-meter-val" id="trADX">--</div></div>
+          <div class="tr-meter"><div class="tr-meter-lbl">BB幅</div><div class="tr-meter-val" id="trBBW">--</div></div>
+          <div class="tr-meter"><div class="tr-meter-lbl">RSI</div><div class="tr-meter-val" id="trRSI">--</div></div>
+          <div class="tr-meter"><div class="tr-meter-lbl">ATR</div><div class="tr-meter-val" id="trATR">--</div></div>
+          <div class="tr-meter"><div class="tr-meter-lbl">状態</div><div class="tr-meter-val" id="trPhase" style="font-size:10px">--</div></div>
+        </div>
+        <div class="range-pos-wrap" id="rangePosWrap">
+          <div class="range-pos-label"><span style="color:var(--gr)">下限</span><span style="color:var(--tx3)" id="rangePosLabel">レンジ内位置</span><span style="color:var(--pu)">上限</span></div>
+          <div class="range-pos-track"><div class="range-pos-fill" id="rangeFill" style="width:100%"></div><div class="range-pos-cursor" id="rangeCursor" style="left:50%"></div></div>
+        </div>
+        <!-- レンジボラ取り指示 (NEW) -->
+        <div id="rangeVolaBox" style="display:none;margin-top:10px;"></div>
       </div>
 
       <!-- CHART -->
@@ -445,6 +543,16 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         <div class="ph-price" id="priceDisp2">----.-</div>
         <div class="ph-chg" id="chgDisp2">--</div>
       </div>
+      <!-- ノイズフィルタ -->
+      <div class="filter-bar">
+        <span class="filter-label">ノイズフィルタ</span>
+        <div class="filter-btns">
+          <button class="fbtn sens act" onclick="setFilter('scalp','sens',this)">敏感</button>
+          <button class="fbtn norm" onclick="setFilter('scalp','norm',this)">標準</button>
+          <button class="fbtn slow" onclick="setFilter('scalp','slow',this)">スロー</button>
+        </div>
+        <span class="filter-desc" id="filterDescScalp">短期シグナルに即反応</span>
+      </div>
       <!-- スキャル用シグナル -->
       <div class="signal-hero none" id="signalHero2">
         <div class="sig-top">
@@ -459,7 +567,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--up)">↑ 上昇</span><span id="upPct2" style="color:var(--up);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill up" id="upBar2" style="width:0%"></div></div></div>
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--dn)">↓ 下降</span><span id="dnPct2" style="color:var(--dn);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill dn" id="dnBar2" style="width:0%"></div></div></div>
         </div>
-        <div class="sig-comment" id="sigComment2">--</div>
+        <div class="sig-comment" id="sigComment2" style="display:none">--</div>
       </div>
       <div class="panel"><div class="panel-lbl">SMCサイン · 短期</div><div id="smcScalp" style="font-size:12px;color:var(--tx2)">--</div></div>
       <div class="panel"><div class="panel-lbl">注意指標</div><div id="eventScalp">--</div></div>
@@ -471,6 +579,16 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         <div class="ph-label">GOLD / XAUUSD</div>
         <div class="ph-price" id="priceDisp3">----.-</div>
         <div class="ph-chg" id="chgDisp3">--</div>
+      </div>
+      <!-- ノイズフィルタ -->
+      <div class="filter-bar">
+        <span class="filter-label">ノイズフィルタ</span>
+        <div class="filter-btns">
+          <button class="fbtn sens" onclick="setFilter('day','sens',this)">敏感</button>
+          <button class="fbtn norm act" onclick="setFilter('day','norm',this)">標準</button>
+          <button class="fbtn slow" onclick="setFilter('day','slow',this)">スロー</button>
+        </div>
+        <span class="filter-desc" id="filterDescDay">中期の流れに追従</span>
       </div>
       <!-- デイトレ用シグナル -->
       <div class="signal-hero none" id="signalHero3">
@@ -487,7 +605,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--up)">↑ 上昇優位</span><span id="upPct3" style="color:var(--up);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill up" id="upBar3" style="width:0%"></div></div></div>
           <div class="power-bar-wrap"><div class="power-bar-label"><span style="color:var(--dn)">↓ 下降優位</span><span id="dnPct3" style="color:var(--dn);font-family:var(--mn)">--%</span></div><div class="power-bar-track"><div class="power-bar-fill dn" id="dnBar3" style="width:0%"></div></div></div>
         </div>
-        <div class="sig-comment" id="sigComment3">--</div>
+        <div class="sig-comment" id="sigComment3" style="display:none">--</div>
       </div>
       <div class="panel"><div class="panel-lbl">フィボナッチ · SMC · トレンドライン</div><div id="fiboPanel" style="font-size:12px;color:var(--tx2);line-height:1.8">--</div></div>
     </div>
@@ -545,6 +663,19 @@ let rfPrevFiltered=null,rfPrevDir='neut';
 let hfmOffset=0.5;
 let perfData={records:[]};
 let countdownTimer=null,countdownSec=0;
+// ノイズフィルタ設定
+let filterMode={scalp:'sens',day:'norm'};
+// シグナル安定化: 直近Nサイクル分のシグナルを保持して多数決
+const FILTER_BUF={sens:1,norm:3,slow:6};
+let signalBuffer=[];  // 全体用
+let trBuffer=[];      // トレンド/レンジ用
+
+// ── $4以上狙えるかの厳格判定バッファ ──
+// 3サイクル連続で同じ判定が出た時だけ表示を更新
+const ENTRY_MIN_DOLLARS = 4.0; // 最低$4の値幅
+let entryBuf = [];              // 直近の entry判定を蓄積
+let stableEntry = null;         // 安定化後の表示用entry
+let lastNarText = '';           // 前回ナレーション（重複防止）
 
 // ==================== AUTH ====================
 function doLogin(){
@@ -638,16 +769,21 @@ async function fetchAndUpdate(){
   }
 }
 
-// 音声: シグナル変化時のみ
+// 音声: エントリー条件が変化した時のみ（$4以上条件ベース）
 function triggerVoiceIfNeeded(r){
-  if(!voiceOn||isSpeaking)return;
-  const now=Date.now();
-  const sig=r.signal?.state||'';
-  const isPerfect=r.signal?.perfect;
-  const minInterval=isPerfect?30000:120000; // 完全一致は30秒に1回
-  if(sig!==lastSpokenSignal&&(now-lastSpokenTime>minInterval)){
-    speak(buildNarration(r));
-    lastSpokenSignal=sig;lastSpokenTime=now;
+  if(!voiceOn||isSpeaking) return;
+  const now  = Date.now();
+  const eq   = r.entryQuality;
+  const stab = stabilizeEntry(eq||{canEntry:false,watchEntry:false});
+
+  // 'can'になった時だけ音声（waitやwatchは音声なし）
+  if(stab === 'can' && stab !== lastSpokenSignal){
+    const txt = buildNarration(r);
+    speak(txt);
+    lastSpokenSignal = stab;
+    lastSpokenTime   = now;
+  } else if(stab !== 'can'){
+    lastSpokenSignal = stab; // 状態は更新するが音声は出さない
   }
 }
 
@@ -834,7 +970,106 @@ function calcSignal(tfBias){
   return{state,stateClass,perfect,strong,moderate,mainDir,matchCount,upPct,dnPct,upStr,dnStr,upCount,dnCount};
 }
 
-// ==================== ANALYZE ====================
+// ==================== $4以上取れるか 厳格判定 ====================
+// 条件: ATR・TF一致数・ADX・BB幅・EMA距離を複合評価
+// 全条件クリアしない限りエントリー促さない
+function calcEntryQuality(r){
+  const price  = r.price;
+  const ATR    = r.ATR || 5;
+  const adx    = r.ADX?.adx || 20;
+  const sig    = r.signal;
+  const BB     = r.BB;
+  const e20    = r.e20;
+  const e75    = r.e75;
+  const tr     = r.trState;
+
+  // ── ① 期待値幅の計算 ──────────────────────
+  // ATRベースの期待幅（TF一致数 × ATR係数）
+  const matchCount = sig?.matchCount || 0;
+  const matchCoef  = matchCount >= 5 ? 1.0
+                   : matchCount >= 4 ? 0.75
+                   : matchCount >= 3 ? 0.5 : 0.25;
+  const expectedMove = ATR * matchCoef; // 期待移動距離$
+
+  // ── ② 各条件チェック ──────────────────────
+  const conditions = [];
+  let passCount = 0;
+
+  // A: 期待値が$4以上
+  const passA = expectedMove >= ENTRY_MIN_DOLLARS;
+  conditions.push({label:`期待幅$${expectedMove.toFixed(1)}`, pass:passA, critical:true});
+  if(passA) passCount += 3; // 最重要条件
+
+  // B: TF一致数 ≥ 4（3以下はノイズ扱い）
+  const passB = matchCount >= 4;
+  conditions.push({label:`TF一致${matchCount}/5`, pass:passB, critical:true});
+  if(passB) passCount += 2;
+
+  // C: ADX ≥ 22（トレンドが出ている）
+  const passC = adx >= 22;
+  conditions.push({label:`ADX${adx}`, pass:passC, critical:false});
+  if(passC) passCount += 1;
+
+  // D: BB幅が十分（レンジ狭すぎない）
+  const bw = BB ? (BB.u - BB.l) / BB.m : 0;
+  const passD = bw >= 0.006;
+  conditions.push({label:`BB幅${(bw*100).toFixed(2)}%`, pass:passD, critical:false});
+  if(passD) passCount += 1;
+
+  // E: 直近EMA20との乖離が$1以上（MA付近は避ける）
+  const distE20 = Math.abs(price - (e20||price));
+  const passE = distE20 >= 1.0;
+  conditions.push({label:`EMA乖離$${distE20.toFixed(1)}`, pass:passE, critical:false});
+  if(passE) passCount += 1;
+
+  // F: トレンド or ゆっくりトレンドのフェーズ（レンジ中央は弱い）
+  const goodPhase = ['trend','slow_trend','weak_trend'].includes(tr?.phaseType||'');
+  const passF = goodPhase || (sig?.canVola && tr?.phaseType==='range');
+  conditions.push({label:tr?.phaseType||'--', pass:passF, critical:false});
+  if(passF) passCount += 1;
+
+  // ── ③ 総合判定 ──────────────────────────
+  // 必須条件(A,B)が両方通り、合計スコア≥5でエントリー推奨
+  const criticalOK = passA && passB;
+  const canEntry = criticalOK && passCount >= 5;
+  const watchEntry = criticalOK && passCount >= 4; // 注視
+
+  // エントリー方向
+  const dir = sig?.mainDir || 'neut';
+
+  // 理由テキスト
+  let reason = '';
+  if(!passA) reason = `期待値幅$${expectedMove.toFixed(1)}で$${ENTRY_MIN_DOLLARS}未満。動きが小さすぎます。`;
+  else if(!passB) reason = `TF一致が${matchCount}/5。最低4TF一致が必要です。`;
+  else if(!passC) reason = `ADX${adx}でトレンドが弱く、方向感がありません。`;
+  else if(!passD) reason = `BB幅が狭くボラが不足しています。`;
+  else reason = `スコア${passCount}点。条件がもう少し揃うまで待機。`;
+
+  // エントリー指示文
+  let instruction = '';
+  if(canEntry && dir === 'up'){
+    instruction = `▲ 上昇エントリー推奨。現在$${price.toFixed(1)}から$${(expectedMove).toFixed(0)}以上の上昇を期待。`;
+  } else if(canEntry && dir === 'dn'){
+    instruction = `▼ 下降エントリー推奨。現在$${price.toFixed(1)}から$${(expectedMove).toFixed(0)}以上の下降を期待。`;
+  } else if(watchEntry && dir !== 'neut'){
+    instruction = `⚠️ 注視段階。条件はほぼ揃っています。あと1〜2項目の確認を。`;
+  } else {
+    instruction = `⏸ エントリー見送り。${reason}`;
+  }
+
+  return {canEntry, watchEntry, passCount, conditions, dir, expectedMove, reason, instruction, matchCount};
+}
+
+// エントリー判定を3サイクルで安定化（コロコロ変わり防止）
+function stabilizeEntry(newEntry){
+  entryBuf.push(newEntry.canEntry ? 'can' : newEntry.watchEntry ? 'watch' : 'wait');
+  if(entryBuf.length > 3) entryBuf.shift();
+  // 3回中2回以上同じなら採用
+  const counts = {};
+  entryBuf.forEach(v=>{ counts[v]=(counts[v]||0)+1; });
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  return top[0]; // 'can' | 'watch' | 'wait'
+}
 function analyze(price,open,hist,spotMeta){
   const closes=hist.map(x=>x.c);
   const sh=hist.slice(-80),sc=sh.map(x=>x.c);
@@ -853,6 +1088,15 @@ function analyze(price,open,hist,spotMeta){
   const tfBias=calcTFBias(hist,price,ATR,e20v,e75v,e200v,VW);
   const signal=calcSignal(tfBias);
 
+  // トレンド/レンジ判定 (NEW)
+  const trState=calcTrendRange(hist,price,ATR,BB,ADX,rsiS);
+
+  // EMA壁検知 (NEW)
+  const emaWalls=calcEMAWalls(price,e20v,e75v,e200v,ATR,ADX,rsiS,buyPressure(sh),signal);
+
+  // $4以上エントリー品質判定 (NEW)
+  const entryQuality=calcEntryQuality({price,ATR,ADX,signal,BB,e20:e20v,e75:e75v,trState:calcTrendRange(sh,price,ATR,BB,ADX,rsiS)});
+
   // 短期方向（後方互換）
   const bp=buyPressure(sh);
   const shortDir=bp>57&&price>e20v?'bull':bp<43&&price<e20v?'bear':'neut';
@@ -868,24 +1112,60 @@ function analyze(price,open,hist,spotMeta){
 
   return{price,open,spotMeta,shortDir,midDir,
     bp,rsiS,e20:e20v,e75:e75v,e200:e200v,VW,BB,ATR,ADX,OB,SMC,TECH,
-    tfBias,signal,changePct,sessName,bbStateLabel,hist:hist.slice(-120)};
+    tfBias,signal,trState,emaWalls,entryQuality,changePct,sessName,bbStateLabel,hist:hist.slice(-120)};
 }
 
-// ==================== NARRATION (新設計) ====================
+// ==================== NARRATION（統合・厳格版） ====================
+// $4以上取れる条件が揃った時だけエントリーを促す
+// それ以外は「待機」「様子見」のみ
 function buildNarration(r){
-  const p=r.price?.toFixed(1);
-  const sig=r.signal;
-  const tf=r.tfBias;
-  const adx=r.ADX?.adx||20;
-  const sess=r.sessName;
+  const p   = r.price?.toFixed(1);
+  const eq  = r.entryQuality;
+  const tr  = r.trState;
+  const sig = r.signal;
+  const adx = r.ADX?.adx || 20;
 
-  if(sig?.perfect&&sig.mainDir==='up')return `完全一致です！現在${p}ドル。1分から日足まで全TFが上昇方向に揃っています。${adx>=25?'ADX'+adx+'でトレンド強め。':''}${sess}での上昇局面。方向が崩れるまで慎重に。`;
-  if(sig?.perfect&&sig.mainDir==='dn')return `完全一致です！現在${p}ドル。1分から日足まで全TFが下降方向に揃っています。${adx>=25?'ADX'+adx+'でトレンド強め。':''}${sess}での下降局面。SLを決めて判断してください。`;
-  if(sig?.strong&&sig.mainDir==='up')return `現在${p}ドル。${sig.matchCount}つのタイムフレームが上昇方向に揃っています。上昇優位が高い局面です。${r.bbStateLabel?.includes('Squeeze')?'スクイーズ明けでボラ拡大中。':''}${sess}。`;
-  if(sig?.strong&&sig.mainDir==='dn')return `現在${p}ドル。${sig.matchCount}つのタイムフレームが下降方向に揃っています。下降優位が高い局面です。${sess}。慎重に判断してください。`;
-  if(sig?.moderate&&sig.mainDir==='up')return `現在${p}ドル。上昇優位が${sig.upPct}%。ただし全TFは揃っていません。${tf?.['1h']?.dir==='up'?'1時間足は上向き。':''}方向の確認を続けてください。`;
-  if(sig?.moderate&&sig.mainDir==='dn')return `現在${p}ドル。下降優位が${sig.dnPct}%。ただし全TFは揃っていません。${tf?.['1h']?.dir==='dn'?'1時間足は下向き。':''}慎重に様子を見てください。`;
-  return `現在${p}ドル。方向感がありません。上昇${sig?.upPct||50}%、下降${sig?.dnPct||50}%。${r.bbStateLabel?.includes('Squeeze')?'スクイーズ中で次の動きに備えてください。':'様子見が基本です。'}`;
+  // EMA壁（最近接）
+  const wall = r.emaWalls?.[0];
+  const wallTxt = wall?.isCrit
+    ? `${wall.label}$${wall.val}が${Math.abs(wall.distPips)}pips先に壁。突破${wall.breakProb}%。`
+    : '';
+
+  // フェーズ
+  const trTxt = tr?.phase ? `${tr.phase}。` : '';
+
+  // ── エントリー推奨（$4以上・条件揃い）──────────
+  if(eq?.canEntry){
+    const stab = stabilizeEntry(eq);
+    if(stab === 'can'){
+      const dir = eq.dir;
+      const exp = eq.expectedMove.toFixed(1);
+      if(dir === 'up')
+        return `▲ エントリーチャンス。現在$${p}、上昇方向で$${exp}以上の値幅を想定。${trTxt}${wallTxt}TF${eq.matchCount}本一致。ADX${adx}。`;
+      if(dir === 'dn')
+        return `▼ エントリーチャンス。現在$${p}、下降方向で$${exp}以上の値幅を想定。${trTxt}${wallTxt}TF${eq.matchCount}本一致。ADX${adx}。`;
+    }
+  }
+
+  // ── 注視段階（もう少し）──────────────────────
+  if(eq?.watchEntry){
+    const dir = eq.dir;
+    return `⚠️ 注視。現在$${p}。${trTxt}あと一歩で条件成立。${dir==='up'?'上昇':'下降'}方向だが、まだ待機を。${wallTxt}`;
+  }
+
+  // ── レンジボラ取りチャンス（別枠）──────────────
+  if(tr?.canVola){
+    return `↔ レンジ内ボラ取り可。上限$${tr.rangeTop}付近から売り（推奨$${tr.sellEntry}）、下限$${tr.rangeBot}付近から買い（推奨$${tr.buyEntry}）。幅${tr.rangeWidthPips}p。危険承知で。`;
+  }
+
+  // ── 待機（条件不足）────────────────────────
+  // 理由を簡潔に
+  const waitReason = eq?.reason || '条件不足。';
+  if(tr?.phaseType === 'squeeze')
+    return `⚡ スクイーズ中。現在$${p}。方向が出るまで待機。${waitReason}`;
+  if(adx < 18)
+    return `⏸ レンジ待機。現在$${p}。ADX${adx}で方向感なし。${waitReason}`;
+  return `⏸ 待機。現在$${p}。${trTxt}${waitReason}`;
 }
 
 // ==================== TV CHART ====================
@@ -944,18 +1224,30 @@ function renderAll(r,d){
   // バイアスリスト
   renderBiasList(r);
 
-  // ナレーション
-  const narTxt=buildNarration(r);
-  $('narText').textContent=narTxt;
-  const sig=r.signal;
-  $('narBadge').textContent=sig?.state||'--';
-  $('narBadge').style.color=sig?.mainDir==='up'?'var(--up)':sig?.mainDir==='dn'?'var(--dn)':'var(--tx3)';
-  $('narBadge').style.borderColor=sig?.mainDir==='up'?'rgba(58,138,224,.4)':sig?.mainDir==='dn'?'rgba(224,85,48,.4)':'var(--bo2)';
+  // ナレーション（1箇所のみ・変化時のみ更新）
+  const narTxt = buildNarration(r);
+  if(narTxt !== lastNarText){
+    $('narText').textContent = narTxt;
+    lastNarText = narTxt;
+  }
+  const eq  = r.entryQuality;
+  const stab = stabilizeEntry(eq||{canEntry:false,watchEntry:false});
+  const badgeColor = stab==='can'  ? 'var(--gr)'
+                   : stab==='watch'? 'var(--am)' : 'var(--tx3)';
+  const badgeTxt   = stab==='can'  ? '🎯 エントリー推奨'
+                   : stab==='watch'? '⚠️ 注視'   : '⏸ 待機中';
+  $('narBadge').textContent   = badgeTxt;
+  $('narBadge').style.color   = badgeColor;
+  $('narBadge').style.borderColor = badgeColor;
 
   // シナリオ
   renderScenario(r);
   // 詳細
   renderAtBody(r);
+  // EMA壁（at-bodyの後に追記）
+  renderEMAWalls(r);
+  // トレンド/レンジパネル
+  renderTRPanel(r);
   // フィボ
   renderFiboPanel(r);
 }
@@ -1103,6 +1395,391 @@ function renderFiboPanel(r){
   if(T.nearFibo)lines.push(`<strong>最近接フィボ:</strong> ${T.nearFibo[0]} = $${T.nearFibo[1]}`);
   if(T.high&&T.low)lines.push(`<strong>直近スイング:</strong> 高値$${T.high} / 安値$${T.low} / 幅$${T.swing}`);
   el.innerHTML=lines.map(l=>`<div style="margin-bottom:5px">${l}</div>`).join('');
+}
+
+// ==================== EMA壁検知 (NEW) ====================
+// 突破確率: ADX・買い圧・乖離・RSIから算出
+function calcEMAWalls(price, e20, e75, e200, ATR, ADX, rsiVal, bp, signal){
+  const adx = ADX?.adx||20;
+  const pdi = ADX?.pdi||20;
+  const ndi = ADX?.ndi||20;
+  const mainDir = signal?.mainDir||'neut';
+  const walls = [];
+
+  // ATRベースの「近い」判定: ATR×1.5以内を警戒ゾーン
+  const WARN_DIST = ATR * 1.5;
+  const CRIT_DIST = ATR * 0.5; // ATR×0.5以内は超接近
+
+  const emas = [{label:'EMA20', val:e20, weight:1},{label:'EMA75', val:e75, weight:2},{label:'EMA200', val:e200, weight:3}];
+
+  emas.forEach(({label, val, weight}) => {
+    if(!val || isNaN(val)) return;
+    const dist = val - price; // 正=上にある, 負=下にある
+    const absDist = Math.abs(dist);
+    const distPips = Math.round(absDist / 0.01);
+
+    if(absDist > WARN_DIST * 2) return; // 遠すぎ → スキップ
+
+    const isAbove = dist > 0; // EMAが価格の上にある
+    const isBelow = dist < 0; // EMAが価格の下にある
+    const isCrit = absDist < CRIT_DIST;
+    const isWarn = absDist < WARN_DIST;
+
+    // 役割判定
+    let role = '';
+    if(mainDir === 'up' && isAbove) role = 'resist'; // 上昇方向の抵抗壁
+    else if(mainDir === 'dn' && isBelow) role = 'support'; // 下降方向の支持壁
+    else if(isAbove) role = 'resist';
+    else role = 'support';
+
+    // 突破確率計算
+    // 要素: ADX(勢い), 買い圧(方向一致), RSI(過熱), 距離(近さ), EMAの重み
+    let breakProb = 50;
+
+    if(role === 'resist') {
+      // 上抜け確率
+      breakProb = 50;
+      breakProb += (adx >= 35 ? 15 : adx >= 25 ? 8 : adx >= 18 ? 2 : -5); // 強トレンドは突破しやすい
+      breakProb += (bp >= 65 ? 15 : bp >= 55 ? 8 : bp >= 45 ? 0 : -10); // 買い圧
+      breakProb += (rsiVal >= 65 ? -12 : rsiVal >= 55 ? 3 : 5); // RSI過熱は突破困難
+      breakProb += (pdi > ndi ? 8 : -8); // PDI優位
+      breakProb -= weight * 5; // EMA200は突破困難
+      breakProb += (isCrit ? 5 : isWarn ? 0 : -5); // 近いほど今すぐ試される
+      breakProb += (signal?.perfect && mainDir==='up' ? 12 : signal?.strong && mainDir==='up' ? 6 : 0);
+    } else {
+      // 下抜け確率（support）
+      breakProb = 50;
+      breakProb += (adx >= 35 ? 15 : adx >= 25 ? 8 : adx >= 18 ? 2 : -5);
+      breakProb += (bp <= 35 ? 15 : bp <= 45 ? 8 : bp <= 55 ? 0 : -10); // 売り圧
+      breakProb += (rsiVal <= 35 ? -12 : rsiVal <= 45 ? 3 : 5); // RSI売られすぎは下抜け困難
+      breakProb += (ndi > pdi ? 8 : -8);
+      breakProb -= weight * 5;
+      breakProb += (isCrit ? 5 : isWarn ? 0 : -5);
+      breakProb += (signal?.perfect && mainDir==='dn' ? 12 : signal?.strong && mainDir==='dn' ? 6 : 0);
+    }
+    breakProb = Math.max(5, Math.min(95, Math.round(breakProb)));
+
+    walls.push({label, val:parseFloat(val.toFixed(1)), dist:parseFloat(dist.toFixed(1)), absDist, distPips, role, isCrit, isWarn, breakProb, weight});
+  });
+
+  // 近い順にソート
+  walls.sort((a,b) => a.absDist - b.absDist);
+  return walls;
+}
+
+// ==================== トレンド/レンジ フェーズ判定 + レンジボラ取り (NEW v2.2) ====================
+function calcTrendRange(hist, price, ATR, BB, ADX, rsiVal){
+  const adx = ADX?.adx||20;
+  const pdi = ADX?.pdi||20;
+  const ndi = ADX?.ndi||20;
+  const bw = BB ? (BB.u - BB.l) / BB.m : 0;
+  const bbU = BB?.u||price+ATR*2;
+  const bbL = BB?.l||price-ATR*2;
+  const bbM = BB?.m||price;
+  const rangePct = Math.max(0, Math.min(1, (price - bbL) / (bbU - bbL || 1)));
+
+  // 直近20本のボラ（実際の値動き幅）
+  const recent = hist.slice(-20);
+  const avgRange = recent.reduce((a,b)=>a+(b.h-b.l),0)/Math.max(recent.length,1);
+  const rangeWidth = bbU - bbL; // BBのレンジ幅
+  const rangeWidthPips = Math.round(rangeWidth / 0.01);
+
+  // ── フェーズ判定 ──────────────────────────────
+  const isSqueeze = bw < 0.004;
+  const isStrongTrend = adx >= 32 && Math.abs(pdi - ndi) >= 10;
+  const isWeakTrend = adx >= 20 && adx < 32;
+  const isSlowTrend = adx >= 15 && adx < 22 && avgRange > ATR * 0.4;
+
+  let phase, phaseClass, icon, sub, phaseType;
+
+  if(isSqueeze){
+    phase='⚡ スクイーズ'; phaseClass='squeeze'; icon='⚡'; phaseType='squeeze';
+    sub=`BB幅が極限まで収縮(${(bw*100).toFixed(2)}%)。次の大きな方向への準備段階。方向確認後に動く局面。`;
+  } else if(isStrongTrend && pdi > ndi){
+    phase='🚀 トレンド（上昇強）'; phaseClass='trend-up-strong'; icon='🚀'; phaseType='trend';
+    sub=`ADX${adx}・PDI${pdi}/NDI${ndi}。明確な上昇トレンド継続中。押し目を拾う局面。`;
+  } else if(isStrongTrend && ndi > pdi){
+    phase='🔻 トレンド（下降強）'; phaseClass='trend-dn-strong'; icon='🔻'; phaseType='trend';
+    sub=`ADX${adx}・NDI${ndi}/PDI${pdi}。明確な下降トレンド継続中。戻り売りの局面。`;
+  } else if(isSlowTrend && pdi > ndi){
+    phase='↗ ゆっくり上昇トレンド'; phaseClass='trend-up-weak'; icon='↗'; phaseType='slow_trend';
+    sub=`ADX${adx}でトレンドは弱い。緩やかな上昇継続。急ぎすぎず流れに乗る局面。`;
+  } else if(isSlowTrend && ndi > pdi){
+    phase='↘ ゆっくり下降トレンド'; phaseClass='trend-dn-weak'; icon='↘'; phaseType='slow_trend';
+    sub=`ADX${adx}でトレンドは弱い。緩やかな下降継続。焦らず流れを確認する局面。`;
+  } else if(isWeakTrend && pdi > ndi){
+    phase='↑ 弱トレンド（上昇）'; phaseClass='trend-up-weak'; icon='↑'; phaseType='weak_trend';
+    sub=`ADX${adx}。上昇方向だがトレンドは強くない。方向転換の可能性も意識。`;
+  } else if(isWeakTrend && ndi > pdi){
+    phase='↓ 弱トレンド（下降）'; phaseClass='trend-dn-weak'; icon='↓'; phaseType='weak_trend';
+    sub=`ADX${adx}。下降方向だがトレンドは強くない。方向転換の可能性も意識。`;
+  } else if(rangePct >= 0.78){
+    phase='🟣 レンジ上限圏'; phaseClass='range-top'; icon='🟣'; phaseType='range';
+    sub=`BB上位${Math.round(rangePct*100)}%。売り圧力が強まるゾーン。反落に注意。`;
+  } else if(rangePct <= 0.22){
+    phase='🟢 レンジ下限圏'; phaseClass='range-bottom'; icon='🟢'; phaseType='range';
+    sub=`BB下位${Math.round((1-rangePct)*100)}%。買い圧力が強まるゾーン。反発に注意。`;
+  } else {
+    phase='↔ レンジ中央'; phaseClass='range-mid'; icon='↔'; phaseType='range';
+    sub=`ADX${adx}でレンジ相場の中央付近。上下どちらかへのブレイクを待つ局面。`;
+  }
+
+  // ── レンジボラ取り 複合スコアリング ──────────────
+  // レンジ・ゆっくりトレンド・弱トレンドの時だけ評価
+  let volaScore = 0;
+  const volaFactors = [];
+
+  // ① レンジ幅 vs ATR×2（幅が十分か）
+  const widthRatio = rangeWidth / (ATR * 2);
+  if(widthRatio >= 1.5){ volaScore += 3; volaFactors.push({txt:`幅${rangeWidthPips}p ✓`, ok:true}); }
+  else if(widthRatio >= 1.0){ volaScore += 1; volaFactors.push({txt:`幅${rangeWidthPips}p △`, ok:true}); }
+  else { volaScore -= 2; volaFactors.push({txt:`幅${rangeWidthPips}p 狭い`, ok:false}); }
+
+  // ② ADXが低い（レンジが安定している）
+  if(adx < 18){ volaScore += 3; volaFactors.push({txt:`ADX${adx} ✓低`, ok:true}); }
+  else if(adx < 25){ volaScore += 1; volaFactors.push({txt:`ADX${adx} △`, ok:true}); }
+  else { volaScore -= 2; volaFactors.push({txt:`ADX${adx} 高い`, ok:false}); }
+
+  // ③ BB幅（ボラ十分か）
+  if(bw >= 0.010){ volaScore += 2; volaFactors.push({txt:`BB幅 ✓`, ok:true}); }
+  else if(bw >= 0.006){ volaScore += 1; volaFactors.push({txt:`BB幅 △`, ok:true}); }
+  else { volaScore -= 1; volaFactors.push({txt:`BB幅 小`, ok:false}); }
+
+  // ④ 直近ボラ（avgRange vs ATR）
+  const volaRatio = avgRange / ATR;
+  if(volaRatio >= 0.7){ volaScore += 2; volaFactors.push({txt:`ボラ ✓`, ok:true}); }
+  else { volaScore -= 1; volaFactors.push({txt:`ボラ 低`, ok:false}); }
+
+  // ⑤ RSI位置（極端に偏っていない）
+  if(rsiVal >= 35 && rsiVal <= 65){ volaScore += 1; volaFactors.push({txt:`RSI${rsiVal} 中央`, ok:true}); }
+  else { volaScore += 0; volaFactors.push({txt:`RSI${rsiVal} 偏り`, ok:false}); }
+
+  // ⑥ スクイーズ・強トレンド中はペナルティ
+  if(isSqueeze){ volaScore -= 4; }
+  if(isStrongTrend){ volaScore -= 5; }
+
+  // 判定
+  const canVola = volaScore >= 4;
+  const borderlineVola = volaScore >= 2 && volaScore < 4;
+
+  // リスクレベル
+  let riskLevel, riskClass, riskLabel;
+  if(volaScore >= 6){ riskLevel='low'; riskClass='vola-risk-low'; riskLabel='危険度: 低'; }
+  else if(volaScore >= 4){ riskLevel='mid'; riskClass='vola-risk-mid'; riskLabel='危険度: 中（要注意）'; }
+  else { riskLevel='high'; riskClass='vola-risk-high'; riskLabel='危険度: 高'; }
+
+  // ── レンジ上限・下限・エントリー価格算出 ──────────────
+  // 上限: BB上限 or 直近高値（より近い方）
+  const recentHigh = Math.max(...recent.map(b=>b.h));
+  const recentLow  = Math.min(...recent.map(b=>b.l));
+  const rangeTop  = parseFloat(Math.min(bbU, recentHigh + ATR*0.2).toFixed(1));
+  const rangeBot  = parseFloat(Math.max(bbL, recentLow  - ATR*0.2).toFixed(1));
+  const totalRng  = rangeTop - rangeBot;
+
+  // エントリー推奨：上限の5%内側、下限の5%内側
+  const sellEntry = parseFloat((rangeTop - totalRng * 0.08).toFixed(1));
+  const buyEntry  = parseFloat((rangeBot + totalRng * 0.08).toFixed(1));
+
+  // 利益幅（往復の60%想定）
+  const targetPips = Math.round(totalRng * 0.6 / 0.01);
+  const sellPips   = Math.round((rangeTop - sellEntry) / 0.01); // SLまで
+  const buyPips    = Math.round((buyEntry - rangeBot) / 0.01);  // SLまで
+
+  // 現在地の位置%
+  const curPct = Math.round(Math.max(0,Math.min(1,(price-rangeBot)/(totalRng||1)))*100);
+
+  // ボラ取りできない理由
+  let noTradeReason = '';
+  if(isSqueeze) noTradeReason = 'スクイーズ中のため方向が読めません。ブレイク確認後に判断を。';
+  else if(isStrongTrend) noTradeReason = 'トレンドが強いためレンジ逆張りは危険です。トレンドフォローを推奨。';
+  else if(rangeWidthPips < 60) noTradeReason = `レンジ幅が${rangeWidthPips}pipsと狭すぎます（最低60pips推奨）。`;
+  else noTradeReason = `複合スコアが低く（${volaScore}点）、現時点では見送り推奨。`;
+
+  return {
+    phase, phaseClass, icon, sub, phaseType,
+    adx, bw:parseFloat((bw*100).toFixed(2)), rangePct, rsi:rsiVal,
+    canVola, borderlineVola, volaScore, volaFactors, riskLevel, riskClass, riskLabel,
+    rangeTop, rangeBot, sellEntry, buyEntry, rangeWidthPips, targetPips, sellPips, buyPips, curPct,
+    noTradeReason, totalRng:parseFloat(totalRng.toFixed(1))
+  };
+}
+
+// ==================== ノイズフィルタ ====================
+// 敏感=即反映, 標準=3回多数決, スロー=6回多数決
+function setFilter(tab, mode, btn){
+  filterMode[tab] = mode;
+  // ボタンUI更新
+  const container = btn.parentElement;
+  container.querySelectorAll('.fbtn').forEach(b => {
+    b.className = 'fbtn ' + (b === btn ? mode+' act' : b.textContent==='敏感'?'sens':b.textContent==='標準'?'norm':'slow');
+  });
+  const descMap = {
+    scalp: {sens:'短期シグナルに即反応', norm:'3回確認後に更新', slow:'6回確認後に更新（荒れ相場向け）'},
+    day:   {sens:'中期シグナルに即反応', norm:'中期の流れに追従', slow:'大きな流れのみ追う'}
+  };
+  const descEl = $('filterDesc'+(tab==='scalp'?'Scalp':'Day'));
+  if(descEl.textContent !== undefined) descEl.textContent = descMap[tab][mode];
+}
+
+// シグナルをバッファに追加して安定化（多数決）
+function applyNoiseFilter(newVal, buffer, mode){
+  const size = FILTER_BUF[mode]||1;
+  buffer.push(newVal);
+  if(buffer.length > size) buffer.splice(0, buffer.length - size);
+  if(buffer.length < size) return newVal; // バッファ未満はそのまま
+  // 多数決
+  const counts = {};
+  buffer.forEach(v => { counts[v] = (counts[v]||0)+1; });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+}
+
+// ==================== renderTRPanel (v2.2 完全刷新) ====================
+function renderTRPanel(r){
+  const tr = r.trState;
+  if(!tr) return;
+
+  // パネル本体
+  const panel = $('trPanel');
+  if(panel.className !== undefined) panel.className = 'tr-panel ' + tr.phaseClass;
+  $('trIcon').textContent = tr.icon;
+  $('trState').textContent = tr.phase;
+  $('trSub').textContent = tr.sub;
+  $('trADX').textContent = tr.adx;
+  $('trADX').style.color = tr.adx>=32?'var(--up)':tr.adx>=20?'var(--am)':'var(--tx2)';
+  $('trBBW').textContent = tr.bw + '%';
+  $('trRSI').textContent = tr.rsi;
+  $('trRSI').style.color = tr.rsi>=70?'var(--dn)':tr.rsi<=30?'var(--up)':'var(--tx2)';
+  $('trATR').textContent = '$'+r.ATR?.toFixed(1);
+  // フェーズタイプ表示
+  const phaseMap = {trend:'トレンド', slow_trend:'ゆっくりトレンド', weak_trend:'弱トレンド', range:'レンジ', squeeze:'スクイーズ'};
+  $('trPhase').textContent = phaseMap[tr.phaseType]||'--';
+
+  // レンジ位置バー
+  const posWrap = $('rangePosWrap');
+  const isRange = tr.phaseType==='range' || tr.phaseType==='squeeze';
+  if(posWrap.style) posWrap.style.display = isRange ? 'block' : 'none';
+  if(isRange){
+    const pct = Math.round(tr.rangePct * 100);
+    $('rangePosLabel').textContent = `現在位置 ${pct}%（上限$${tr.rangeTop} 下限$${tr.rangeBot}）`;
+    const cursor = $('rangeCursor');
+    if(cursor.style) cursor.style.left = pct + '%';
+  }
+
+  // ── レンジボラ取りパネル ──────────────────────────
+  const volaBox = $('rangeVolaBox');
+  if(!volaBox||volaBox.style===undefined) return;
+
+  // レンジ・ゆっくりトレンド・弱トレンド以外は非表示
+  const showVola = ['range','slow_trend','weak_trend','squeeze'].includes(tr.phaseType);
+  volaBox.style.display = showVola ? 'block' : 'none';
+  if(!showVola) return;
+
+  const canT = tr.canVola;
+  const borderT = tr.borderlineVola;
+
+  // スコアチップHTML
+  const chips = tr.volaFactors.map(f=>`<span class="vola-score-chip" style="background:${f.ok?'rgba(27,174,130,.15)':'rgba(224,85,48,.12)'};color:${f.ok?'#5DD4A5':'#F0A080'};border:0.5px solid ${f.ok?'rgba(27,174,130,.3)':'rgba(224,85,48,.25)'}">${f.txt}</span>`).join('');
+
+  if(canT || borderT){
+    // ボラ取り可能
+    const verdictTxt = canT ? '⬡ ボラ取り チャンス' : '⚠️ ボラ取り 要注意';
+    const verdictClass = canT ? 'can' : 'can';
+    const curPct = tr.curPct;
+    const nowPosTxt = curPct >= 70 ? `🟣 上限圏（売り有利）` : curPct <= 30 ? `🟢 下限圏（買い有利）` : `↔ 中央付近（様子見）`;
+
+    volaBox.innerHTML = `
+      <div class="vola-panel can-trade">
+        <div class="vola-header">
+          <div class="vola-verdict ${verdictClass}">${verdictTxt}</div>
+          <div class="${tr.riskClass} vola-risk-badge" style="margin-left:auto">${tr.riskLabel}</div>
+        </div>
+        <div class="vola-body">
+          <div class="vola-score-row">${chips}</div>
+
+          <!-- 現在地バー -->
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-bottom:3px;">
+              <span style="color:var(--up)">下限 $${tr.rangeBot}</span>
+              <span style="color:var(--g)">${nowPosTxt}</span>
+              <span style="color:var(--dn)">上限 $${tr.rangeTop}</span>
+            </div>
+            <div class="vola-range-bar">
+              <div class="vola-range-fill" style="width:100%"></div>
+              <div class="vola-range-cursor" style="left:${curPct}%"></div>
+            </div>
+            <div style="text-align:center;font-size:9px;color:var(--tx3)">レンジ幅 ${tr.rangeWidthPips}pips · 現在 $${r.price.toFixed(1)} (${curPct}%)</div>
+          </div>
+
+          <!-- 売り・買いエントリー -->
+          <div class="vola-range-row">
+            <div class="vola-side sell-side">
+              <div class="vola-side-label">▼ 上限から売り</div>
+              <div class="vola-limit">上限 $${tr.rangeTop}</div>
+              <div class="vola-entry">$${tr.sellEntry}</div>
+              <div class="vola-pips">推奨エントリー（上限-${tr.sellPips}p内側）</div>
+              <div style="font-size:9px;color:var(--tx3);margin-top:3px">目標 $${tr.rangeBot} 付近（+${tr.targetPips}p想定）</div>
+            </div>
+            <div class="vola-mid-arrow">⇄</div>
+            <div class="vola-side buy-side">
+              <div class="vola-side-label">▲ 下限から買い</div>
+              <div class="vola-limit">下限 $${tr.rangeBot}</div>
+              <div class="vola-entry">$${tr.buyEntry}</div>
+              <div class="vola-pips">推奨エントリー（下限+${tr.buyPips}p内側）</div>
+              <div style="font-size:9px;color:var(--tx3);margin-top:3px">目標 $${tr.rangeTop} 付近（+${tr.targetPips}p想定）</div>
+            </div>
+          </div>
+
+          <div class="vola-note">⚠️ <strong>危険承知で取る場合の目安です。</strong>レンジブレイク時は即時撤退を。上限・下限を抜けたらトレンド転換の可能性があります。必ずSLを設定してください。${borderT&&!canT?'（スコアが低め。慎重に）':''}</div>
+        </div>
+      </div>`;
+  } else {
+    // ボラ取り不可
+    volaBox.innerHTML = `
+      <div class="vola-panel no-trade">
+        <div class="vola-header">
+          <div class="vola-verdict no">🚫 レンジボラ取り — 見送り推奨</div>
+          <div class="${tr.riskClass} vola-risk-badge" style="margin-left:auto">${tr.riskLabel}</div>
+        </div>
+        <div class="vola-body">
+          <div class="vola-score-row">${chips}</div>
+          <div class="vola-note">${tr.noTradeReason}</div>
+          ${isRange?`<div style="margin-top:8px;font-size:11px;color:var(--tx3)">レンジ幅 ${tr.rangeWidthPips}pips · 上限 $${tr.rangeTop} · 下限 $${tr.rangeBot}</div>`:''}
+        </div>
+      </div>`;
+  }
+}
+
+// ==================== renderEMAWalls (NEW) ====================
+function renderEMAWalls(r){
+  const walls = r.emaWalls;
+  if(!walls||!walls.length) return;
+  const el = $('at-body');
+  if(!el||el.innerHTML===undefined) return;
+
+  // at-bodyの既存内容に壁情報を追記
+  const wallLines = walls.slice(0,4).map(w => {
+    const roleLabel = w.role==='resist' ? '⚠️ 抵抗壁' : '🛡️ 支持壁';
+    const distStr = w.dist > 0 ? `+$${w.dist.toFixed(1)}上` : `-$${Math.abs(w.dist).toFixed(1)}下`;
+    const critMark = w.isCrit ? '🔴 超接近！' : w.isWarn ? '🟡 接近中' : '';
+    const probColor = w.breakProb>=70?'#5DD4A5':w.breakProb>=50?'#E8C96A':'#F0A080';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:${w.role==='resist'?'rgba(224,85,48,.07)':'rgba(58,138,224,.07)'};border-radius:var(--rs);border:0.5px solid ${w.role==='resist'?'rgba(224,85,48,.3)':'rgba(58,138,224,.3)'};margin-bottom:3px;">
+      <span style="font-size:10px;font-weight:700;color:${w.role==='resist'?'var(--dn)':'var(--up)'};min-width:54px">${w.label}</span>
+      <span style="font-size:10px;color:var(--tx3)">$${w.val}</span>
+      <span style="font-size:10px;color:var(--tx2)">${distStr} (${w.distPips}pips)</span>
+      <span style="font-size:9px">${critMark}</span>
+      <span style="margin-left:auto;font-family:var(--mn);font-size:11px;font-weight:700;color:${probColor}">突破${w.breakProb}%</span>
+      <span style="font-size:9px;color:var(--tx3)">${roleLabel}</span>
+    </div>`;
+  }).join('');
+
+  const wallSection = `<div style="margin-top:8px;border-top:0.5px solid var(--bo);padding-top:7px;">
+    <div style="font-size:9px;color:var(--g);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px">⬡ EMA壁 検知</div>
+    ${wallLines}
+  </div>`;
+
+  // 既存HTMLに追記（重複しないよう壁セクションは置換）
+  const existing = el.innerHTML.replace(/<div style="margin-top:8px;border-top[\s\S]*?<\/div>\s*<\/div>\s*<\/div>$/,'');
+  el.innerHTML = existing + wallSection;
 }
 
 // ==================== ECONOMIC CALENDAR ====================
