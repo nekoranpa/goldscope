@@ -1039,6 +1039,11 @@ function setVoiceVolume(v){
   if(btn) btn.textContent = voiceVolume === 0 ? '🔇' : voiceVolume < 0.5 ? '🔉' : '🔔';
 }
 
+function setVoiceRate(v){
+  voiceRate = parseFloat(v);
+  console.log('[Voice] speed:', voiceRate);
+}
+
 function toggleMute(){
   isMuted = !isMuted;
   const btn = document.getElementById('muteBtn');
@@ -1062,6 +1067,68 @@ function unlockAudio(){
   }
 }
 
+// テキストを音声読み上げ用に変換（記号・英略語を読みやすく）
+function toSpeakText(text){
+  return text
+    .replace(/🚫/g, 'エントリー禁止')
+    .replace(/⏸/g, '')
+    .replace(/⚡/g, '')
+    .replace(/🟢/g, '')
+    .replace(/🔴/g, '')
+    .replace(/🔵/g, '')
+    .replace(/🟡/g, '')
+    .replace(/⚠️/g, '注意。')
+    .replace(/✅/g, '')
+    .replace(/⏳/g, '')
+    .replace(/📈/g, '')
+    .replace(/📉/g, '')
+    .replace(/📊/g, '')
+    .replace(/🔷/g, '')
+    .replace(/🔶/g, '')
+    .replace(/↗/g, '上昇')
+    .replace(/↘/g, '下降')
+    .replace(/↑/g, '上昇')
+    .replace(/↓/g, '下降')
+    .replace(/→/g, '')
+    // SMA読み替え（スマ→エスエムエー）
+    .replace(/(\d+)SMA/g, '$1エスエムエー')
+    .replace(/SMA(\d+)/g, 'エスエムエー$1')
+    .replace(/SMA/g, 'エスエムエー')
+    // EMA読み替え
+    .replace(/EMA(\d+)/g, 'イーエムエー$1')
+    .replace(/EMA/g, 'イーエムエー')
+    // BB読み替え（ボリンジャーバンド）
+    .replace(/ボリンジャーバンドウォーク/g, 'バンドウォーク') // 先に置換してから
+    .replace(/BB幅/g, 'ボリンジャーバンド幅')
+    .replace(/BB上限/g, 'ボリンジャーバンド上限')
+    .replace(/BB下限/g, 'ボリンジャーバンド下限')
+    .replace(/BB中央/g, 'ボリンジャーバンド中央')
+    .replace(/\bBB\b/g, 'ボリンジャーバンド')
+    // ADX読み替え
+    .replace(/ADX(\d+)/g, 'エーディーエックス$1')
+    .replace(/ADX/g, 'エーディーエックス')
+    // RSI読み替え
+    .replace(/RSI(\d+)/g, 'アールエスアイ$1')
+    .replace(/RSI/g, 'アールエスアイ')
+    // BOS/CHoCH読み替え
+    .replace(/CHoCH/g, 'チョーク')
+    .replace(/BOS/g, 'ビーオーエス')
+    .replace(/OBリテスト/g, 'オーダーブロックリテスト')
+    .replace(/\bOB\b/g, 'オーダーブロック')
+    .replace(/FVG/g, 'フェアバリューギャップ')
+    .replace(/VWAP/g, 'ブイワップ')
+    // $数字 → 数字ドル
+    .replace(/\$(\d+\.?\d*)/g, '$1ドル')
+    // pips読み替え
+    .replace(/(\d+)pips/g, '$1ピップス')
+    .replace(/(\d+)p\b/g, '$1ピップス')
+    // %読み替え
+    .replace(/(\d+)%/g, '$1パーセント')
+    // 連続スペース整理
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function speak(text){
   if(!text || isMuted) return;
   if(!window.speechSynthesis){
@@ -1069,16 +1136,22 @@ function speak(text){
     return;
   }
 
+  // テキストを音声用に変換
+  const speakText = toSpeakText(text);
+
   // iOS Safari: paused状態の場合resume
   if(window.speechSynthesis.paused){
     window.speechSynthesis.resume();
   }
   window.speechSynthesis.cancel();
 
-  // 100文字超は分割（Chrome長文バグ対策）
-  const chunks = text.length > 80
-    ? (text.match(/[^。、！？!?]{1,80}[。、！？!?]?/g) || [text])
-    : [text];
+  // voiceRateを確実に現在値で取得
+  const currentRate = voiceRate || 1.0;
+
+  // 80文字超は分割（Chrome長文バグ対策）
+  const chunks = speakText.length > 80
+    ? (speakText.match(/[^。、！？!?]{1,80}[。、！？!?]?/g) || [speakText])
+    : [speakText];
 
   const voices = window.speechSynthesis.getVoices();
   const pref = voices.find(v=>v.name.includes('Kyoko'))
@@ -1099,13 +1172,14 @@ function speak(text){
   const speakNext = () => {
     if(idx >= chunks.length || isMuted){
       isSpeaking = false;
+      updateVoiceStatusBadge('waiting');
       if(wa) wa.className='speak-wave';
       if(wn) wn.className='speak-wave';
       return;
     }
     const u = new SpeechSynthesisUtterance(chunks[idx++]);
     u.lang   = 'ja-JP';
-    u.rate   = voiceRate;
+    u.rate   = currentRate; // 確実に現在のrateを使用
     u.volume = voiceVolume;
     u.pitch  = 1.0;
     if(pref) u.voice = pref;
@@ -1113,13 +1187,14 @@ function speak(text){
     u.onerror = (e) => {
       console.warn('[Voice] error:', e.error);
       isSpeaking = false;
+      updateVoiceStatusBadge('waiting');
       if(wa) wa.className='speak-wave';
       if(wn) wn.className='speak-wave';
     };
     window.speechSynthesis.speak(u);
   };
   speakNext();
-  console.log('[Voice] 発話開始:', text.slice(0,40)+'...');
+  console.log('[Voice] rate:'+currentRate+' 発話:', speakText.slice(0,40)+'...');
 }
 
 function stopVoice(){
@@ -2300,18 +2375,86 @@ function buildNarration(r){
     return '⏳ リテスト待ち。'+smc.bos.label+'確認。現在$'+p+'。OBへの戻りを待ってからエントリー。'+sma320Txt;
   }
 
-  // ── 待機（一般）─────────────────────────
+  // ── 待機（一般・多様なナレーション）─────────────────
   narVariant++;
-  const sessInfo=sess.includes('ロンドン')?'ロンドン時間。':sess.includes('NY')?'NY時間。':'アジア時間。';
-  const dirTxt=dir1H==='up'?'上昇目線':dir1H==='dn'?'下降目線':'中立';
-  const waitPhrases=[
-    '現在$'+p+'。待機中。'+(tr?.phase||'')+'ADX'+adx+'、'+(adx>=25?'トレンドあり。':'方向感弱め。')+sma320Txt+'条件が揃うまで入らないのが正解。',
-    'ゴールド$'+p+'。'+sessInfo+(smc?.bbWalk?smc.bbWalk.label+'。':'')+sma320Txt+'エントリー条件未成立。資金を守ることが最優先です。',
-    '$'+p+'。RSI'+rsiV+'。'+(tr?.phase||'')+'。'+sma320Txt+'今は見送りが正解。次のチャンスを待ちましょう。',
-    '$'+p+'。ADX'+adx+'。'+(tech?.triangleBreak?.label||'')+sma320Txt+'条件不足のため待機中。焦りは禁物です。',
-    '現在$'+p+'。'+(smc?.choch?(smc.choch.label+'。'):'')+sma320Txt+(gate?.warnings?.find(w=>w.code==='AWAIT_RETEST')?.label||'')+'待機してください。',
+  const sessInfo = sess.includes('ロンドン') ? 'ロンドン時間' : sess.includes('NY') ? 'ニューヨーク時間' : 'アジア時間';
+  const dirTxt   = dir1H==='up' ? '上昇目線' : dir1H==='dn' ? '下降目線' : '中立';
+  const e80txt   = r.sma80 ? '80エスエムエーは$'+r.sma80+'。' : '';
+  const chgAbs   = Math.abs(parseFloat(r.changePct?.toFixed(2)||'0'));
+  const chgDir   = (r.changePct||0)>=0 ? '上昇' : '下落';
+  const fvgTxt   = r.fvgData?.fvgLabel&&!r.fvgData.fvgLabel.includes('なし') ? r.fvgData.fvgLabel+'。' : '';
+  const techTxt  = tech?.triangle ? tech.triangle+'。' : '';
+  const trendTxt = tech?.trendline ? tech.trendline.label+'。' : '';
+  const bbWalkTxt= smc?.bbWalk ? smc.bbWalk.label+'。' : '';
+  const obTxt    = smc?.obRetest ? smc.obRetest.label+'。' : '';
+  const fiboTxt  = tech?.nearFibo ? 'フィボナッチ'+tech.nearFibo[0]+'の$'+tech.nearFibo[1]+'付近にいます。' : '';
+
+  // なぜこうなっているかの解説フレーズ
+  const reasonPhrases = [
+    adx < 18
+      ? `現在エーディーエックスが${adx}と低く、方向感のないレンジ相場です。売りも買いも均衡しているため、どちらかに明確に動くまで待機が正解です。`
+      : adx >= 35
+      ? `エーディーエックス${adx}と高く、強いトレンドが出ています。方向が確定しているので、押し目や戻りを待ってトレンドフォローが有効な局面です。`
+      : `エーディーエックス${adx}、弱いトレンドが出ています。勢いが増すか、失速するかの分岐点です。`,
+    rsiV >= 70
+      ? `アールエスアイが${rsiV}と買われすぎゾーンに入っています。過熱感があり反落のリスクが高まっています。ここからの追いかけ買いは危険です。`
+      : rsiV <= 30
+      ? `アールエスアイが${rsiV}と売られすぎゾーンに来ています。反発の可能性がある局面ですが、トレンドが強い場合はさらに下落することもあります。`
+      : `アールエスアイ${rsiV}、中立ゾーンです。`,
+    smc?.strongHighs?.length > 0
+      ? `$${smc.strongHighs[0].price}に${smc.strongHighs[0].count}回反発しているストロングハイがあります。何度も止められているレベルは意識されやすく、突破するには強い勢いが必要です。`
+      : smc?.strongLows?.length > 0
+      ? `$${smc.strongLows[0].price}に${smc.strongLows[0].count}回反発しているストロングローがあります。強い支持帯として機能しており、下に向かうエントリーは慎重にする必要があります。`
+      : `現在、強い支持抵抗帯の近くには入っていません。`,
+    r.isTrueSqueeze
+      ? `ボリンジャーバンドが極限まで収縮しています。これはBBスクイーズと呼ばれる状態で、エネルギーが蓄積されている証拠です。どちらかに大きくブレイクする前兆なので、方向が決まってからエントリーします。`
+      : bbWalkTxt
+      ? `ボリンジャーバンドの外側を値動きが沿って進んでいます。これをバンドウォークといい、強いトレンドが継続していることを示します。`
+      : `ボリンジャーバンドは通常の状態です。`,
+    smc?.obRetest
+      ? obTxt + 'オーダーブロックとは、大口の注文が集中した価格帯です。一度大きく動いた後、その起点に価格が戻ってくることをリテストといい、次の動きのヒントになります。'
+      : smc?.bos
+      ? `${smc.bos.label}が発生しました。ビーオーエス、ブレイク・オブ・ストラクチャーとは、直近の高値や安値を抜いて市場の構造が変わったことを意味します。次はリテストを待ちます。`
+      : smc?.choch
+      ? `${smc.choch.label}が発生しました。チョーク、チェンジ・オブ・キャラクターとは、相場の性格が変わったサインです。上昇から下降、あるいはその逆への転換を示しています。`
+      : '現在、SMCサインは発生していません。',
+    fvgTxt
+      ? fvgTxt + 'フェアバリューギャップとは、価格が急激に動いた際にできる空白ゾーンです。市場はこのギャップを埋めようとする傾向があるため、反発や引き付けのポイントとして使われます。'
+      : '',
+    techTxt
+      ? techTxt + '三角持ち合いは高値と安値が収束している状態です。エネルギーが蓄積されており、どちらかに抜けたときに大きな動きが出やすいパターンです。'
+      : trendTxt || '',
+    fiboTxt
+      ? fiboTxt + 'フィボナッチリトレースメントとは、前回の動きに対する戻りの目安です。38.2パーセント、50パーセント、61.8パーセントが特に意識されます。'
+      : '',
+    r.sma320
+      ? `15分足の320エスエムエーは$${r.sma320}付近にあります。この移動平均線は長期的なサポートとレジスタンスとして機能することが多く、価格が近づくと反発しやすい傾向があります。`
+      : '',
+    e80txt
+      ? `80エスエムエーは$${r.sma80}にあります。この移動平均線は中期のトレンドの方向性を示し、価格がこのラインの上にあれば上昇バイアス、下にあれば下降バイアスとなります。`
+      : '',
+  ].filter(Boolean);
+
+  // 基本フレーズ（状況説明）
+  const basicPhrases = [
+    `現在$${p}。${dirTxt}、${tr?.phase||''}。エーディーエックス${adx}、${adx>=25?'トレンドあり。':'方向感弱め。'}${sma320Txt}条件が揃うまで入らないのが正解。`,
+    `ゴールド$${p}。${sessInfo}。${bbWalkTxt}${sma320Txt}エントリー条件未成立。資金を守ることが最優先です。`,
+    `$${p}。アールエスアイ${rsiV}。${tr?.phase||''}。${sma320Txt}今は見送りが正解。次のチャンスを待ちましょう。`,
+    `$${p}。${sessInfo}。${dirTxt}の局面。${techTxt}${sma320Txt}条件不足のため待機中。焦りは禁物です。`,
+    `現在$${p}。${chgAbs>0.1?chgDir+'傾向あり。':'ほぼ横ばい。'}${fvgTxt}${sma320Txt}エントリーを急がず、次のサインを待ちましょう。`,
+    `ゴールド$${p}。前日比${chgDir}${chgAbs}パーセント。${trendTxt}${e80txt}${sma320Txt}しっかりした根拠が出るまで待機。`,
+    `$${p}。${tr?.phase||'レンジ'}。${obTxt}${sma320Txt}次のエントリーポイントを辛抱強く待ちます。`,
+    `現在$${p}。${fiboTxt}${sma320Txt}方向感が出るまでは傍観が最善です。`,
   ];
-  return waitPhrases[narVariant%waitPhrases.length];
+
+  // 解説フレーズと基本フレーズを交互に読む
+  const allPhrases = [...basicPhrases];
+  // 解説フレーズがある場合は3回に1回差し込む
+  if(reasonPhrases.length > 0 && narVariant % 3 === 0){
+    const rIdx = Math.floor(narVariant / 3) % reasonPhrases.length;
+    return reasonPhrases[rIdx];
+  }
+  return allPhrases[narVariant % allPhrases.length];
 }
 
 
