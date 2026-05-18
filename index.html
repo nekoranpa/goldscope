@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>GoldScope Vision v2.2 — AI Market Intelligence XAUUSD</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -513,6 +514,30 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         <div class="chart-overlay-info" id="chartInfo"></div>
       </div>
 
+      <!-- ★ 中期シナリオ（固定・変更時のみ訂正）-->
+      <div class="panel" id="midScenPanel" style="border-color:rgba(184,148,42,.3);background:linear-gradient(135deg,rgba(184,148,42,.05),transparent);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <div class="panel-lbl" style="margin-bottom:0;color:var(--g)">⬡ 中期シナリオ（1H確定足基準）</div>
+          <span id="midScenBadge" style="font-size:9px;padding:2px 7px;border-radius:20px;border:0.5px solid var(--bo2);color:var(--tx3);font-family:var(--mn)">構築中</span>
+          <span id="midScenCorrBadge" style="display:none;font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(192,122,16,.2);color:var(--am);border:0.5px solid rgba(192,122,16,.4)">🔄 訂正あり</span>
+        </div>
+        <div id="midScenText" style="font-size:13px;font-weight:500;color:var(--tx);line-height:1.75;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:var(--rs);">分析後に表示されます。</div>
+        <div id="midScenPrev" style="display:none;font-size:11px;color:var(--tx3);margin-top:6px;padding:6px 8px;border-radius:var(--rs);background:rgba(255,255,255,.03);border-left:2px solid var(--am)"></div>
+        <!-- 1H確定足 暫定表示 -->
+        <div id="conf1HRow" style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <span style="font-size:9px;color:var(--tx3)">1H確定目線:</span>
+          <span id="conf1HDir" style="font-size:11px;font-weight:700;font-family:var(--mn)">--</span>
+          <span style="font-size:9px;color:var(--tx3)">│ 形成中:</span>
+          <span id="conf1HProv" style="font-size:10px;font-family:var(--mn);color:var(--am)">--</span>
+        </div>
+      </div>
+
+      <!-- FVG パネル -->
+      <div class="panel" id="fvgPanel">
+        <div class="panel-lbl">⬡ FVG（フェアバリューギャップ）· 確定足ベース</div>
+        <div id="fvgMain" style="font-size:12px;color:var(--tx2)">分析後に表示</div>
+      </div>
+
       <!-- SMC / シナリオ -->
       <div class="scenario-box">
         <div class="panel-lbl">シナリオ · SMC分析</div>
@@ -671,11 +696,32 @@ let signalBuffer=[];  // 全体用
 let trBuffer=[];      // トレンド/レンジ用
 
 // ── $4以上狙えるかの厳格判定バッファ ──
-// 3サイクル連続で同じ判定が出た時だけ表示を更新
-const ENTRY_MIN_DOLLARS = 4.0; // 最低$4の値幅
-let entryBuf = [];              // 直近の entry判定を蓄積
-let stableEntry = null;         // 安定化後の表示用entry
-let lastNarText = '';           // 前回ナレーション（重複防止）
+const ENTRY_MIN_DOLLARS = 4.0;
+let entryBuf = [];
+let stableEntry = null;
+let lastNarText = '';
+
+// ── 確定足ベース1H目線（コアロジック）──────────────
+// 形成中の足は使わない。確定済み足の終値のみで判定
+let confirmed1H = {
+  dir: 'neut',       // 'up' | 'dn' | 'neut'
+  provisional: null, // 形成中の暫定方向
+  lockedAt: 0,       // 最後に確定した時刻(ms)
+  highSeries: [],    // 確定高値列（スイング判定用）
+  lowSeries: [],     // 確定安値列
+  lastBar: null,     // 最後に処理した確定バー
+  changedAt: null,   // 最後に目線が変わった時刻
+  prevDir: 'neut',
+};
+
+// ── 中期シナリオ（固定・変更時のみ更新）──────────────
+let midScenario = {
+  text: '',          // シナリオ文
+  dir: 'neut',
+  setAt: 0,
+  corrected: false,  // 訂正フラグ
+  prevText: '',
+};
 
 // ==================== AUTH ====================
 function doLogin(){
@@ -1070,6 +1116,136 @@ function stabilizeEntry(newEntry){
   const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
   return top[0]; // 'can' | 'watch' | 'wait'
 }
+
+// ==================== 確定足ベース 1H目線判定 ====================
+// 形成中の末尾バーは除外。終値2本連続+EMA条件で目線確定
+function updateConfirmed1H(hist, price, ATR){
+  const n = hist.length;
+  if(n < 10) return confirmed1H;
+  const confirmed = hist.slice(0, n - 1); // 末尾（形成中）を除外
+  const forming   = hist[n - 1];
+  const cc = confirmed.map(b => b.c);
+  const len = cc.length;
+  if(len < 6) return confirmed1H;
+
+  const slice10  = confirmed.slice(-10);
+  const swHigh   = Math.max(...slice10.map(b => b.c));
+  const swLow    = Math.min(...slice10.map(b => b.c));
+  const r3       = cc.slice(-3);
+  const rising2  = r3[2] > r3[1] && r3[1] > r3[0];
+  const falling2 = r3[2] < r3[1] && r3[1] < r3[0];
+  const eC20     = ema(cc.slice(-30), 20);
+  const eC50     = ema(cc.slice(-60), 50);
+  const lastC    = cc[len - 1];
+  const aboveEMA = lastC > eC20 && lastC > eC50;
+  const belowEMA = lastC < eC20 && lastC < eC50;
+  const adxC     = calcADX(confirmed.slice(-20), 14);
+
+  let newDir = confirmed1H.dir;
+  if     (rising2  && aboveEMA && adxC.pdi > adxC.ndi) newDir = 'up';
+  else if(falling2 && belowEMA && adxC.ndi > adxC.pdi) newDir = 'dn';
+  // EMAの間は変更しない
+
+  if(newDir !== confirmed1H.dir){ confirmed1H.prevDir=confirmed1H.dir; confirmed1H.changedAt=Date.now(); }
+  confirmed1H.dir = newDir;
+
+  // 暫定（形成中足のみ）
+  confirmed1H.provisional =
+    forming.c > swHigh*1.0005 ? 'up' : forming.c < swLow*0.9995 ? 'dn' : null;
+
+  return confirmed1H;
+}
+
+// ==================== FVG 数値化・反発スコア ====================
+function calcFVGScore(hist, price, ATR, signal){
+  const n = hist.length;
+  if(n < 8) return {fvgs:[], nearFVG:null, fvgScore:0, fvgLabel:'FVGなし', bounceProb:50};
+  const fvgs = [];
+  const confirmed = hist.slice(0, n-1); // 確定足のみ
+
+  for(let i=2; i<confirmed.length; i++){
+    const b0=confirmed[i-2], b2=confirmed[i];
+    const gapUp = b2.l - b0.h;
+    if(gapUp > ATR*0.15){
+      const mid=(b2.l+b0.h)/2;
+      const inFVG = price<=b2.l && price>=b0.h;
+      fvgs.push({type:'bull', high:b2.l, low:b0.h, mid:parseFloat(mid.toFixed(1)),
+        gap:parseFloat(gapUp.toFixed(1)), filled:inFVG,
+        approach:!inFVG && Math.abs(price-mid)<ATR*2,
+        age:confirmed.length-i, label:`FVG↑ $${b0.h.toFixed(1)}〜$${b2.l.toFixed(1)}`});
+    }
+    const gapDn = b0.l - b2.h;
+    if(gapDn > ATR*0.15){
+      const mid=(b0.l+b2.h)/2;
+      const inFVG = price>=b2.h && price<=b0.l;
+      fvgs.push({type:'bear', high:b0.l, low:b2.h, mid:parseFloat(mid.toFixed(1)),
+        gap:parseFloat(gapDn.toFixed(1)), filled:inFVG,
+        approach:!inFVG && Math.abs(price-mid)<ATR*2,
+        age:confirmed.length-i, label:`FVG↓ $${b2.h.toFixed(1)}〜$${b0.l.toFixed(1)}`});
+    }
+  }
+
+  const active = fvgs
+    .filter(f=>!f.filled && f.age<=30 && Math.abs(f.mid-price)<ATR*6)
+    .sort((a,b)=>Math.abs(a.mid-price)-Math.abs(b.mid-price)).slice(0,4);
+
+  const nf = active[0]||null;
+  let fvgScore=0, bounceProb=50, fvgLabel='近接FVGなし';
+
+  if(nf){
+    const md=signal?.mainDir||'neut';
+    const aligned  =(nf.type==='bull'&&md==='up')||(nf.type==='bear'&&md==='dn');
+    const opposing =(nf.type==='bull'&&md==='dn')||(nf.type==='bear'&&md==='up');
+    const dr = Math.abs(nf.mid-price)/ATR;
+    fvgScore=50;
+    fvgScore += nf.gap>ATR*0.5?15 : nf.gap>ATR*0.3?8 : 2;
+    fvgScore += nf.age<=5?12 : nf.age<=10?6 : 0;
+    fvgScore += nf.approach?10:0;
+    fvgScore += aligned?10 : opposing?-20:0;
+    fvgScore -= dr>3?10 : dr>2?5:0;
+    fvgScore  = Math.max(10,Math.min(90,Math.round(fvgScore)));
+    bounceProb= fvgScore;
+    if(nf.approach){
+      const role=nf.type==='bull'?'支持帯':'抵抗帯';
+      const st=nf.gap>ATR*0.4?'強':'';
+      const ic=nf.type==='bull'?(st?'🟢':'🔵'):(st?'🔴':'🟠');
+      fvgLabel=`${ic} ${st}FVG${role} $${nf.low}〜$${nf.high}（反発${bounceProb}%）`;
+    } else {
+      fvgLabel=`FVG $${nf.mid} (${nf.type==='bull'?'↑':'↓'}) — $${Math.abs(nf.mid-price).toFixed(1)}先`;
+    }
+  }
+  return {fvgs:active, nearFVG:nf, fvgScore, fvgLabel, bounceProb};
+}
+
+// ==================== 中期シナリオ（固定・訂正型）====================
+function updateMidScenario(r, conf1H, fvgData){
+  const dir1H = conf1H.dir;
+  // 5分以上経過 & 方向転換があった時だけ更新
+  const needsUpdate = !midScenario.text ||
+    (midScenario.dir !== dir1H && Date.now()-midScenario.setAt > 300000);
+  if(!needsUpdate) return midScenario;
+
+  midScenario.prevText  = midScenario.text;
+  midScenario.corrected = !!midScenario.text;
+
+  const e75Pos  = r.price>r.e75  ?`EMA75($${Math.round(r.e75)})上位` :`EMA75($${Math.round(r.e75)})下位`;
+  const e200Pos = r.price>r.e200 ?`EMA200($${Math.round(r.e200)})上位`:`EMA200($${Math.round(r.e200)})下位`;
+  const phase   = r.trState?.phase||'';
+  const fvgTxt  = fvgData?.nearFVG
+    ?`FVG${fvgData.nearFVG.type==='bull'?'支持':'抵抗'}帯$${fvgData.nearFVG.low}〜$${fvgData.nearFVG.high}近接。`:'';
+
+  let newText='';
+  if(dir1H==='up')
+    newText=`【上昇目線・1H確定足】${e75Pos}・${e200Pos}。${phase}。${fvgTxt}押し目で15m/5mの買いシグナルを待つ局面。`;
+  else if(dir1H==='dn')
+    newText=`【下降目線・1H確定足】${e75Pos}・${e200Pos}。${phase}。${fvgTxt}戻りで15m/5mの売りシグナルを待つ局面。`;
+  else
+    newText=`【中立目線・1H確定足】EMA間で方向感なし。${phase}。${fvgTxt}ブレイクまで静観推奨。`;
+
+  midScenario.text=newText; midScenario.dir=dir1H; midScenario.setAt=Date.now();
+  return midScenario;
+}
+
 function analyze(price,open,hist,spotMeta){
   const closes=hist.map(x=>x.c);
   const sh=hist.slice(-80),sc=sh.map(x=>x.c);
@@ -1084,18 +1260,34 @@ function analyze(price,open,hist,spotMeta){
   const TECH=calcTech(hist,price,ATR);
   const changePct=((price-open)/open)*100;
 
-  // TFバイアス計算（NEW）
+  // TFバイアス計算
   const tfBias=calcTFBias(hist,price,ATR,e20v,e75v,e200v,VW);
   const signal=calcSignal(tfBias);
 
-  // トレンド/レンジ判定 (NEW)
+  // トレンド/レンジ判定
   const trState=calcTrendRange(hist,price,ATR,BB,ADX,rsiS);
 
-  // EMA壁検知 (NEW)
+  // EMA壁検知
   const emaWalls=calcEMAWalls(price,e20v,e75v,e200v,ATR,ADX,rsiS,buyPressure(sh),signal);
 
-  // $4以上エントリー品質判定 (NEW)
-  const entryQuality=calcEntryQuality({price,ATR,ADX,signal,BB,e20:e20v,e75:e75v,trState:calcTrendRange(sh,price,ATR,BB,ADX,rsiS)});
+  // 確定足ベース 1H目線（形成中バー除外）
+  const conf1H=updateConfirmed1H(hist,price,ATR);
+
+  // FVG スコア（確定足ベース）
+  const fvgData=calcFVGScore(hist,price,ATR,signal);
+
+  // $4以上エントリー品質判定（FVGスコアも加味）
+  const baseEQ=calcEntryQuality({price,ATR,ADX,signal,BB,e20:e20v,e75:e75v,trState});
+  // FVGが反対方向に高スコアなら追加ペナルティ
+  const fvgPenalty = fvgData.nearFVG && !fvgData.nearFVG.approach &&
+    ((fvgData.nearFVG.type==='bear'&&signal.mainDir==='up')||(fvgData.nearFVG.type==='bull'&&signal.mainDir==='dn'))
+    ? {canEntry:false, watchEntry:false, passCount:0, conditions:[], dir:'neut',
+       expectedMove:baseEQ.expectedMove, reason:`FVG${fvgData.nearFVG.type==='bear'?'抵抗':'支持'}帯（$${fvgData.nearFVG.low}〜$${fvgData.nearFVG.high}）が進行方向に反発リスク${fvgData.bounceProb}%。見送り推奨。`, instruction:'', matchCount:0}
+    : null;
+  const entryQuality = fvgPenalty || baseEQ;
+
+  // 中期シナリオ（確定足1H目線ベース、固定）
+  const midScen=updateMidScenario({price,e75:e75v,e200:e200v,trState,BB,ATR},conf1H,fvgData);
 
   // 短期方向（後方互換）
   const bp=buyPressure(sh);
@@ -1112,7 +1304,8 @@ function analyze(price,open,hist,spotMeta){
 
   return{price,open,spotMeta,shortDir,midDir,
     bp,rsiS,e20:e20v,e75:e75v,e200:e200v,VW,BB,ATR,ADX,OB,SMC,TECH,
-    tfBias,signal,trState,emaWalls,entryQuality,changePct,sessName,bbStateLabel,hist:hist.slice(-120)};
+    tfBias,signal,trState,emaWalls,entryQuality,conf1H,fvgData,midScen,
+    changePct,sessName,bbStateLabel,hist:hist.slice(-120)};
 }
 
 // ==================== NARRATION（統合・厳格版） ====================
@@ -1239,6 +1432,10 @@ function renderAll(r,d){
   $('narBadge').textContent   = badgeTxt;
   $('narBadge').style.color   = badgeColor;
   $('narBadge').style.borderColor = badgeColor;
+
+  // 中期シナリオ・1H確定足・FVG
+  renderMidScenario(r);
+  renderFVGPanel(r);
 
   // シナリオ
   renderScenario(r);
@@ -1747,6 +1944,59 @@ function renderTRPanel(r){
         </div>
       </div>`;
   }
+}
+
+// ==================== renderMidScenario ====================
+function renderMidScenario(r){
+  const ms=r.midScen; const cf=r.conf1H;
+  if(!ms) return;
+  $('midScenText').textContent = ms.text||'構築中...';
+  const badge=$('midScenBadge');
+  const dc=ms.dir==='up'?'var(--up)':ms.dir==='dn'?'var(--dn)':'var(--tx3)';
+  badge.textContent=ms.dir==='up'?'↑ 上昇目線':ms.dir==='dn'?'↓ 下降目線':'↔ 中立';
+  badge.style.color=dc; badge.style.borderColor=dc;
+  const corrBadge=$('midScenCorrBadge'),prevDiv=$('midScenPrev');
+  if(ms.corrected&&ms.prevText){
+    corrBadge.style.display='inline-flex';
+    prevDiv.style.display='block';
+    prevDiv.textContent='旧シナリオ: '+ms.prevText;
+  }
+  const dirEl=$('conf1HDir'),provEl=$('conf1HProv');
+  if(dirEl.textContent!==undefined){
+    const dC=cf.dir==='up'?'var(--up)':cf.dir==='dn'?'var(--dn)':'var(--tx3)';
+    dirEl.textContent=cf.dir==='up'?'↑ 上昇確定':cf.dir==='dn'?'↓ 下降確定':'↔ 中立';
+    dirEl.style.color=dC;
+  }
+  if(provEl.textContent!==undefined){
+    if(cf.provisional&&cf.provisional!==cf.dir){
+      provEl.textContent=cf.provisional==='up'?'▲ 暫定上昇中（確認待ち）':'▼ 暫定下降中（確認待ち）';
+      provEl.style.color='var(--am)';
+    } else {
+      provEl.textContent='確定方向と一致';
+      provEl.style.color='var(--tx3)';
+    }
+  }
+}
+
+// ==================== renderFVGPanel ====================
+function renderFVGPanel(r){
+  const el=$('fvgMain');
+  if(!el||el.innerHTML===undefined) return;
+  const fd=r.fvgData;
+  if(!fd||!fd.fvgs.length){el.innerHTML='<span style="color:var(--tx3)">近接FVGなし（確定足ベース検索済み）</span>';return;}
+  const rows=fd.fvgs.map(f=>{
+    const isCur=f.approach;
+    const col=f.type==='bull'?'var(--up)':'var(--dn)';
+    const probCol=fd.bounceProb>=70?'var(--gr)':fd.bounceProb>=50?'var(--am)':'var(--dn)';
+    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--rs);border:0.5px solid ${isCur?(f.type==='bull'?'rgba(58,138,224,.4)':'rgba(224,85,48,.4)'):'var(--bo)'};background:${isCur?(f.type==='bull'?'rgba(58,138,224,.06)':'rgba(224,85,48,.06)'):'var(--bg3)'};margin-bottom:3px;flex-wrap:wrap;">
+      <span style="font-size:10px;font-weight:700;color:${col};min-width:20px">${f.type==='bull'?'↑':'↓'}</span>
+      <span style="font-size:11px;font-family:var(--mn);color:var(--tx)">$${f.low}〜$${f.high}</span>
+      <span style="font-size:9px;color:var(--tx3)">幅$${f.gap} · ${f.age}本前</span>
+      ${isCur?`<span style="font-size:9px;background:rgba(192,122,16,.2);color:var(--am);padding:1px 5px;border-radius:3px">接近中</span>`:''}
+      <span style="margin-left:auto;font-family:var(--mn);font-size:11px;font-weight:700;color:${probCol}">反発${fd.bounceProb||50}%</span>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div style="margin-bottom:6px;font-size:11px;font-weight:600;color:${fd.nearFVG?.approach?(fd.nearFVG.type==='bull'?'var(--up)':'var(--dn)'):'var(--tx2)'};">${fd.fvgLabel}</div>${rows}`;
 }
 
 // ==================== renderEMAWalls (NEW) ====================
