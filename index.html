@@ -1070,7 +1070,8 @@ function unlockAudio(){
 // テキストを音声読み上げ用に変換（記号・英略語を読みやすく）
 function toSpeakText(text){
   return text
-    .replace(/🚫/g, 'エントリー禁止')
+    .replace(/🚫\s*エントリー禁止/g, 'エントリー注意')
+    .replace(/🚫/g, 'エントリー注意')
     .replace(/⏸/g, '')
     .replace(/⚡/g, '')
     .replace(/🟢/g, '')
@@ -2288,18 +2289,18 @@ function buildNarration(r){
   if(gate&&!gate.allowed&&gate.blocked&&gate.blocked.length>0){
     const primary=gate.blocked[0];
     if(primary.code==='SQUEEZE')
-      return '🚫 エントリー禁止。現在$'+p+'。BBスクイーズ中のため方向が読めません。ブレイクと方向確認後まで待機。'+sma320Txt;
+      return '🚫 現在$'+p+'。BBスクイーズ中のため方向が読めません。ブレイクと方向確認後まで待機。'+sma320Txt;
     if(primary.code==='STRONG_HIGH')
-      return '🚫 入らないでください。$'+(gate.dangerSH?.price)+'のStrong High（'+(gate.dangerSH?.count)+'回反発）が目前です。'+primary.detail+'ブレイクしてリテスト確認後のみ可。';
+      return '🚫 $'+(gate.dangerSH?.price)+'のStrong High（'+(gate.dangerSH?.count)+'回反発）が目前です。'+primary.detail+'ブレイクしてリテスト確認後のみ可。';
     if(primary.code==='STRONG_LOW')
-      return '🚫 入らないでください。$'+(gate.dangerSL?.price)+'のStrong Low（'+(gate.dangerSL?.count)+'回反発）が近くにあります。'+primary.detail+'下抜けリテスト確認後のみ可。';
+      return '🚫 $'+(gate.dangerSL?.price)+'のStrong Low（'+(gate.dangerSL?.count)+'回反発）が近くにあります。'+primary.detail+'下抜けリテスト確認後のみ可。';
     if(primary.code==='NO_ROOM_UP'||primary.code==='NO_ROOM_DN')
       return '🚫 値幅不足。'+primary.detail+'今は入るべきではありません。';
     if(primary.code==='LOW_ADX')
       return '⏸ 待機。現在$'+p+'。ADX'+adx+'でトレンドの勢いが弱い。25以上になるまで待機。'+sma320Txt;
     if(primary.code==='MA_SANDWICH')
       return '⏸ 待機。80SMAと320SMAの間に挟まれています。どちらかを明確に抜けてから判断。';
-    return '🚫 エントリー禁止。'+primary.detail;
+    return '🚫 '+primary.detail;
   }
 
   // ── 🟢 OBリテスト ────────────────────────────
