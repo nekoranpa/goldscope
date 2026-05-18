@@ -1488,7 +1488,7 @@ function buildNarration(r){
     `${p}ドル。${sessInfo}${dirTxt}の局面。${wallTxt}${fvgTxt}条件が揃うまで見送りです。`,
     `現在${p}ドル。ATRは${atr}ドル。${tr?.phaseType==='squeeze'?'スクイーズ中、ブレイク待ちです。':tr?.phaseType==='range'?'レンジ相場。上限'+tr.rangeTop+'、下限'+tr.rangeBot+'ドルです。':''}${sessInfo}`,
     `ゴールド${p}ドル。${dirTxt}。${rsiTxt}${fvgTxt}今は見送りが正解です。チャンスを待ちましょう。`,
-    `${p}ドル。1時間足${dir1H==='up'?'上昇':'dir1H==="dn"?下降':'中立'}目線。${trTxt}${wallTxt}エントリーはまだです。`,
+    `${p}ドル。1時間足${dir1H==='up'?'上昇':dir1H==='dn'?'下降':'中立'}目線。${trTxt}${wallTxt}エントリーはまだです。`,
     `現在${p}ドル。${sessInfo}${trTxt}${fvgTxt}ADX${adx}、RSI${rsi}。条件不足のため待機中。`,
   ];
   return waitPhrases[narVariant % waitPhrases.length];
