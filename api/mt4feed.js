@@ -1,126 +1,61 @@
-//+------------------------------------------------------------------+
-//|  GoldScopeFeed.mq4                                               |
-//|  XAUUSD リアルタイムデータを Vercel API に送信する EA             |
-//|  設置場所: MT4 → Experts フォルダに入れてコンパイル              |
-//+------------------------------------------------------------------+
-#property copyright "GoldScope Vision"
-#property version   "1.00"
-#property strict
+let cache = {
+  bid:0,ask:0,mid:0,spread:0,symbol:'XAUUSD',
+  ts:0,ohlcv:[],updatedAt:0,
+};
+const SECRET_KEY = process.env.MT4_SECRET_KEY || 'YOUR_SECRET_KEY_HERE';
+const CACHE_TTL = 30000;
 
-//--- 設定パラメータ
-extern string VercelEndpoint = "https://goldscope.vercel.app/api/mt4feed";
-extern string SecretKey      = "YOUR_SECRET_KEY_HERE"; // Vercel環境変数と合わせる
-extern int    SendIntervalSec = 5;   // 送信間隔（秒）
-extern int    BarCount        = 300; // 送信するバー数（ヒストリカル）
-extern string Symbol_         = "XAUUSD"; // 対象シンボル（HFMの正確な名前に合わせる）
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  if(req.method==='OPTIONS') return res.status(200).end();
 
-//--- 内部変数
-datetime lastSendTime = 0;
-int      winsock      = 0;
+  if(req.method==='POST'){
+    try{
+      const body=typeof req.body==='string'?JSON.parse(req.body):req.body;
+      if(body.key!==SECRET_KEY) return res.status(401).json({error:'Unauthorized'});
+      const mid=parseFloat(body.mid);
+      if(!mid||isNaN(mid)||mid<1000||mid>20000)
+        return res.status(400).json({error:'Invalid price: '+body.mid});
+      const bars=[];
+      if(body.ohlcv){
+        const entries=body.ohlcv.split(';').filter(s=>s.length>5);
+        for(const e of entries){
+          const p=e.split(',');
+          if(p.length<6) continue;
+          bars.push({t:parseInt(p[0])*1000,o:parseFloat(p[1]),h:parseFloat(p[2]),
+            l:parseFloat(p[3]),c:parseFloat(p[4]),v:parseInt(p[5]),forming:p[6]==='1'});
+        }
+      }
+      cache={
+        bid:parseFloat(body.bid)||mid-0.3,
+        ask:parseFloat(body.ask)||mid+0.3,
+        mid,spread:parseFloat(body.spread)||0,
+        symbol:body.symbol||'XAUUSD',
+        ts:parseInt(body.ts)||Math.floor(Date.now()/1000),
+        ohlcv:bars,updatedAt:Date.now(),source:'MT4/HFM',live:true,
+      };
+      return res.status(200).json({ok:true,mid:cache.mid,bars:bars.length});
+    }catch(e){
+      return res.status(500).json({error:e.message});
+    }
+  }
 
-//+------------------------------------------------------------------+
-int OnInit(){
-   Print("[GoldScopeFeed] 起動。送信先: ", VercelEndpoint);
-   Print("[GoldScopeFeed] シンボル: ", Symbol_, " 間隔: ", SendIntervalSec, "秒");
-   EventSetTimer(SendIntervalSec);
-   return(INIT_SUCCEEDED);
+  if(req.method==='GET'){
+    const age=Date.now()-cache.updatedAt;
+    if(!cache.mid||age>CACHE_TTL)
+      return res.status(503).json({
+        error:'MT4 data unavailable',age,
+        message:'MT4接続なし。EAが動作しているか確認してください。'
+      });
+    return res.status(200).json({
+      bid:cache.bid,ask:cache.ask,mid:cache.mid,spread:cache.spread,
+      symbol:cache.symbol,ts:cache.ts,ohlcv:cache.ohlcv,
+      source:'MT4/HFM',live:true,ageMs:age,
+      lastRefreshed:new Date(cache.updatedAt).toLocaleTimeString('ja-JP'),
+    });
+  }
+
+  return res.status(405).json({error:'Method not allowed'});
 }
-
-void OnDeinit(const int reason){
-   EventKillTimer();
-   Print("[GoldScopeFeed] 停止。理由コード: ", reason);
-}
-
-//+------------------------------------------------------------------+
-void OnTimer(){
-   SendData();
-}
-
-// チャートのティック更新でも送信（より即時性が高い）
-void OnTick(){
-   if(TimeCurrent() - lastSendTime >= SendIntervalSec){
-      SendData();
-   }
-}
-
-//+------------------------------------------------------------------+
-void SendData(){
-   lastSendTime = TimeCurrent();
-
-   // ── 現在価格 ──
-   double bid   = MarketInfo(Symbol_, MODE_BID);
-   double ask   = MarketInfo(Symbol_, MODE_ASK);
-   double mid   = (bid + ask) / 2.0;
-   double spread= (ask - bid) / Point;
-
-   // ── 直近バーのOHLCV（確定済み + 形成中）──
-   // M5（5分足）を基準に送信
-   int bars = MathMin(BarCount, iBars(Symbol_, PERIOD_M5));
-
-   string ohlcv = "";
-   for(int i = bars - 1; i >= 0; i--){
-      double o = iOpen (Symbol_, PERIOD_M5, i);
-      double h = iHigh (Symbol_, PERIOD_M5, i);
-      double l = iLow  (Symbol_, PERIOD_M5, i);
-      double c = iClose(Symbol_, PERIOD_M5, i);
-      long   v = iVolume(Symbol_, PERIOD_M5, i);
-      datetime t = iTime(Symbol_, PERIOD_M5, i);
-
-      // i=0は形成中バー（フラグ付き）
-      string forming = (i == 0) ? "1" : "0";
-      ohlcv += IntegerToString((int)t) + "," +
-               DoubleToStr(o, 2) + "," +
-               DoubleToStr(h, 2) + "," +
-               DoubleToStr(l, 2) + "," +
-               DoubleToStr(c, 2) + "," +
-               IntegerToString(v) + "," +
-               forming + ";";
-   }
-
-   // ── JSONペイロード組み立て ──
-   string json = "{";
-   json += "\"key\":\"" + SecretKey + "\",";
-   json += "\"symbol\":\"" + Symbol_ + "\",";
-   json += "\"bid\":"  + DoubleToStr(bid, 2)  + ",";
-   json += "\"ask\":"  + DoubleToStr(ask, 2)  + ",";
-   json += "\"mid\":"  + DoubleToStr(mid, 2)  + ",";
-   json += "\"spread\":" + DoubleToStr(spread, 1) + ",";
-   json += "\"ts\":"   + IntegerToString((int)TimeCurrent()) + ",";
-   json += "\"ohlcv\":\"" + ohlcv + "\"";
-   json += "}";
-
-   // ── HTTP POST ──
-   // MT4のWebRequest（許可リストにVercelドメインを追加すること）
-   // MT4: ツール → オプション → エキスパートアドバイザー → WebRequest許可URLに追加
-   // 追加URL: https://goldscope.vercel.app
-
-   char   post[];
-   char   result[];
-   string headers = "Content-Type: application/json\r\n";
-   string resultStr;
-   int    timeout = 3000; // 3秒タイムアウト
-
-   StringToCharArray(json, post, 0, StringLen(json));
-
-   int res = WebRequest(
-      "POST",
-      VercelEndpoint,
-      headers,
-      timeout,
-      post,
-      result,
-      resultStr
-   );
-
-   if(res == 200){
-      // 成功（ログ量削減のためコメントアウト推奨）
-      // Print("[GoldScopeFeed] 送信成功: $", DoubleToStr(mid, 2));
-   } else if(res == -1){
-      Print("[GoldScopeFeed] WebRequest失敗。URLが許可リストにあるか確認してください。");
-      Print("[GoldScopeFeed] MT4: ツール→オプション→エキスパートアドバイザー→WebRequest許可URL");
-      Print("[GoldScopeFeed] 追加URL: https://goldscope.vercel.app");
-   } else {
-      Print("[GoldScopeFeed] HTTPエラー: ", res, " | ", resultStr);
-   }
-}
-//+------------------------------------------------------------------+
