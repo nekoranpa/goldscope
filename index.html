@@ -3,7 +3,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
 <title>GoldScope Vision v2.2 — AI Market Intelligence XAUUSD</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -311,6 +311,49 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 .vola-score-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
 .vola-score-chip{font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mn);}
 
+/* ===== レスポンシブ ===== */
+/* 全体の横スクロール防止 */
+html,body{overflow-x:hidden;width:100%;}
+*{-webkit-box-sizing:border-box;box-sizing:border-box;}
+
+/* iPhone SE / 小型スマホ (〜375px) */
+@media(max-width:375px){
+  .ph-price{font-size:28px;}
+  .clock-main{font-size:18px;}
+  .sig-score-num{font-size:26px;}
+  .sig-status{font-size:14px;}
+  .app-body{padding:8px 8px 30px;}
+  .voice-bar{padding:5px 8px;gap:5px;}
+  .voice-bar input[type=range]{width:50px;}
+  .tf-align-grid{grid-template-columns:repeat(5,1fr);gap:3px;}
+  .tf-card{padding:6px 3px;}
+  .tf-arrow{font-size:16px;}
+  .tf-name{font-size:8px;}
+  .tf-strength{font-size:8px;}
+  .tr-meters{flex-wrap:wrap;}
+  .tr-meter{min-width:50px;}
+  .vola-range-row{grid-template-columns:1fr 20px 1fr;}
+  .scenario-grid{grid-template-columns:1fr;}
+  .bias-tf-row{flex-wrap:wrap;gap:4px;}
+  .bias-tf-name{min-width:auto;font-size:9px;}
+  .hdr-name{font-size:11px;}
+  .nar-text{font-size:13px;}
+  .tab-nav .tnb{font-size:10px;padding:8px 8px;}
+}
+
+/* iPhone標準 / 中型スマホ (376px〜430px) */
+@media(min-width:376px) and (max-width:430px){
+  .ph-price{font-size:32px;}
+  .app-body{padding:10px 10px 30px;}
+  .tf-align-grid{grid-template-columns:repeat(5,1fr);}
+  .scenario-grid{grid-template-columns:1fr;}
+  .sig-score-num{font-size:30px;}
+  .sig-status{font-size:16px;}
+  .voice-bar input[type=range]{width:60px;}
+  .bias-tf-name{min-width:auto;font-size:9px;}
+}
+
+/* 小型タブレット〜スマホ横向き (431px〜600px) */
 @media(max-width:600px){
   .ph-price{font-size:32px;}
   .scenario-grid{grid-template-columns:1fr;}
@@ -318,6 +361,35 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
   .tf-align-grid{grid-template-columns:repeat(5,1fr);}
   .sig-score-num{font-size:30px;}
   .sig-status{font-size:18px;}
+  .clock-bar{flex-wrap:wrap;gap:4px;padding:5px 12px;}
+  .voice-bar{flex-wrap:wrap;gap:4px;}
+  .vb-sep{display:none;}
+  .hdr-ver{display:none;}
+  .tr-meters{gap:4px;}
+  .tr-meter{min-width:55px;padding:5px 6px;}
+}
+
+/* voice-bar専用: 小さい画面で折り返し */
+@media(max-width:520px){
+  .voice-bar{padding:6px 10px;}
+  #voiceBtn{margin-left:0 !important;}
+  .voice-bar input[type=range]{width:55px;}
+}
+
+/* iPhone Safe Area対応 (ノッチ・Dynamic Island) */
+@supports(padding:max(0px)){
+  .app-hdr{
+    padding-left:max(16px,env(safe-area-inset-left));
+    padding-right:max(16px,env(safe-area-inset-right));
+  }
+  .app-body{
+    padding-left:max(14px,env(safe-area-inset-left));
+    padding-right:max(14px,env(safe-area-inset-right));
+    padding-bottom:max(40px,env(safe-area-inset-bottom));
+  }
+  .app-footer{
+    padding-bottom:max(12px,env(safe-area-inset-bottom));
+  }
 }
 </style>
 </head>
@@ -384,12 +456,20 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
     <div class="vb-sep"></div>
     <span style="font-size:10px;color:var(--tx3)">速度</span>
     <select id="voiceSpeed" style="font-size:10px;padding:3px 7px;border-radius:var(--rs);border:0.5px solid var(--bo2);background:var(--bg3);color:var(--tx);outline:none;cursor:pointer;" onchange="setVoiceRate(this.value)">
+      <option value="0.8">0.8×</option>
       <option value="0.9">0.9×</option>
       <option value="1.0" selected>1.0×</option>
       <option value="1.2">1.2×</option>
       <option value="1.5">1.5×</option>
     </select>
-    <button class="vb-btn" id="voiceBtn" onclick="toggleVoice()" style="margin-left:auto">🔔 音声: ON</button>
+    <div class="vb-sep"></div>
+    <span style="font-size:10px;color:var(--tx3)">音量</span>
+    <input type="range" id="voiceVolume" min="0" max="1" step="0.1" value="1"
+      style="width:70px;accent-color:var(--g);cursor:pointer;"
+      oninput="setVoiceVolume(this.value)">
+    <span id="volLabel" style="font-size:10px;font-family:var(--mn);color:var(--tx3);min-width:24px">100%</span>
+    <button class="vb-btn" id="muteBtn" onclick="toggleMute()" style="padding:4px 8px">🔔</button>
+    <button class="vb-btn" id="voiceBtn" onclick="toggleVoice()" style="margin-left:auto">音声: ON</button>
   </div>
 
   <div class="tab-nav">
@@ -748,7 +828,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(id) id.addEventListener('keydown',e=>{if(e.key==='Enter')pw?.focus();});
   startClock();loadPerf();
   hfmOffset=parseFloat(localStorage.getItem('hfm_offset')||'0.5');
-  window.speechSynthesis?.getVoices();
+  initVoices();
 });
 function doLogout(){isRunning=false;clearInterval(tickTimer);stopVoice();currentUser=null;showPage('login');}
 
@@ -778,22 +858,116 @@ function updateSessions(){
 }
 
 // ==================== VOICE ====================
-function setVoiceRate(v){voiceRate=parseFloat(v);}
-function speak(text){
-  if(!voiceOn||!window.speechSynthesis)return;
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=voiceRate;
-  const voices=window.speechSynthesis.getVoices();
-  const pref=voices.find(v=>v.name.includes('Kyoko'))||voices.find(v=>v.name.includes('O-ren'))||voices.find(v=>v.lang==='ja-JP')||voices.find(v=>v.lang.startsWith('ja'));
-  if(pref)u.voice=pref;
-  isSpeaking=true;
-  $('speakAnim').className='speak-wave on';$('narWave').className='speak-wave on';
-  u.onend=u.onerror=()=>{isSpeaking=false;$('speakAnim').className='speak-wave';$('narWave').className='speak-wave';};
-  window.speechSynthesis.speak(u);
+let voiceVolume = 1.0;
+let isMuted = false;
+
+function setVoiceRate(v){ voiceRate = parseFloat(v); }
+
+function setVoiceVolume(v){
+  voiceVolume = parseFloat(v);
+  const pct = Math.round(voiceVolume * 100);
+  const lbl = document.getElementById('volLabel');
+  if(lbl) lbl.textContent = pct + '%';
+  const btn = document.getElementById('muteBtn');
+  if(btn) btn.textContent = voiceVolume === 0 ? '🔇' : voiceVolume < 0.5 ? '🔉' : '🔔';
 }
-function stopVoice(){window.speechSynthesis?.cancel();isSpeaking=false;$('speakAnim').className='speak-wave';$('narWave').className='speak-wave';}
-function toggleVoice(){voiceOn=!voiceOn;$('voiceBtn').textContent=voiceOn?'🔔 音声: ON':'🔕 音声: OFF';}
-function speakNow(){if(lastResult)speak(buildNarration(lastResult));}
+
+function toggleMute(){
+  isMuted = !isMuted;
+  const btn = document.getElementById('muteBtn');
+  if(btn) btn.textContent = isMuted ? '🔇' : '🔔';
+  if(isMuted) window.speechSynthesis?.cancel();
+}
+
+function speak(text){
+  if(!text) return;
+  if(isMuted) return;
+  if(!window.speechSynthesis){ console.warn('[Voice] speechSynthesis未対応'); return; }
+
+  window.speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang   = 'ja-JP';
+  u.rate   = voiceRate;
+  u.volume = voiceVolume;
+  u.pitch  = 1.0;
+
+  // 日本語音声を探す（見つからなくても発話する）
+  const voices = window.speechSynthesis.getVoices();
+  if(voices.length > 0){
+    const pref =
+      voices.find(v => v.name.includes('Kyoko')) ||
+      voices.find(v => v.name.includes('O-ren')) ||
+      voices.find(v => v.name.includes('Otoya')) ||
+      voices.find(v => v.lang === 'ja-JP') ||
+      voices.find(v => v.lang.startsWith('ja')) ||
+      voices[0]; // 何もなければデフォルト音声
+    if(pref) u.voice = pref;
+  }
+
+  isSpeaking = true;
+  $('speakAnim').className = 'speak-wave on';
+  const narWaveEl = document.getElementById('narWave');
+  if(narWaveEl) narWaveEl.className = 'speak-wave on';
+
+  u.onend = u.onerror = () => {
+    isSpeaking = false;
+    $('speakAnim').className = 'speak-wave';
+    if(narWaveEl) narWaveEl.className = 'speak-wave';
+  };
+
+  // Chrome bug対策: 長文は途中で止まるので分割
+  if(text.length > 100){
+    const chunks = text.match(/.{1,80}[。、!！?？\s]|.{1,80}/g) || [text];
+    let idx = 0;
+    const speakChunk = () => {
+      if(idx >= chunks.length || isMuted){ isSpeaking=false; return; }
+      const cu = new SpeechSynthesisUtterance(chunks[idx++]);
+      cu.lang = 'ja-JP'; cu.rate = voiceRate; cu.volume = voiceVolume;
+      if(u.voice) cu.voice = u.voice;
+      cu.onend = speakChunk;
+      cu.onerror = () => { isSpeaking=false; };
+      window.speechSynthesis.speak(cu);
+    };
+    speakChunk();
+  } else {
+    window.speechSynthesis.speak(u);
+  }
+  console.log('[Voice] 発話:', text.slice(0, 30) + '...');
+}
+
+function stopVoice(){
+  window.speechSynthesis?.cancel();
+  isSpeaking = false;
+  $('speakAnim').className = 'speak-wave';
+  const nw = document.getElementById('narWave');
+  if(nw) nw.className = 'speak-wave';
+}
+
+function toggleVoice(){
+  voiceOn = !voiceOn;
+  const btn = document.getElementById('voiceBtn');
+  if(btn) btn.textContent = voiceOn ? '音声: ON' : '音声: OFF';
+  btn.style.color = voiceOn ? 'var(--gr)' : 'var(--tx3)';
+}
+
+function speakNow(){
+  // 音声コンテキスト初期化（ユーザー操作必須）
+  if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+  const text = lastResult ? buildNarration(lastResult) : 'ゴールドスコープ、準備中です。';
+  speak(text);
+}
+
+// 音声エンジン初期化（voices読み込み待ち）
+function initVoices(){
+  if(window.speechSynthesis){
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+      const v = window.speechSynthesis.getVoices();
+      console.log('[Voice] 利用可能な音声:', v.length, '個');
+    };
+  }
+}
 
 // ==================== MONITORING ====================
 function autoStart(){if(isRunning)return;isRunning=true;$('startBtn').textContent='⏹ 停止';$('startBtn').className='vb-btn stop';$('liveDot').className='ldot on';$('liveLabel').textContent='分析中';loadEconomicCalendar();fetchAndUpdate();tickTimer=setInterval(fetchAndUpdate,5000);}
