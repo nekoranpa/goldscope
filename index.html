@@ -86,7 +86,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 .tnb.act{color:var(--g);border-bottom-color:var(--g);}
 
 /* ===== APP BODY ===== */
-.app-body{max-width:900px;margin:0 auto;padding:14px 14px 40px;}
+.app-body{width:100%;max-width:980px;margin:0 auto;padding:14px 14px 40px;}
 .tab-content{display:none;}
 .tab-content.act{display:block;}
 
@@ -326,38 +326,43 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 
 /* ===== PC レイアウト（768px以上）===== */
 @media(min-width:768px){
-  .page{ flex-direction:row; }
-  .app-hdr{ position:sticky;top:0;z-index:100; }
-  .app-body{
-    max-width:860px;
-    margin:0 auto;
-    padding:20px 24px 60px;
-  }
-  .monitor-bar{ padding:8px 24px; }
-  .voice-bar{ padding:8px 24px; }
-  .tab-nav .tnb{ font-size:13px; padding:10px 20px; }
-  .price-hero{ padding:20px 24px; }
+  .page{ flex-direction:column; }
+  .app-hdr{ padding:0 32px; }
+  .clock-bar{ padding:8px 32px; }
+  .monitor-bar{ padding:8px 32px; }
+  .voice-bar{ padding:8px 32px; gap:10px; }
+  .tab-nav{ padding:0 32px; gap:4px; }
+  .tab-nav .tnb{ font-size:13px; padding:12px 22px; }
+  .app-body{ max-width:980px; margin:0 auto; padding:24px 32px 60px; }
+  .price-hero{ padding:22px 24px; }
   .ph-price{ font-size:52px; }
-  .signal-hero{ padding:18px 20px; }
-  .tf-align-grid{ grid-template-columns:repeat(5,1fr);gap:8px; }
-  .tf-card{ padding:10px 6px; }
-  .tf-arrow{ font-size:20px; }
-  .tf-name{ font-size:11px; }
+  .signal-hero{ padding:20px 22px; }
+  .tf-align-grid{ grid-template-columns:repeat(5,1fr); gap:10px; }
+  .tf-card{ padding:12px 8px; }
+  .tf-arrow{ font-size:22px; }
+  .tf-name{ font-size:12px; }
+  .tf-strength{ font-size:11px; }
   .scenario-grid{ grid-template-columns:1fr 1fr; }
-  .tr-meters{ gap:12px; }
-  .tr-meter{ min-width:70px; }
-  .panel{ padding:16px 18px; }
-  #tvChart{ height:360px !important; }
-  .nar-text{ font-size:15px; }
-  .sig-score-num{ font-size:38px; }
-  .voice-bar input[type=range]{ width:100px; }
+  .tr-meters{ gap:14px; }
+  .tr-meter{ min-width:80px; padding:10px 14px; }
+  .panel{ padding:18px 20px; }
+  .nar-text{ font-size:15px; line-height:1.8; }
+  .nar-box{ padding:18px 20px; }
+  .sig-score-num{ font-size:42px; }
+  .sig-status{ font-size:20px; }
+  #tvChart{ height:380px !important; }
+  .voice-bar input[type=range]{ width:120px; }
   .vb-sep{ display:block; }
   .hdr-ver{ display:block; }
+  .bias-panel{ padding:14px 16px; }
+  .perf-stats{ gap:20px; }
+  .perf-stat{ padding:14px 20px; }
 }
 
 @media(min-width:1200px){
-  .app-body{ max-width:1080px; }
-  #tvChart{ height:420px !important; }
+  .app-body{ max-width:1100px; }
+  #tvChart{ height:440px !important; }
+  .ph-price{ font-size:60px; }
 }
 /* 全体の横スクロール防止 */
 html,body{overflow-x:hidden;width:100%;}
