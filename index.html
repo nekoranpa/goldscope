@@ -324,7 +324,56 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 .vola-score-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
 .vola-score-chip{font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mn);}
 
-/* ===== PC レイアウト（768px以上）===== */
+/* ===== PC グリッドレイアウト（auto-fill・画面幅に応じて自動カラム）===== */
+@media(min-width:1024px){
+  /* タブコンテンツをグリッドコンテナに変換 */
+  #tab-sec.act,
+  #tab-scalp.act,
+  #tab-daytrade.act{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 10px;
+    align-items: start;
+  }
+  /* 価格ヒーロー・フィルタ・ナレーションは全幅 */
+  #tab-sec .price-hero,
+  #tab-sec .filter-bar,
+  #tab-sec .nar-box{ grid-column: 1 / -1; }
+  /* チャートは2カラム分 */
+  #tab-sec .chart-wrap{ grid-column: span 2; }
+  /* シグナルは2カラム */
+  #tab-sec .signal-hero{ grid-column: span 2; }
+  /* SMCシナリオは2カラム */
+  #tab-sec .scenario-box{ grid-column: span 2; }
+  /* 調整/転換・スクイーズは2カラム */
+  #trendPhasePanel,#squeezePanel{ grid-column: span 2; }
+  /* 各パネルを縦に揃える */
+  #tab-sec .panel,
+  #tab-sec .tr-panel,
+  #tab-sec .bias-panel{ height:100%; box-sizing:border-box; }
+}
+
+@media(min-width:1280px){
+  #tab-sec.act,#tab-scalp.act,#tab-daytrade.act{
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media(min-width:1600px){
+  #tab-sec.act,#tab-scalp.act,#tab-daytrade.act{
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+  #tab-sec .chart-wrap{ grid-column: span 3; }
+  .app-body{ max-width: 1500px; }
+}
+
+@media(min-width:1920px){
+  #tab-sec.act{
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  #tab-sec .chart-wrap{ grid-column: span 2; }
+  .app-body{ max-width: 1800px; }
+}
 @media(min-width:768px){
   .page{ flex-direction:column; }
   .app-hdr{ padding:0 32px; }
