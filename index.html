@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>GoldScope Vision v2.6 — AI Market Intelligence XAUUSD</title>
+<title>GoldScope Vision v2.7 — AI Market Intelligence XAUUSD</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -746,13 +746,18 @@ html,body{overflow-x:hidden;width:100%;}
       <!-- ★ UTBot シグナルパネル (v2.6) -->
       <div class="panel" id="utbotPanel" style="border-color:rgba(232,201,106,.4);background:linear-gradient(135deg,rgba(232,201,106,.06),transparent);">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <div class="panel-lbl" style="margin-bottom:0;color:var(--gl)">⚡ UTBot シグナル</div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:10px;color:var(--tx3)">ATR係数</span>
-            <input type="range" id="utbotFactor" min="0.5" max="4.0" step="0.1" value="2.0"
-              style="width:90px;accent-color:var(--g);cursor:pointer;"
+          <div class="panel-lbl" style="margin-bottom:0;color:var(--gl)">🌊 ウェーブシグナル</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:10px;color:var(--tx3)">Key</span>
+            <input type="range" id="utbotFactor" min="0.5" max="4.0" step="0.5" value="1.0"
+              style="width:70px;accent-color:var(--g);cursor:pointer;"
               oninput="document.getElementById('utbotFactorVal').textContent=parseFloat(this.value).toFixed(1)">
-            <span id="utbotFactorVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:24px">2.0</span>
+            <span id="utbotFactorVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:20px">1.0</span>
+            <span style="font-size:10px;color:var(--tx3);margin-left:4px">ATR</span>
+            <input type="range" id="utbotAtrPeriod" min="5" max="20" step="1" value="10"
+              style="width:70px;accent-color:var(--g);cursor:pointer;"
+              oninput="document.getElementById('utbotAtrVal').textContent=this.value">
+            <span id="utbotAtrVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:20px">10</span>
           </div>
         </div>
         <!-- シグナル表示 -->
@@ -971,7 +976,7 @@ html,body{overflow-x:hidden;width:100%;}
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div>GoldScope Vision v2.6 · 株式会社サウンドテラス</div>
+      <div>GoldScope Vision v2.7 · 株式会社サウンドテラス</div>
     </div>
     <div class="disclaimer" style="max-width:900px;margin:7px auto 0">⚠️ 投資助言・売買指示・利益保証ではありません。投資判断はご自身の責任で行ってください。</div>
   </footer>
@@ -1064,6 +1069,22 @@ const FILTER_BUF={sens:1,norm:3,slow:6};
 let signalBuffer=[];  // 全体用
 let trBuffer=[];      // トレンド/レンジ用
 
+// ==================== ウェーブシグナル状態 (v2.7) ====================
+let waveState = {
+  tf: '5m',           // '5m' | '15m'
+  dir: 'none',        // 'up' | 'dn' | 'none'
+  entryPrice: null,
+  tp: null,
+  sl: null,
+  atr: null,
+  score: 0,
+  active: false,      // ポジション中
+  tpHalf: false,      // TP半分通過済み
+  lastNarTime: 0,     // 最後にナレーション発話した時刻
+  narInterval: 30000, // 30秒毎
+  narVariant: 0,      // バリエーションカウンター
+};
+
 // ── $4以上狙えるかの厳格判定バッファ ──
 const ENTRY_MIN_DOLLARS = 4.0;
 let entryBuf = [];
@@ -1143,7 +1164,7 @@ function switchTab(name){
   document.querySelectorAll('.tnb').forEach(b=>b.classList.remove('act'));
   const t=document.getElementById('tab-'+name);
   if(t)t.classList.add('act');
-  const labels={sec:'秒スキャ',scalp:'スキャル',daytrade:'デイ',perf:'実績'};
+  const labels={sec:'秒スキャ',wave:'ウェーブ',scalp:'スキャル',daytrade:'デイ',perf:'実績'};
   document.querySelectorAll('.tnb').forEach(b=>{
     if(b.textContent.includes(labels[name]||name))b.classList.add('act');
   });
@@ -1625,60 +1646,80 @@ async function fetchAll(){
   return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,lastRefreshed:new Date().toLocaleTimeString('ja-JP'),source:'SIM（MT4未接続）',hist:[...simHistory],live:false};
 }
 
-// ==================== UTBot (v2.6) ====================
-// ATRベーストレイリングラインで方向転換を検出
-// 係数はUIスライダーで1.0〜4.0調整可能（デフォルト2.0）
+// ==================== UTBot 本家完全移植 (v2.7) ====================
+// PineScript v4 "UT Bot Alerts" をJSに正確移植
+// Key Value=1, ATR Period=10 がデフォルト（本家と同じ）
 
 let utbotState = {
-  line: null,        // トレイリングライン値
-  dir: 'none',       // 'up' | 'dn' | 'none'
+  line: null,
+  dir: 'none',
   prevDir: 'none',
-  signalPrice: null, // シグナル発生価格
+  signalPrice: null,
   signalTime: null,
-  factor: 2.0,
+  factor: 1.0,    // 本家 Key Value デフォルト=1
+  atrPeriod: 10,  // 本家 ATR Period デフォルト=10
 };
 
-// UTBotトレイリングライン計算
-function calcUTBot(hist, factor) {
-  if (!hist || hist.length < 20) return null;
-  const closes = hist.map(x => x.c);
-  const atrVal = calcATR(hist, 14);
-  const trail = atrVal * factor;
+// ATR RMA方式（Wilder's smoothing）本家準拠
+function calcATRRMA(hist, period) {
+  if (hist.length < period + 1) return calcATR(hist, period);
+  const tr = [];
+  for (let i = 1; i < hist.length; i++) {
+    const h = hist[i].h, l = hist[i].l, pc = hist[i-1].c;
+    tr.push(Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc)));
+  }
+  let rma = tr.slice(0, period).reduce((a,b) => a+b, 0) / period;
+  for (let i = period; i < tr.length; i++) rma = (rma * (period-1) + tr[i]) / period;
+  return rma;
+}
 
-  let line = closes[0];
-  let dir = 'none';
-  const lines = [];
+// 本家UTBot完全移植
+function calcUTBot(hist, keyValue, atrPeriod) {
+  if (!hist || hist.length < (atrPeriod||10) * 2 + 5) return null;
+  const kv   = keyValue  || utbotState.factor;
+  const atrP = atrPeriod || utbotState.atrPeriod;
+  const src  = hist.map(x => x.c);
+  const n    = src.length;
+  const atrVal = calcATRRMA(hist, atrP);
+  const nLoss  = kv * atrVal;
 
-  for (let i = 1; i < closes.length; i++) {
-    const c = closes[i];
-    const prev = closes[i - 1];
-    let newLine = line;
-
-    if (c > line) {
-      newLine = Math.max(line, c - trail);
-    } else {
-      newLine = Math.min(line, c + trail);
-    }
-    line = newLine;
-    lines.push({ line, c });
+  // xATRTrailingStop 全バー計算（本家3条件分岐）
+  const xATRTS = new Array(n).fill(0);
+  xATRTS[0] = src[0] - nLoss;
+  for (let i = 1; i < n; i++) {
+    const s = src[i], sp = src[i-1], tp = xATRTS[i-1];
+    if      (s > tp && sp > tp) xATRTS[i] = Math.max(tp, s - nLoss);
+    else if (s < tp && sp < tp) xATRTS[i] = Math.min(tp, s + nLoss);
+    else if (s > tp)            xATRTS[i] = s - nLoss;
+    else                        xATRTS[i] = s + nLoss;
   }
 
-  const last = lines[lines.length - 1];
-  const prev2 = lines[lines.length - 2];
-  if (!last || !prev2) return null;
+  // pos計算
+  const pos = new Array(n).fill(0);
+  for (let i = 1; i < n; i++) {
+    const sp = src[i-1], tp = xATRTS[i-1], s = src[i], t = xATRTS[i];
+    if      (sp < tp && s > tp) pos[i] =  1;
+    else if (sp > tp && s < tp) pos[i] = -1;
+    else                        pos[i] = pos[i-1];
+  }
 
-  // 方向判定
-  let newDir = 'none';
-  if (last.c > last.line && prev2.c <= prev2.line) newDir = 'up';
-  else if (last.c < last.line && prev2.c >= prev2.line) newDir = 'dn';
-  else newDir = last.c > last.line ? 'up' : 'dn';
+  const last = n - 1, prev = n - 2;
+  // buy = src > xATRTS and crossover(ema1, xATRTS)
+  // ema(src,1) = src なので crossoverは前足<=ts、今足>tsで判定
+  const isBuy  = src[last] > xATRTS[last] && src[prev] <= xATRTS[prev];
+  const isSell = src[last] < xATRTS[last] && src[prev] >= xATRTS[prev];
+  const barDir = src[last] > xATRTS[last] ? 'up' : 'dn';
 
   return {
-    line: parseFloat(last.line.toFixed(2)),
-    dir: newDir,
-    atr: parseFloat(atrVal.toFixed(2)),
-    trail: parseFloat(trail.toFixed(2)),
-    isNew: newDir !== utbotState.dir, // 前回から方向が変わった
+    line:   parseFloat(xATRTS[last].toFixed(2)),
+    dir:    isBuy ? 'up' : isSell ? 'dn' : barDir,
+    barDir,
+    isBuy, isSell,
+    isNew:  isBuy || isSell,
+    atr:    parseFloat(atrVal.toFixed(2)),
+    nLoss:  parseFloat(nLoss.toFixed(2)),
+    pos:    pos[last],
+    kv, atrP,
   };
 }
 
@@ -1874,8 +1915,9 @@ function renderUTBotPF() {
 // UTBotパネル更新（renderAllから呼ぶ）
 let lastUTBotDir = 'none';
 function renderUTBotPanel(r) {
-  const factor = parseFloat(document.getElementById('utbotFactor')?.value || '2.0');
-  const utbot = calcUTBot(r.hist, factor);
+  const factor = parseFloat(document.getElementById('utbotFactor')?.value || '1.0');
+  const atrP  = parseInt(document.getElementById('utbotAtrPeriod')?.value || '10');
+  const utbot = calcUTBot(r.hist, factor, atrP);
   if (!utbot) return;
 
   // PF判定チェック（毎回）
