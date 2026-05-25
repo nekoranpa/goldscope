@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>GoldScope Vision v2.9.1 — Scalp / Daytrade UTBot</title>
+<title>GoldScope Vision v2.9.3 — Scalp UTBot / Ross Micro Pullback</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -72,6 +72,52 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 @media(min-width:1500px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.chart-wrap{grid-column:span 2}.signal-hero{grid-column:span 2}.app-body{max-width:1500px}}
 @media(max-width:600px){.ph-price{font-size:32px}.tf-align-grid{gap:3px}.tf-card{padding:6px 3px}.tf-arrow{font-size:16px}.app-body{padding:10px}.clock-main{font-size:18px}.sig-status{font-size:17px}.sig-score-num{font-size:30px}.power-bars{flex-direction:column}.hdr-ver{display:none}.vb-btn{padding:4px 8px}.voice-bar input[type=range]{width:56px}.ea-voice-mini{width:100%}}
 @supports(padding:max(0px)){.app-hdr{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}.app-body{padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));padding-bottom:max(40px,env(safe-area-inset-bottom))}}
+
+/* ===== MODE DESIGN SPLIT v2.9.3 ===== */
+#tab-scalp .price-hero{
+  background:
+    radial-gradient(circle at 10% 0%, rgba(232,201,106,.15), transparent 34%),
+    linear-gradient(135deg,rgba(184,148,42,.08),rgba(58,138,224,.035));
+  border-color:rgba(184,148,42,.32);
+}
+#tab-scalp .signal-hero,
+#tab-scalp .chart-wrap{
+  box-shadow:0 0 0 1px rgba(184,148,42,.04), 0 18px 60px rgba(0,0,0,.18);
+}
+#tab-daytrade .price-hero{
+  background:
+    radial-gradient(circle at 10% 0%, rgba(138,126,232,.18), transparent 36%),
+    linear-gradient(135deg,rgba(138,126,232,.10),rgba(27,174,130,.04));
+  border-color:rgba(138,126,232,.42);
+}
+#tab-daytrade .panel-lbl,
+#tab-daytrade .sig-label{color:var(--pu);}
+#tab-daytrade .signal-hero{
+  background:linear-gradient(135deg,rgba(138,126,232,.075),rgba(13,16,20,.95));
+  border-color:rgba(138,126,232,.28);
+}
+#tab-daytrade .chart-wrap{
+  border-color:rgba(138,126,232,.28);
+  box-shadow:0 0 0 1px rgba(138,126,232,.04), 0 18px 60px rgba(0,0,0,.20);
+}
+.day-micro-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-family:var(--mn);font-weight:700;
+  padding:3px 8px;border-radius:20px;
+  color:var(--pu);background:rgba(138,126,232,.12);
+  border:.5px solid rgba(138,126,232,.35);
+}
+.micro-card{
+  border:.5px solid rgba(138,126,232,.28);
+  background:linear-gradient(135deg,rgba(138,126,232,.08),rgba(0,0,0,.12));
+  border-radius:var(--rs);
+  padding:9px 10px;
+  margin-top:7px;
+}
+.micro-title{font-size:12px;font-weight:800;color:var(--pu);margin-bottom:4px}
+.micro-line{font-size:11px;color:var(--tx2);line-height:1.7}
+.micro-score{font-family:var(--mn);font-size:18px;font-weight:800}
+
 </style>
 </head>
 <body>
@@ -80,7 +126,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
   <div class="login-wrap">
     <div class="login-logo">
       <div class="logo-name">GoldScope <span>Vision</span></div>
-      <div class="logo-sub">Scalp / Daytrade UTBot · v2.9.1</div>
+      <div class="logo-sub">Scalp UTBot / Ross Micro Pullback · v2.9.3</div>
     </div>
     <div class="login-card">
       <div style="font-size:13px;font-weight:700;margin-bottom:4px;">会員ログイン</div>
@@ -98,7 +144,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
     <div class="hdr-logo">
       <div class="logo-dot">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v2.9.1</span>
+      <span class="hdr-ver">v2.9.3</span>
     </div>
     <div class="hdr-right">
       <div class="live-pill"><div class="ldot" id="liveDot"></div><span id="liveLabel">待機中</span><div class="speak-wave" id="speakAnimHeader"><div class="sw"></div><div class="sw"></div><div class="sw"></div></div></div>
@@ -248,19 +294,19 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         <div class="price-hero wide">
           <div class="ph-row">
             <div>
-              <div class="ph-label">GOLD / XAUUSD · デイトレ（UTBot 15m/1H基準）</div>
+              <div class="ph-label">GOLD / XAUUSD · デイトレ（ロス式マイクロプルバック）</div>
               <div class="ph-price" id="priceDispDay">----.-</div>
               <div class="ph-chg" id="chgDispDay">変動率 --</div>
             </div>
             <div class="ph-meta">
-              <div>Day Logic: <span id="dayLogicLabel">UTBot + 15m/1H/日足</span></div>
+              <div>Day Logic: <span id="dayLogicLabel">Ross Micro Pullback + EMA9/20/200 + VWAP/MACD</span></div>
               <div>Target: <span id="dayTargetLabel">--</span></div>
               <div style="color:var(--g);margin-top:2px;" id="dayUpdated">--</div>
             </div>
           </div>
           <div class="chip-row">
             <div class="chip"><div class="chip-l">Day ATR</div><div class="chip-v" style="color:var(--g)" id="dayAtrChip">--</div></div>
-            <div class="chip"><div class="chip-l">Day UTBot</div><div class="chip-v" id="utbotDayChip">--</div></div>
+            <div class="chip"><div class="chip-l">RossPB</div><div class="chip-v" id="microDayChip">--</div></div>
             <div class="chip"><div class="chip-l">15m</div><div class="chip-v" id="day15Chip">--</div></div>
             <div class="chip"><div class="chip-l">1H</div><div class="chip-v" id="day1hChip">--</div></div>
             <div class="chip"><div class="chip-l">EA許可</div><div class="chip-v" id="eaAllowChipDay">--</div></div>
@@ -275,10 +321,10 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
         <div class="signal-hero none" id="signalHeroDay">
           <div class="sig-top">
             <div>
-              <div class="sig-label">⬡ デイトレ UTBot シグナル</div>
+              <div class="sig-label">⬡ デイトレ Ross Micro Pullback 判定</div>
               <div class="sig-status neut" id="sigStatusDay">分析待ち</div>
             </div>
-            <div><div class="sig-score-num neut" id="sigScoreDay">--</div><div style="font-size:10px;color:var(--tx3)">中期スコア /6</div></div>
+            <div><div class="sig-score-num neut" id="sigScoreDay">--</div><div style="font-size:10px;color:var(--tx3)">PBスコア /7</div></div>
           </div>
           <div class="tf-align-grid" style="grid-template-columns:repeat(3,1fr);max-width:360px">
             <div class="tf-card" id="tfc-day-15m"><div class="tf-name">15分</div><div class="tf-arrow">→</div><div class="tf-strength">--</div></div>
@@ -325,7 +371,7 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
   </div>
 
   <footer class="app-footer">
-    <div class="footer-inner"><div>GoldScope Vision v2.9.1 · 株式会社サウンドテラス</div><div>Scalp / Daytrade UTBot</div></div>
+    <div class="footer-inner"><div>GoldScope Vision v2.9.3 · 株式会社サウンドテラス</div><div>Scalp UTBot / Ross Micro Pullback</div></div>
     <div class="disclaimer">⚠️ 投資助言・売買指示・利益保証ではありません。投資判断はご自身の責任で行ってください。EA連携は自動売買の補助信号であり、必ずデモ検証から開始してください。</div>
   </footer>
 </div>
@@ -335,13 +381,13 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
   <div style="max-width:760px;margin:0 auto;padding:24px 16px">
     <div class="panel">
       <div style="font-size:16px;font-weight:700;margin-bottom:6px" id="accName">--</div>
-      <div class="mini">プラン: GOLD / XAUUSD対応 · スキャル/デイトレ UTBot · 月額: ¥12,000</div>
+      <div class="mini">プラン: GOLD / XAUUSD対応 · スキャルUTBot / デイトレ・ロス式マイクロプルバック · 月額: ¥12,000</div>
     </div>
     <div class="panel">
       <div class="panel-lbl">ロードマップ</div>
       <div class="mini">
         Phase 1: MT4/HFM価格接続<br>
-        Phase 2: UTBotベースのスキャル/デイトレ表示<br>
+        Phase 2: スキャルUTBot / デイトレ・ロス式マイクロプルバック表示<br>
         Phase 3: EA連携は音声欄の別メッセージとして保持<br>
         Phase 4: デモ検証後に自動売買ルール確定
       </div>
@@ -350,14 +396,14 @@ html,body{height:100%;background:var(--bg);color:var(--tx);font-family:var(--jp)
 </div>
 
 <script>
-// ==================== GoldScope Vision v2.9.1 ====================
+// ==================== GoldScope Vision v2.9.3 ====================
 // 変更点:
 // ・実績タブ廃止
 // ・会員ボタンをツール上部へ移動
 // ・秒スキャ → スキャル
 // ・スキャル/デイトレの2タブ構成
 // ・スキャルは前回のUTBotを中核に運用
-// ・デイトレは中期UTBot + 15m/1H/日足ロジック
+// ・デイトレはマイクロプルバック + 15m/1H/日足ロジック
 // ・両タブのチャートにBUY/SELL/BLOCKサイン表示
 // ・EAは独立タブではなく音声系バー + 各タブのメッセージ欄に表示
 // ・音声はタブ切替でスキャル/デイトレ別に内容変更
@@ -732,6 +778,153 @@ function calcTrendRange(hist, price, ATR, BB, ADX, rsiVal){
   return {phase,phaseType,icon,sub,adx,bw:parseFloat((bw*100).toFixed(2)),rsi:rsiVal,bbPct};
 }
 
+
+// ==================== MICRO PULLBACK METHOD v2.9.3 ====================
+// デイトレ専用。大きな流れ（15m/1H/日足）に対して、短期の浅い押し・戻りから再加速を狙う。
+// 条件:
+// 1) 15m/1H/日足のうち2つ以上が同方向
+// 2) 価格がEMA20へ一度近づく（押し/戻り）
+// 3) EMA75/EMA200の向きと位置が同方向
+// 4) RSIが過熱ではなく、戻り切っている
+// 5) ADXが弱すぎない
+// 6) 直近足で再加速
+// 7) OB/MA/FVGの反発壁が近すぎない
+function calcMicroPullback(r){
+  const price = r.price;
+  const ATR = r.ATR || 1;
+  const h = r.hist || [];
+  const closes = h.map(b=>b.c);
+  const recent = h.slice(-18);
+  const last = h[h.length-1] || {c:price,h:price,l:price,o:price,v:0};
+  const prev = h[h.length-2] || last;
+
+  // Ross Cameron原則: 買い/ロング専用
+  const dir = 'up';
+
+  const e9 = r.e9 || ema(closes,9);
+  const e20 = r.e20;
+  const e200 = r.e200;
+  const VW = r.VW;
+  const macd = r.MACD || calcMACD(closes,12,26,9);
+  const vol = r.volumePattern || calcVolumePattern(h);
+
+  // Stage 1: Screening
+  // 元ルール: 出来高 +500%以上、価格 +5%以上
+  const liquidityOk = true; // XAUUSDは高流動性とみなす
+  const volumeSpikeOk = vol.spikeRatio >= ROSS_RULES.volumeSpikeRatio;
+  const priceUpOk = (r.changePct || 0) >= ROSS_RULES.priceUpPctMin;
+  const screenOk = liquidityOk && volumeSpikeOk && priceUpOk;
+
+  // Stage 2: Chart filtering
+  const aboveVWAP = price > VW;
+  const above200 = price > e200;
+  const macdGreen = macd.isGreen;
+  const volumePatternOk = vol.upVol;
+  const chartOk = aboveVWAP && above200 && macdGreen && volumePatternOk;
+
+  // Stage 3: Ross Micro Pullback
+  // 日足上昇トレンドの代替: 15m/1H/日足のうち最低2つ上向き + 価格がEMA200上
+  const dailyTrendOk = r.daySignal?.upCount >= 2 && price > e200;
+  const pullbackBars = recent.slice(-8);
+  const pullbackLow = Math.min(...pullbackBars.map(b=>b.l));
+  const pullbackHigh = Math.max(...pullbackBars.slice(0,-1).map(b=>b.h));
+  const madeSmallPullback = pullbackBars.some(b => b.l <= e9 || b.l <= e20 || Math.abs(b.c-e20) <= ATR*0.8);
+  const notChasingHigh = (Math.max(...recent.map(b=>b.h)) - price) >= ATR*0.15 || madeSmallPullback;
+  const breakPullbackHigh = last.c > pullbackHigh && prev.c <= pullbackHigh;
+  const emaStackOk = e9 >= e20 && e20 >= e200 * 0.998;
+  const entryTimingOk = dailyTrendOk && madeSmallPullback && breakPullbackHigh && notChasingHigh && emaStackOk;
+
+  // Stage 4: Risk / Reward
+  const entry = price;
+  const slRaw = pullbackLow - ATR*0.12;
+  const risk = Math.max(entry - slRaw, ATR*0.35);
+  const sl = entry - risk;
+  const tp1 = entry + risk * ROSS_RULES.rrMin;   // 1:2
+  const tp2 = entry + risk * ROSS_RULES.rrBest;  // 1:3
+  const rr = (tp1-entry)/(entry-sl);
+  const rrOk = rr >= ROSS_RULES.rrMin;
+
+  // 利確警戒: MACD赤転 / 出来高を伴う陰線
+  const heavyRed = last.c < (last.o||last.c) && (last.v||0) > (vol.recentVol||1)*1.35;
+  const exitSignal = macd.crossDn || (!macd.isGreen && macd.hist < 0) || heavyRed;
+
+  let wallOk = true;
+  let wallReason = '';
+  const nearStrongHigh = r.SMC?.strongHighs?.some(s => s.absDistance !== undefined ? s.absDistance < ATR*1.5 : Math.abs(s.price-price)<ATR*1.5);
+  const fvgAhead = r.FVG?.nearFVG && r.FVG.nearFVG.type==='bear' && Math.abs((r.FVG.nearFVG.mid||price)-price)<ATR*1.5;
+  if(nearStrongHigh){ wallOk=false; wallReason='Strong Highが近い'; }
+  if(fvgAhead){ wallOk=false; wallReason='上方向に反対FVG'; }
+
+  const checks = [
+    {key:'liquidity', ok:liquidityOk, label:'高流動性'},
+    {key:'volumeSpike', ok:volumeSpikeOk, label:`出来高 ${vol.spikeRatio.toFixed(1)}倍（500%以上）`},
+    {key:'priceUp', ok:priceUpOk, label:`価格上昇 ${((r.changePct||0)).toFixed(2)}%（5%以上）`},
+    {key:'vwap', ok:aboveVWAP, label:'VWAP上'},
+    {key:'ema200', ok:above200, label:'200EMA上'},
+    {key:'macd', ok:macdGreen, label:macdGreen?'MACD緑':'MACD赤/弱い'},
+    {key:'volPattern', ok:volumePatternOk, label:'上昇出来高増・調整出来高減'},
+    {key:'dailyTrend', ok:dailyTrendOk, label:`中期上昇 ${r.daySignal?.upCount||0}/3`},
+    {key:'pullback', ok:madeSmallPullback, label:'1m/5m小さな押し目'},
+    {key:'break', ok:breakPullbackHigh, label:'押し目高値ブレイク'},
+    {key:'notChase', ok:notChasingHigh, label:'高値掴み回避'},
+    {key:'rr', ok:rrOk, label:`RR ${rr.toFixed(2)}（最低1:2）`},
+    {key:'wall', ok:wallOk, label:wallOk?'反発壁許容':wallReason}
+  ];
+
+  const score = checks.filter(x=>x.ok).length;
+  const setup = screenOk && chartOk && dailyTrendOk && madeSmallPullback && notChasingHigh && rrOk && wallOk;
+  const trigger = setup && breakPullbackHigh && macdGreen && !exitSignal;
+
+  let state = '見送り';
+  let stateClass = 'none';
+  let decision = 'NO_TRADE';
+  let reason = '';
+  if(!screenOk){
+    reason = !volumeSpikeOk ? '第1段階NG: 出来高500%以上ではない' :
+             !priceUpOk ? '第1段階NG: 価格上昇5%以上ではない' :
+             '第1段階NG';
+    state = '🚫 見送り（スクリーニング未通過）';
+  } else if(!chartOk){
+    reason = '第2段階NG: VWAP/200EMA/MACD/出来高パターンのいずれか未達';
+    state = '🚫 見送り（チャート条件未達）';
+  } else if(exitSignal){
+    reason = '利確/撤退シグナル: MACD赤転または出来高陰線';
+    state = '🚪 利確・撤退優先';
+    decision = 'EXIT_OR_NO_ENTRY';
+  } else if(trigger){
+    state = '🎯 Ross Micro Pullback BUY';
+    stateClass = 'perfect-up';
+    decision = 'BUY';
+    reason = '押し目高値ブレイク。ロング許可。';
+  } else if(setup){
+    state = '⬡ 押し目高値ブレイク待ち';
+    stateClass = 'strong-up';
+    decision = 'WAIT_BREAK';
+    reason = '条件は概ね通過。押し目高値の上抜け待ち。';
+  } else {
+    state = '⏸ 押し目形成待ち';
+    stateClass = 'weak';
+    decision = 'WAIT_PULLBACK';
+    reason = '第3段階待ち。高値掴み禁止。';
+  }
+
+  return {
+    dir, score, max:checks.length, setup, trigger, checks, state, stateClass, decision, reason,
+    screenOk, chartOk, dailyTrendOk, entryTimingOk, exitSignal,
+    liquidityOk, volumeSpikeOk, priceUpOk, aboveVWAP, above200, macdGreen, volumePatternOk,
+    madeSmallPullback, breakPullbackHigh, notChasingHigh, emaStackOk, wallOk, wallReason,
+    volumeSpikeRatio:parseFloat(vol.spikeRatio.toFixed(2)),
+    priceUpPct:parseFloat((r.changePct||0).toFixed(2)),
+    macdHist:parseFloat((macd.hist||0).toFixed(4)),
+    entry: parseFloat(entry.toFixed(2)),
+    sl: parseFloat(sl.toFixed(2)),
+    tp1: parseFloat(tp1.toFixed(2)),
+    tp2: parseFloat(tp2.toFixed(2)),
+    rr: parseFloat(rr.toFixed(2)),
+    risk: parseFloat(risk.toFixed(2))
+  };
+}
+
 // ==================== RISK / EA ====================
 function calcEMAWalls(price,e20,e75,e80,e200,sma320,ATR,signal,mode){
   const levels=[
@@ -793,8 +986,8 @@ function calcReboundRisk(ctx){
   return {score,decision,title,autoTradeAllowed,lotMultiplier,tpMultiplier,nearestWall,reasons};
 }
 function calcEntryQuality(r, mode){
-  const sig=mode==='daytrade'?r.daySignal:r.signal, ATR=r.ATR, ADX=r.ADX, BB=r.BB, price=r.price, e20=r.e20, ut=mode==='daytrade'?r.utbotDay:r.utbotScalp;
-  const match=sig.matchCount, score=mode==='daytrade'?r.utbotDayScore.score:r.utbotScalpScore.score;
+  const sig=mode==='daytrade'?r.daySignal:r.signal, ATR=r.ATR, ADX=r.ADX, BB=r.BB, price=r.price, e20=r.e20, ut=mode==='daytrade'?r.microPullback:r.utbotScalp;
+  const match=sig.matchCount, score=mode==='daytrade'?r.microPullback.score:r.utbotScalpScore.score;
   const expectedMove = ATR * (mode==='daytrade' ? (match>=3?2.4:match>=2?1.7:.7) : (match>=5?1.15:match>=4?.85:match>=3?.55:.25));
   const bw=BB?(BB.u-BB.l)/BB.m:0;
   let pass=0, reasons=[];
@@ -803,31 +996,33 @@ function calcEntryQuality(r, mode){
   if(score>=4){pass+=2}else reasons.push(`UTBot根拠${score}/6`);
   if(ADX.adx>=(mode==='daytrade'?22:20)){pass+=1}else reasons.push(`ADX${ADX.adx}で弱い`);
   if(bw>=0.005){pass+=1}else reasons.push(`BB幅不足`);
-  const canEntry=pass>=7 && sig.mainDir!=='neut' && ut && ut.dir===sig.mainDir;
-  const watchEntry=!canEntry && pass>=6 && sig.mainDir!=='neut';
+  const canEntry=mode==='daytrade' ? (r.microPullback.trigger === true && r.microPullback.decision === 'BUY') : (pass>=7 && sig.mainDir!=='neut' && ut && ut.dir===sig.mainDir);
+  const watchEntry=mode==='daytrade' ? (!canEntry && r.microPullback.setup === true) : (!canEntry && pass>=6 && sig.mainDir!=='neut');
   return {canEntry,watchEntry,passCount:pass,expectedMove,reason:reasons.join(' / ')||'条件良好',dir:sig.mainDir,matchCount:match};
 }
 function buildEASignal(r, mode='scalp'){
   const rr = mode==='daytrade' ? r.reboundRiskDay : r.reboundRiskScalp;
   const eq = mode==='daytrade' ? r.entryQualityDay : r.entryQualityScalp;
   const sig = mode==='daytrade' ? r.daySignal : r.signal;
-  const ut = mode==='daytrade' ? r.utbotDay : r.utbotScalp;
-  const score = mode==='daytrade' ? r.utbotDayScore.score : r.utbotScalpScore.score;
+  const ut = mode==='daytrade' ? r.microPullback : r.utbotScalp;
+  const score = mode==='daytrade' ? r.microPullback.score : r.utbotScalpScore.score;
   return {
     enabled: true,
-    version: 'GoldScope v2.9.1',
+    version: 'GoldScope v2.9.3',
     mode,
     symbol: 'XAUUSD',
     action: sig?.mainDir === 'up' ? 'BUY' : sig?.mainDir === 'dn' ? 'SELL' : 'NONE',
     price: parseFloat(r.price.toFixed(2)),
     score,
     confidence: sig?.mainDir === 'up' ? sig?.upPct : sig?.dnPct,
-    utbotDir: ut?.dir || 'none',
+    strategy: mode==='daytrade' ? 'ROSS_MICRO_PULLBACK_LONG_ONLY' : 'UTBOT_SCALP',
+    utbotDir: mode==='daytrade' ? undefined : (ut?.dir || 'none'),
+    microPullbackState: mode==='daytrade' ? (ut?.state || 'none') : undefined,
     live: r.spotMeta?.live === true,
     source: r.spotMeta?.source || 'unknown',
     reboundRisk: rr.score || 0,
     reboundDecision: rr.decision || 'normal',
-    autoTradeAllowed: rr.autoTradeAllowed !== false && eq.canEntry === true,
+    autoTradeAllowed: rr.autoTradeAllowed !== false && eq.canEntry === true && (mode!=='daytrade' || (r.microPullback.trigger === true && r.microPullback.decision === 'BUY')),
     lotMultiplier: rr.lotMultiplier ?? 1.0,
     tpMultiplier: rr.tpMultiplier ?? 1.0,
     nearestWall: rr.nearestWall?.label || null,
@@ -868,8 +1063,8 @@ function analyze(price, open, hist, spotMeta){
   if(!hist || hist.length<30){ hist=simHistory; }
   const closes=hist.map(b=>b.c), sh=hist.slice(-120), sc=sh.map(b=>b.c);
   const ATR=calcATR(sh,14), ADX=calcADX(sh,14), BB=bb(sc,20,2);
-  const e20=ema(sc,20), e75=ema(closes,75), e80=sma(closes,80), e200=ema(closes,200), sma320=sma(closes,Math.min(320,closes.length));
-  const rsiS=rsi(sc), VW=vwap(sh), bp=buyPressure(sh);
+  const e9=ema(sc,9), e20=ema(sc,20), e75=ema(closes,75), e80=sma(closes,80), e200=ema(closes,200), sma320=sma(closes,Math.min(320,closes.length));
+  const rsiS=rsi(sc), VW=vwap(sh), bp=buyPressure(sh), MACD=calcMACD(closes,12,26,9), volumePattern=calcVolumePattern(hist);
   const tfBias=calcTFBias(hist,price,ATR,e20,e75,e200,VW);
   const signal=calcSignal(tfBias);
   const daySignal=calcDaySignal(tfBias);
@@ -878,12 +1073,13 @@ function analyze(price, open, hist, spotMeta){
   const OB=detectOB(hist,price,ATR);
   const FVG=calcFVG(hist,price,ATR);
 
-  const utbotScalp=calcUTBotFull(hist.slice(-120),1.5,7);
-  const utbotDay=calcUTBotFull(hist.slice(-180),2.5,14);
+  const utbotScalp=calcUTBotFull(hist.slice(-120),ROSS_RULES.utbotKV,ROSS_RULES.utbotATR);
+  const utbotDay=calcUTBotFull(hist.slice(-180),ROSS_RULES.utbotKV,ROSS_RULES.utbotATR);
 
-  let base={price,open,spotMeta,hist:hist.slice(-200),ATR,ADX,BB,e20,e75,e80,e200,sma320,rsiS,VW,bp,tfBias,signal,daySignal,trState,SMC:strong,OB,FVG,utbotScalp,utbotDay};
+  let base={price,open,spotMeta,hist:hist.slice(-200),ATR,ADX,BB,e9,e20,e75,e80,e200,sma320,rsiS,VW,bp,MACD,volumePattern,tfBias,signal,daySignal,trState,SMC:strong,OB,FVG,utbotScalp,utbotDay};
   base.utbotScalpScore=calcUTBotScore(base,utbotScalp,'scalp');
-  base.utbotDayScore=calcUTBotScore(base,utbotDay,'daytrade');
+  base.microPullback=calcMicroPullback(base);
+  base.utbotDayScore={score:base.microPullback.score,max:base.microPullback.max,items:base.microPullback.checks};
 
   base.emaWallsScalp=calcEMAWalls(price,e20,e75,e80,e200,sma320,ATR,signal,'scalp');
   base.emaWallsDay=calcEMAWalls(price,e20,e75,e80,e200,sma320,ATR,daySignal,'daytrade');
@@ -988,16 +1184,16 @@ function renderScalp(r){
   renderDetails('Scalp',r,'scalp');
 }
 function renderDay(r){
-  const sig=r.daySignal, score=r.utbotDayScore, rr=r.reboundRiskDay, ea=buildEASignal(r,'daytrade');
+  const sig=r.daySignal, score=r.utbotDayScore, rr=r.reboundRiskDay, ea=buildEASignal(r,'daytrade'), mp=r.microPullback;
   $('signalHeroDay').className='signal-hero '+sig.stateClass;
-  const utDir=r.utbotDay?.dir||'none';
-  $('sigStatusDay').textContent=`${sig.state} · UTBot ${utDir==='up'?'BUY':utDir==='dn'?'SELL':'--'}`;
+  const utDir=mp.dir||'none';
+  $('sigStatusDay').textContent=mp.state;
   $('sigStatusDay').className='sig-status '+(sig.mainDir==='up'?'up':sig.mainDir==='dn'?'dn':'neut');
-  $('sigScoreDay').textContent=score.score+'/6'; $('sigScoreDay').className='sig-score-num '+(utDir==='up'?'up':utDir==='dn'?'dn':'neut');
+  $('sigScoreDay').textContent=score.score+'/'+score.max; $('sigScoreDay').className='sig-score-num '+(utDir==='up'?'up':utDir==='dn'?'dn':'neut');
   $('upBarDay').style.width=sig.upPct+'%'; $('dnBarDay').style.width=sig.dnPct+'%'; $('upPctDay').textContent=sig.upPct+'%'; $('dnPctDay').textContent=sig.dnPct+'%';
   renderTFCards('day',r.tfBias,['15m','1h','1d']);
   $('dayAtrChip').textContent='$'+r.ATR.toFixed(1);
-  $('utbotDayChip').textContent=utDir==='up'?'BUY':utDir==='dn'?'SELL':'--'; $('utbotDayChip').style.color=utDir==='up'?'var(--up)':utDir==='dn'?'var(--dn)':'var(--tx3)';
+  $('microDayChip').textContent=mp.trigger?'TRIGGER':mp.setup?'SETUP':'WAIT'; $('microDayChip').style.color=mp.trigger?'var(--gr)':mp.setup?'var(--pu)':'var(--tx3)';
   $('day15Chip').textContent=r.tfBias['15m'].dir; $('day1hChip').textContent=r.tfBias['1h'].dir;
   $('eaAllowChipDay').textContent=ea.autoTradeAllowed?'許可':'停止'; $('eaAllowChipDay').style.color=ea.autoTradeAllowed?'var(--gr)':'var(--dn)';
   $('narTextDay').textContent=buildNarration(r,'daytrade');
@@ -1033,8 +1229,9 @@ function renderDetails(suffix,r,mode){
   const sig=mode==='daytrade'?r.daySignal:r.signal, score=mode==='daytrade'?r.utbotDayScore:r.utbotScalpScore, eq=mode==='daytrade'?r.entryQualityDay:r.entryQualityScalp;
   const lines=[];
   lines.push(`📊 $${r.price.toFixed(1)} · ${sig.state} · ADX${r.ADX.adx} · RSI${r.rsiS}`);
-  lines.push(`🌊 UTBot根拠: ${score.score}/6 · ${score.items.map(x=>(x.ok?'✅':'⬜')+x.label).join(' / ')}`);
+  lines.push(`${mode==='daytrade'?'🟣 Ross判定':'🌊 UTBot'}: ${score.score}/${score.max||6} · ${score.items.map(x=>(x.ok?'✅':'⬜')+x.label).join(' / ')}`);
   lines.push(`📉 EMA20 $${r.e20.toFixed(1)} · EMA75 $${r.e75.toFixed(1)} · 80SMA $${r.e80.toFixed(1)} · 320SMA $${r.sma320.toFixed(1)}`);
+  if(mode==='daytrade' && r.microPullback){ lines.push(`🟣 RossPB: ${r.microPullback.state} · ${r.microPullback.reason} · Entry $${r.microPullback.entry} · SL $${r.microPullback.sl} · TP1 $${r.microPullback.tp1} · TP2 $${r.microPullback.tp2}`); }
   if(r.FVG.nearFVG) lines.push(`⬡ ${r.FVG.label}`);
   if(r.OB.obRetest) lines.push(`🔷 ${r.OB.obRetest.label}`);
   if(r.SMC.strongHighs.length) lines.push(`🔴 Strong High: ${r.SMC.strongHighs.map(s=>'$'+s.price+'('+s.count+'回)').join(' / ')}`);
@@ -1046,7 +1243,13 @@ function renderDayTarget(r){
   const t=r.dayTarget;
   if(!t.target){ $('dayTargetPanel').innerHTML='<div style="color:var(--tx3)">中期方向感なし。目標設定は見送り。</div>'; return; }
   $('dayTargetPanel').innerHTML = `
-    <div style="font-size:15px;font-weight:800;color:${r.daySignal.mainDir==='up'?'var(--up)':'var(--dn)'};margin-bottom:8px">${t.label}</div>
+    <span class="day-micro-badge">Ross Micro Pullback</span>
+    <div class="micro-card">
+      <div class="micro-title">${r.microPullback.state}</div>
+      <div class="micro-line">Entry $${r.microPullback.entry} / SL ${r.microPullback.sl?'$'+r.microPullback.sl:'--'} / TP1 ${r.microPullback.tp1?'$'+r.microPullback.tp1:'--'} / TP2 ${r.microPullback.tp2?'$'+r.microPullback.tp2:'--'}</div>
+      <div class="micro-line">出来高 ${r.microPullback.volumeSpikeRatio}倍 / 価格 ${r.microPullback.priceUpPct}% / MACD ${r.microPullback.macdGreen?'緑':'赤'} / 押し目高値ブレイク ${r.microPullback.breakPullbackHigh?'確認':'待ち'} · Score <span class="micro-score">${r.microPullback.score}/${r.microPullback.max}</span></div>
+    </div>
+    <div style="font-size:15px;font-weight:800;color:${r.daySignal.mainDir==='up'?'var(--up)':'var(--dn)'};margin:10px 0 8px">${t.label}</div>
     ${t.items.map(x=>`<div class="row-item"><span>${x.label}<br><span style="color:var(--tx3)">${x.basis} / 距離$${x.dist.toFixed(1)}</span></span><strong style="font-family:var(--mn)">$${x.price}</strong></div>`).join('')}
   `;
 }
@@ -1082,7 +1285,7 @@ function updateChart(r,mode){
   c.series.setData(candles);
   let e=candles[0]?.close||r.price, k=2/21;
   c.emaLine.setData(candles.map(x=>{e=x.close*k+e*(1-k);return{time:x.time,value:parseFloat(e.toFixed(2))};}));
-  const ut=mode==='daytrade'?calcUTBotFull(hist,2.5,14):calcUTBotFull(hist,1.5,7);
+  const ut=calcUTBotFull(hist,ROSS_RULES.utbotKV,ROSS_RULES.utbotATR);
   if(ut){
     c.utLine.setData(ut.xATRTS.map((v,i)=>({time:candles[i].time,value:parseFloat(v.toFixed(2))})));
     const markers=ut.signals.slice(-40).map(s=>({
@@ -1101,7 +1304,7 @@ function updateChart(r,mode){
   c.riskLine.setData(rr.nearestWall?candles.map(x=>({time:x.time,value:rr.nearestWall.wallPrice})):[]);
   const legendId=mode==='daytrade'?'chartLegendDay':'chartLegendScalp';
   const sig=mode==='daytrade'?r.daySignal:r.signal, ea=buildEASignal(r,mode);
-  $(legendId).innerHTML=`<span class="cl-item" style="color:#E8C96A">$${r.price.toFixed(1)}</span><span class="cl-item" style="color:${sig.mainDir==='up'?'#3A8AE0':sig.mainDir==='dn'?'#E05530':'#777'}">${sig.state}</span><span class="cl-item" style="color:${ea.autoTradeAllowed?'#1BAE82':'#E05530'}">${ea.autoTradeAllowed?'EA OK':'EA BLOCK'}</span><span class="cl-item" style="color:${mode==='daytrade'?'#8A7EE8':'#E8C96A'}">UTBot</span>`;
+  $(legendId).innerHTML=`<span class="cl-item" style="color:#E8C96A">$${r.price.toFixed(1)}</span><span class="cl-item" style="color:${sig.mainDir==='up'?'#3A8AE0':sig.mainDir==='dn'?'#E05530':'#777'}">${sig.state}</span><span class="cl-item" style="color:${ea.autoTradeAllowed?'#1BAE82':'#E05530'}">${ea.autoTradeAllowed?'EA OK':'EA BLOCK'}</span><span class="cl-item" style="color:${mode==='daytrade'?'#8A7EE8':'#E8C96A'}">${mode==='daytrade'?'RossPB':'UTBot'}</span>`;
 }
 function resizeCharts(){
   Object.values(charts).forEach(c=>{try{c.chart.timeScale().fitContent();}catch(e){}});
@@ -1116,9 +1319,13 @@ function buildNarration(r, mode){
   const p=r.price.toFixed(1);
 
   if(mode==='daytrade'){
-    if(ea.autoTradeAllowed) return `デイトレ。現在$${p}。${sig.state}。UTBot根拠${score.score}点。目標は${r.dayTarget.label}。反発リスク${ea.reboundRisk}点で、自動売買メッセージは許可です。`;
-    if(ea.reboundRisk>=45) return `デイトレ。現在$${p}。方向は${sig.mainDir==='up'?'上昇':'下降'}寄りですが、${ea.nearestWall||'反発壁'}が近いため待機。チャートのブロックサインを確認してください。`;
-    return `デイトレ。現在$${p}。${sig.state}。UTBot根拠${score.score}点。${eq.reason}。15分、1時間、日足の一致を待ちます。`;
+    const mp=r.microPullback;
+    if(ea.autoTradeAllowed) return `デイトレ。現在$${p}。ロス式マイクロプルバック発動。押し目高値を上抜けました。エントリーは買いのみ。損切り$${mp.sl}、利確候補$${mp.tp1}、理想$${mp.tp2}です。`;
+    if(mp.exitSignal) return `デイトレ。現在$${p}。MACD赤転または出来高陰線のため、利確または見送りです。`;
+    if(!mp.screenOk) return `デイトレ。現在$${p}。見送り。ロス式の第1段階未通過です。出来高${mp.volumeSpikeRatio}倍、価格上昇${mp.priceUpPct}パーセント。500パーセント出来高増と5パーセント上昇が必要です。`;
+    if(!mp.chartOk) return `デイトレ。現在$${p}。見送り。VWAP上、200EMA上、MACD緑、出来高パターンのどれかが不足しています。`;
+    if(ea.reboundRisk>=45) return `デイトレ。現在$${p}。ロス式条件に近いですが、${ea.nearestWall||'反発壁'}が近いため待機。高値掴み禁止です。`;
+    return `デイトレ。現在$${p}。${mp.state}。${mp.reason}。押し目形成後、押し目高値を抜けた瞬間だけ買います。`;
   }
 
   if(ea.autoTradeAllowed) return `スキャル。現在$${p}。${sig.state}。UTBot根拠${score.score}点。反発リスクは${ea.reboundRisk}点、短期エントリー可能です。`;
