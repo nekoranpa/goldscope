@@ -1,10 +1,11 @@
 
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>GoldScope Vision v2.5 — AI Market Intelligence XAUUSD</title>
+<title>GoldScope Vision v2.6 — AI Market Intelligence XAUUSD</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -501,7 +502,7 @@ html,body{overflow-x:hidden;width:100%;}
   <div class="login-wrap">
     <div class="login-logo">
       <div class="logo-name">GoldScope <span>Vision</span></div>
-      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · v2.5</div>
+      <div class="logo-sub">AI Market Intelligence for GOLD (XAUUSD) · v2.6</div>
     </div>
     <div class="login-card">
       <div style="font-size:13px;font-weight:600;margin-bottom:4px;">会員ログイン</div>
@@ -521,7 +522,7 @@ html,body{overflow-x:hidden;width:100%;}
     <div class="hdr-logo">
       <div class="logo-dot">⬡</div>
       <span class="hdr-name">GoldScope <span>Vision</span></span>
-      <span class="hdr-ver">v2.5</span>
+      <span class="hdr-ver">v2.6</span>
     </div>
     <div class="hdr-right">
       <div class="live-pill">
@@ -742,6 +743,59 @@ html,body{overflow-x:hidden;width:100%;}
         </div>
       </div>
 
+      <!-- ★ UTBot シグナルパネル (v2.6) -->
+      <div class="panel" id="utbotPanel" style="border-color:rgba(232,201,106,.4);background:linear-gradient(135deg,rgba(232,201,106,.06),transparent);">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div class="panel-lbl" style="margin-bottom:0;color:var(--gl)">⚡ UTBot シグナル</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10px;color:var(--tx3)">ATR係数</span>
+            <input type="range" id="utbotFactor" min="0.5" max="4.0" step="0.1" value="2.0"
+              style="width:90px;accent-color:var(--g);cursor:pointer;"
+              oninput="document.getElementById('utbotFactorVal').textContent=parseFloat(this.value).toFixed(1)">
+            <span id="utbotFactorVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:24px">2.0</span>
+          </div>
+        </div>
+        <!-- シグナル表示 -->
+        <div id="utbotSignalBox" style="padding:12px;border-radius:var(--rs);background:var(--bg3);border:0.5px solid var(--bo2);margin-bottom:10px;">
+          <div id="utbotArrow" style="font-size:28px;line-height:1;margin-bottom:4px;">⏳</div>
+          <div id="utbotLabel" style="font-size:13px;font-weight:700;font-family:var(--mn);color:var(--tx2)">分析待ち</div>
+          <div id="utbotPrice" style="font-size:11px;color:var(--tx3);margin-top:2px;font-family:var(--mn)">--</div>
+        </div>
+        <!-- 根拠スコア -->
+        <div id="utbotReason" style="font-size:12px;color:var(--tx2);line-height:1.8;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:var(--rs);border-left:2px solid var(--gl);display:none;"></div>
+        <!-- PF検証統計 -->
+        <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--bo);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:10px;color:var(--tx3)">PF自動検証（ATR×1.5 TP/SL・30分判定）</span>
+            <button onclick="clearUTBotPF()" style="font-size:9px;color:var(--tx3);background:none;border:0.5px solid var(--bo2);border-radius:4px;padding:2px 6px;cursor:pointer;">リセット</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--rs);padding:6px 4px;">
+              <div style="font-size:16px;font-weight:700;font-family:var(--mn);color:var(--tx)" id="pfTotal">0</div>
+              <div style="font-size:9px;color:var(--tx3)">試行</div>
+            </div>
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--rs);padding:6px 4px;">
+              <div style="font-size:16px;font-weight:700;font-family:var(--mn);color:var(--up)" id="pfWin">0</div>
+              <div style="font-size:9px;color:var(--tx3)">勝ち</div>
+            </div>
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--rs);padding:6px 4px;">
+              <div style="font-size:16px;font-weight:700;font-family:var(--mn);color:var(--dn)" id="pfLoss">0</div>
+              <div style="font-size:9px;color:var(--tx3)">負け</div>
+            </div>
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--rs);padding:6px 4px;">
+              <div style="font-size:16px;font-weight:700;font-family:var(--mn);color:var(--gr)" id="pfWR">--%</div>
+              <div style="font-size:9px;color:var(--tx3)">勝率</div>
+            </div>
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--rs);padding:6px 4px;">
+              <div style="font-size:16px;font-weight:700;font-family:var(--mn);color:var(--g)" id="pfPF">--</div>
+              <div style="font-size:9px;color:var(--tx3)">PF</div>
+            </div>
+          </div>
+          <!-- 直近シグナル履歴 -->
+          <div id="utbotHistory" style="margin-top:8px;font-size:11px;max-height:120px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
       <!-- FVG パネル -->
       <div class="panel" id="fvgPanel">
         <div class="panel-lbl">⬡ FVG（フェアバリューギャップ）· 確定足ベース</div>
@@ -917,7 +971,7 @@ html,body{overflow-x:hidden;width:100%;}
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div>GoldScope Vision v2.5 · 株式会社サウンドテラス</div>
+      <div>GoldScope Vision v2.6 · 株式会社サウンドテラス</div>
     </div>
     <div class="disclaimer" style="max-width:900px;margin:7px auto 0">⚠️ 投資助言・売買指示・利益保証ではありません。投資判断はご自身の責任で行ってください。</div>
   </footer>
@@ -1065,7 +1119,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const id=document.getElementById('inp-id');
   if(pw) pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   if(id) id.addEventListener('keydown',e=>{if(e.key==='Enter')pw?.focus();});
-  startClock();loadPerf();
+  startClock();loadPerf();loadUTBotPF();
   hfmOffset=parseFloat(localStorage.getItem('hfm_offset')||'0.5');
   initVoices();
 });
@@ -1569,6 +1623,307 @@ async function fetchAll(){
   const p=parseFloat((base+(Math.random()-.49)*.6).toFixed(2));
   simHistory.push({c:p,h:p+.4,l:p-.4,v:350});if(simHistory.length>300)simHistory=simHistory.slice(-300);
   return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,lastRefreshed:new Date().toLocaleTimeString('ja-JP'),source:'SIM（MT4未接続）',hist:[...simHistory],live:false};
+}
+
+// ==================== UTBot (v2.6) ====================
+// ATRベーストレイリングラインで方向転換を検出
+// 係数はUIスライダーで1.0〜4.0調整可能（デフォルト2.0）
+
+let utbotState = {
+  line: null,        // トレイリングライン値
+  dir: 'none',       // 'up' | 'dn' | 'none'
+  prevDir: 'none',
+  signalPrice: null, // シグナル発生価格
+  signalTime: null,
+  factor: 2.0,
+};
+
+// UTBotトレイリングライン計算
+function calcUTBot(hist, factor) {
+  if (!hist || hist.length < 20) return null;
+  const closes = hist.map(x => x.c);
+  const atrVal = calcATR(hist, 14);
+  const trail = atrVal * factor;
+
+  let line = closes[0];
+  let dir = 'none';
+  const lines = [];
+
+  for (let i = 1; i < closes.length; i++) {
+    const c = closes[i];
+    const prev = closes[i - 1];
+    let newLine = line;
+
+    if (c > line) {
+      newLine = Math.max(line, c - trail);
+    } else {
+      newLine = Math.min(line, c + trail);
+    }
+    line = newLine;
+    lines.push({ line, c });
+  }
+
+  const last = lines[lines.length - 1];
+  const prev2 = lines[lines.length - 2];
+  if (!last || !prev2) return null;
+
+  // 方向判定
+  let newDir = 'none';
+  if (last.c > last.line && prev2.c <= prev2.line) newDir = 'up';
+  else if (last.c < last.line && prev2.c >= prev2.line) newDir = 'dn';
+  else newDir = last.c > last.line ? 'up' : 'dn';
+
+  return {
+    line: parseFloat(last.line.toFixed(2)),
+    dir: newDir,
+    atr: parseFloat(atrVal.toFixed(2)),
+    trail: parseFloat(trail.toFixed(2)),
+    isNew: newDir !== utbotState.dir, // 前回から方向が変わった
+  };
+}
+
+// UTBotシグナル根拠スコア計算
+function calcUTBotScore(r, utbot) {
+  if (!r || !utbot) return { score: 0, max: 6, items: [] };
+  const { price, ATR, ADX, signal, BB, e20, e75, e200, rsiS, SMC, isTrueSqueeze } = r;
+  const dir = utbot.dir;
+  const items = [];
+
+  // ①ATRライン方向一致
+  items.push({
+    ok: true,
+    label: `ATRライン${dir === 'up' ? '上抜け' : '下抜け'} $${utbot.line.toFixed(1)}`,
+    key: 'ATR_CROSS'
+  });
+
+  // ②EMA200方向一致
+  const ema200ok = dir === 'up' ? price > e200 : price < e200;
+  items.push({
+    ok: ema200ok,
+    label: `EMA200 ${ema200ok ? '方向一致' : '逆方向⚠️'} ($${e200?.toFixed(1)})`,
+    key: 'EMA200'
+  });
+
+  // ③ADX強度
+  const adxVal = ADX?.adx || 0;
+  const adxOk = adxVal >= 25;
+  items.push({
+    ok: adxOk,
+    label: `ADX${adxVal} ${adxOk ? 'トレンド有効' : '弱め注意'}`,
+    key: 'ADX'
+  });
+
+  // ④FVGサポート
+  const fvg = r.fvgData;
+  const fvgOk = fvg?.nearFVG && (
+    (dir === 'up' && fvg.nearFVG.type === 'bull') ||
+    (dir === 'dn' && fvg.nearFVG.type === 'bear')
+  );
+  items.push({
+    ok: !!fvgOk,
+    label: fvgOk
+      ? `FVGゾーン下支え ($${fvg.nearFVG?.low?.toFixed(1)}〜$${fvg.nearFVG?.high?.toFixed(1)})`
+      : 'FVG一致なし',
+    key: 'FVG'
+  });
+
+  // ⑤BBスクイーズでない
+  const noSqueeze = !isTrueSqueeze;
+  items.push({
+    ok: noSqueeze,
+    label: noSqueeze ? 'BBスクイーズなし（ボラあり）' : 'BBスクイーズ中⚠️',
+    key: 'BB_SQUEEZE'
+  });
+
+  // ⑥RSI過熱していない
+  const rsiOk = dir === 'up' ? (rsiS || 50) < 72 : (rsiS || 50) > 28;
+  items.push({
+    ok: rsiOk,
+    label: `RSI${rsiS || 50} ${rsiOk ? '適正範囲' : '過熱注意⚠️'}`,
+    key: 'RSI'
+  });
+
+  const score = items.filter(x => x.ok).length;
+  return { score, max: 6, items };
+}
+
+// UTBotナレーション生成
+function buildUTBotNarration(utbot, scoreData, price) {
+  const dir = utbot.dir === 'up' ? 'バイ' : 'セル';
+  const dirJP = utbot.dir === 'up' ? '上昇' : '下降';
+  const scoreStr = `根拠${scoreData.score}点中${scoreData.max}点`;
+  const priority = scoreData.score >= 5 ? '優先度高め' :
+                   scoreData.score >= 3 ? '優先度中程度' : '優先度低め、慎重に';
+
+  let text = `${dir}シグナル。`;
+  text += `ATRライン${utbot.line.toFixed(1)}を${utbot.dir === 'up' ? '上抜け' : '下抜け'}。`;
+
+  // 根拠を読み上げ
+  const okItems = scoreData.items.filter(x => x.ok);
+  const ngItems = scoreData.items.filter(x => !x.ok);
+
+  if (okItems.length > 0) {
+    text += okItems.map(x => x.label).join('。') + '。';
+  }
+  if (ngItems.length > 0) {
+    text += '注意点として' + ngItems.map(x => x.label).join('、') + '。';
+  }
+
+  text += `${scoreStr}、${priority}。`;
+  return text;
+}
+
+// ==================== UTBot PF計測 (v2.6) ====================
+let utbotPFData = { records: [] };
+
+function loadUTBotPF() {
+  try {
+    const d = localStorage.getItem('gsv_utbot_pf');
+    if (d) utbotPFData = JSON.parse(d);
+  } catch {}
+  renderUTBotPF();
+}
+
+function saveUTBotPF() {
+  try { localStorage.setItem('gsv_utbot_pf', JSON.stringify(utbotPFData)); } catch {}
+}
+
+function clearUTBotPF() {
+  if (confirm('UTBotPFデータをリセットしますか？')) {
+    utbotPFData = { records: [] };
+    saveUTBotPF();
+    renderUTBotPF();
+  }
+}
+
+// シグナル記録（発生時）
+function recordUTBotSignal(dir, price, atr, score) {
+  const tp = dir === 'up' ? price + atr * 1.5 : price - atr * 1.5;
+  const sl = dir === 'up' ? price - atr * 1.5 : price + atr * 1.5;
+  const rec = {
+    id: Date.now(),
+    dir, price, tp, sl, score,
+    time: new Date().toLocaleString('ja-JP'),
+    result: null, // 'win' | 'loss' | null（未判定）
+    checkAt: Date.now() + 30 * 60 * 1000, // 30分後に判定
+  };
+  utbotPFData.records.unshift(rec);
+  if (utbotPFData.records.length > 200) utbotPFData.records = utbotPFData.records.slice(0, 200);
+  saveUTBotPF();
+  renderUTBotPF();
+}
+
+// 未判定レコードを現在価格で自動判定
+function checkUTBotPFResults(currentPrice) {
+  const now = Date.now();
+  let changed = false;
+  for (const rec of utbotPFData.records) {
+    if (rec.result !== null) continue;
+    if (now < rec.checkAt) continue;
+    // 30分経過 → 現在価格で判定
+    if (rec.dir === 'up') {
+      rec.result = currentPrice >= rec.tp ? 'win' : 'loss';
+    } else {
+      rec.result = currentPrice <= rec.tp ? 'win' : 'loss';
+    }
+    changed = true;
+  }
+  if (changed) { saveUTBotPF(); renderUTBotPF(); }
+}
+
+function renderUTBotPF() {
+  const judged = utbotPFData.records.filter(r => r.result !== null);
+  const total = judged.length;
+  const wins = judged.filter(r => r.result === 'win').length;
+  const losses = total - wins;
+  const wr = total > 0 ? Math.round(wins / total * 100) : 0;
+  // PF = 総利益 / 総損失（ATR×1.5固定なのでRR=1:1、PF=勝率/(1-勝率)）
+  const pf = losses > 0 ? (wins / losses).toFixed(2) : wins > 0 ? '∞' : '--';
+
+  const el = id => document.getElementById(id);
+  if (el('pfTotal')) el('pfTotal').textContent = total;
+  if (el('pfWin'))   el('pfWin').textContent   = wins;
+  if (el('pfLoss'))  el('pfLoss').textContent  = losses;
+  if (el('pfWR'))    el('pfWR').textContent     = total > 0 ? wr + '%' : '--%';
+  if (el('pfPF'))    { el('pfPF').textContent   = pf;
+    el('pfPF').style.color = pf >= 1.5 ? 'var(--gr)' : pf >= 1.0 ? 'var(--g)' : 'var(--dn)'; }
+
+  // 履歴表示（直近10件）
+  const histEl = el('utbotHistory');
+  if (!histEl) return;
+  const recent = utbotPFData.records.slice(0, 10);
+  const pending = utbotPFData.records.filter(r => r.result === null).length;
+  histEl.innerHTML = (pending > 0
+    ? `<div style="font-size:10px;color:var(--am);margin-bottom:4px">⏳ 判定待ち: ${pending}件（30分後自動判定）</div>`
+    : '') +
+    recent.map(r => {
+      const col = r.result === 'win' ? 'var(--up)' : r.result === 'loss' ? 'var(--dn)' : 'var(--tx3)';
+      const icon = r.result === 'win' ? '✅' : r.result === 'loss' ? '❌' : '⏳';
+      const dirIcon = r.dir === 'up' ? '▲' : '▼';
+      return `<div style="display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:0.5px solid var(--bo);">
+        <span style="color:${r.dir==='up'?'var(--up)':'var(--dn)'}">${dirIcon}</span>
+        <span style="font-family:var(--mn);color:var(--tx2)">$${r.price?.toFixed(1)}</span>
+        <span style="color:var(--tx3);font-size:10px">${r.time}</span>
+        <span style="margin-left:auto;color:${col}">${icon} ${r.result||'待ち'}</span>
+        <span style="font-size:10px;color:var(--tx3)">${r.score}/6点</span>
+      </div>`;
+    }).join('') ||
+    '<div style="font-size:11px;color:var(--tx3);padding:4px 0">シグナル記録なし</div>';
+}
+
+// UTBotパネル更新（renderAllから呼ぶ）
+let lastUTBotDir = 'none';
+function renderUTBotPanel(r) {
+  const factor = parseFloat(document.getElementById('utbotFactor')?.value || '2.0');
+  const utbot = calcUTBot(r.hist, factor);
+  if (!utbot) return;
+
+  // PF判定チェック（毎回）
+  checkUTBotPFResults(r.price);
+
+  const scoreData = calcUTBotScore(r, utbot);
+  const arrow = document.getElementById('utbotArrow');
+  const label = document.getElementById('utbotLabel');
+  const priceEl = document.getElementById('utbotPrice');
+  const reasonEl = document.getElementById('utbotReason');
+  if (!arrow) return;
+
+  const isUp = utbot.dir === 'up';
+  arrow.textContent = isUp ? '▲' : '▼';
+  arrow.style.color = isUp ? 'var(--up)' : 'var(--dn)';
+
+  // スコアバー
+  const bars = Array.from({length: 6}, (_, i) =>
+    `<span style="display:inline-block;width:14px;height:14px;border-radius:3px;margin:1px;background:${i < scoreData.score ? (isUp ? 'var(--up)' : 'var(--dn)') : 'var(--bg4)'}"></span>`
+  ).join('');
+
+  label.innerHTML = `${isUp ? '<span style="color:var(--up)">▲ BUYシグナル</span>' : '<span style="color:var(--dn)">▼ SELLシグナル</span>'}
+    <span style="margin-left:8px">${bars}</span>
+    <span style="font-size:11px;color:var(--tx3);margin-left:4px">${scoreData.score}/${scoreData.max}点</span>`;
+
+  priceEl.textContent = `ATRライン: $${utbot.line.toFixed(1)}  |  ATR: $${utbot.atr.toFixed(1)}  |  係数: ${factor.toFixed(1)}`;
+
+  // 根拠リスト
+  reasonEl.style.display = 'block';
+  reasonEl.innerHTML = scoreData.items.map(item =>
+    `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;">
+      <span style="color:${item.ok ? 'var(--gr)' : 'var(--tx3)'}">${item.ok ? '✅' : '⬜'}</span>
+      <span style="color:${item.ok ? 'var(--tx)' : 'var(--tx3)'}">${item.label}</span>
+    </div>`
+  ).join('');
+
+  // 新シグナル発生 → ナレーション＋記録
+  if (utbot.isNew && utbot.dir !== lastUTBotDir) {
+    lastUTBotDir = utbot.dir;
+    const narText = buildUTBotNarration(utbot, scoreData, r.price);
+    speak(narText);
+    recordUTBotSignal(utbot.dir, r.price, utbot.atr, scoreData.score);
+    // 状態保存
+    utbotState.dir = utbot.dir;
+    utbotState.line = utbot.line;
+    utbotState.signalPrice = r.price;
+    utbotState.signalTime = new Date().toLocaleTimeString('ja-JP');
+  }
 }
 
 // ==================== INDICATORS ====================
@@ -2972,6 +3327,9 @@ function renderAll(r,d){
   $('narBadge').textContent   = badgeTxt;
   $('narBadge').style.color   = badgeColor;
   $('narBadge').style.borderColor = badgeColor;
+
+  // UTBot シグナル (v2.6)
+  renderUTBotPanel(r);
 
   // 中期シナリオ・1H確定足・FVG
   renderMidScenario(r);
