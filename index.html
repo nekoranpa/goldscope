@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>GoldScope Vision v2.8 — AI Market Intelligence XAUUSD</title>
+<title>GoldScope Vision v2.9 — AI Market Intelligence XAUUSD</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -833,15 +833,15 @@ html,body{overflow-x:hidden;width:100%;}
           <div class="panel-lbl" style="margin-bottom:0;color:var(--gl)">🌊 ウェーブシグナル</div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="font-size:10px;color:var(--tx3)">Key</span>
-            <input type="range" id="utbotFactor" min="0.5" max="4.0" step="0.5" value="1.0"
+            <input type="range" id="utbotFactor" min="0.5" max="4.0" step="0.5" value="1.5"
               style="width:70px;accent-color:var(--g);cursor:pointer;"
               oninput="document.getElementById('utbotFactorVal').textContent=parseFloat(this.value).toFixed(1)">
-            <span id="utbotFactorVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:20px">1.0</span>
+            <span id="utbotFactorVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:20px">1.5</span>
             <span style="font-size:10px;color:var(--tx3);margin-left:4px">ATR</span>
-            <input type="range" id="utbotAtrPeriod" min="5" max="20" step="1" value="10"
+            <input type="range" id="utbotAtrPeriod" min="5" max="20" step="1" value="7"
               style="width:70px;accent-color:var(--g);cursor:pointer;"
               oninput="document.getElementById('utbotAtrVal').textContent=this.value">
-            <span id="utbotAtrVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:20px">10</span>
+            <span id="utbotAtrVal" style="font-size:12px;font-family:var(--mn);color:var(--gl);min-width:20px">7</span>
           </div>
         </div>
         <!-- シグナル表示 -->
@@ -1060,7 +1060,7 @@ html,body{overflow-x:hidden;width:100%;}
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div>GoldScope Vision v2.8 · 株式会社サウンドテラス</div>
+      <div>GoldScope Vision v2.9 · 株式会社サウンドテラス</div>
     </div>
     <div class="disclaimer" style="max-width:900px;margin:7px auto 0">⚠️ 投資助言・売買指示・利益保証ではありません。投資判断はご自身の責任で行ってください。</div>
   </footer>
@@ -1578,8 +1578,10 @@ let lastNarSpoken = 0;
 const NAR_INTERVAL = 30000; // 通常30秒ごとに読み上げ
 let lastBBState = ''; // BB状態の変化を追跡
 
-// 音声: 定期読み上げ＋エントリー時・BB状態変化時は即座
+// 音声: タブ別に分岐（v2.9）
 function triggerVoiceIfNeeded(r){
+  // ウェーブシグナルタブは triggerWaveVoice で処理済み
+  if (currentTab === 'wave') return;
   if(!voiceOn||isSpeaking) return;
   const now  = Date.now();
   const eq   = r.entryQuality;
@@ -1730,6 +1732,38 @@ async function fetchAll(){
   return{rate:p,bid:p-.5,ask:p+.5,mid:p,open:simHistory[0].c,lastRefreshed:new Date().toLocaleTimeString('ja-JP'),source:'SIM（MT4未接続）',hist:[...simHistory],live:false};
 }
 
+// ==================== calcUTBotFull (チャート描画用) ====================
+// 全バーのxATRTS・barDir・シグナルを返す
+function calcUTBotFull(hist, kv, atrP) {
+  if (!hist || hist.length < atrP * 2 + 2) return null;
+  const src = hist.map(x => x.c);
+  const n   = src.length;
+  const atrVal = calcATRRMA(hist, atrP);
+  const nLoss  = kv * atrVal;
+
+  const xATRTS = new Array(n).fill(0);
+  xATRTS[0] = src[0] - nLoss;
+  for (let i = 1; i < n; i++) {
+    const s = src[i], sp = src[i-1], tp = xATRTS[i-1];
+    if      (s > tp && sp > tp) xATRTS[i] = Math.max(tp, s - nLoss);
+    else if (s < tp && sp < tp) xATRTS[i] = Math.min(tp, s + nLoss);
+    else if (s > tp)            xATRTS[i] = s - nLoss;
+    else                        xATRTS[i] = s + nLoss;
+  }
+
+  const barDir = src.map((s, i) => s > xATRTS[i] ? 'up' : 'dn');
+
+  const signals = [];
+  for (let i = 1; i < n; i++) {
+    if (src[i] > xATRTS[i] && src[i-1] <= xATRTS[i-1])
+      signals.push({ idx: i, dir: 'up', price: src[i] });
+    else if (src[i] < xATRTS[i] && src[i-1] >= xATRTS[i-1])
+      signals.push({ idx: i, dir: 'dn', price: src[i] });
+  }
+
+  return { xATRTS, barDir, signals, atrVal };
+}
+
 // ==================== UTBot 本家完全移植 (v2.7) ====================
 // PineScript v4 "UT Bot Alerts" をJSに正確移植
 // Key Value=1, ATR Period=10 がデフォルト（本家と同じ）
@@ -1740,8 +1774,8 @@ let utbotState = {
   prevDir: 'none',
   signalPrice: null,
   signalTime: null,
-  factor: 1.0,    // 本家 Key Value デフォルト=1
-  atrPeriod: 10,  // 本家 ATR Period デフォルト=10
+  factor: 1.5,    // 最適化済み KV=1.5
+  atrPeriod: 7,   // 最適化済み ATR=7
 };
 
 // ATR RMA方式（Wilder's smoothing）本家準拠
@@ -1999,8 +2033,8 @@ function renderUTBotPF() {
 // UTBotパネル更新（renderAllから呼ぶ）
 let lastUTBotDir = 'none';
 function renderUTBotPanel(r) {
-  const factor = parseFloat(document.getElementById('utbotFactor')?.value || '1.0');
-  const atrP  = parseInt(document.getElementById('utbotAtrPeriod')?.value || '10');
+  const factor = parseFloat(document.getElementById('utbotFactor')?.value || '1.5');
+  const atrP  = parseInt(document.getElementById('utbotAtrPeriod')?.value || '7');
   const utbot = calcUTBot(r.hist, factor, atrP);
   if (!utbot) return;
 
@@ -2038,11 +2072,17 @@ function renderUTBotPanel(r) {
     </div>`
   ).join('');
 
-  // 新シグナル発生 → ナレーション＋記録
+  // 新シグナル発生 → ウェーブ音声＋記録
   if (utbot.isNew && utbot.dir !== lastUTBotDir) {
     lastUTBotDir = utbot.dir;
-    const narText = buildUTBotNarration(utbot, scoreData, r.price);
-    speak(narText);
+    const tp = utbot.dir === 'up'
+      ? r.price + utbot.atr * 1.5
+      : r.price - utbot.atr * 1.5;
+    const sl = utbot.dir === 'up'
+      ? r.price - utbot.atr
+      : r.price + utbot.atr;
+    // ウェーブ専用音声（今です＋2分タイマー）
+    onWaveSignal(utbot.dir, r.price, tp, sl, utbot.atr, scoreData.score);
     recordUTBotSignal(utbot.dir, r.price, utbot.atr, scoreData.score);
     // 状態保存
     utbotState.dir = utbot.dir;
@@ -2050,6 +2090,8 @@ function renderUTBotPanel(r) {
     utbotState.signalPrice = r.price;
     utbotState.signalTime = new Date().toLocaleTimeString('ja-JP');
   }
+  // シグナルなし時の30秒定期ナレーション（ウェーブタブ用）
+  triggerWaveVoice(r);
 }
 
 // ==================== INDICATORS ====================
@@ -3379,7 +3421,7 @@ function buildNarration(r){
 
 
 // ==================== TV CHART ====================
-let tvChart=null,tvSeries=null,tvEMALine=null;
+let tvChart=null,tvSeries=null,tvEMALine=null,tvUTBotLine=null;
 function toHeikinAshi(candles){const ha=[];for(let i=0;i<candles.length;i++){const c=candles[i];const haClose=(c.open+c.high+c.low+c.close)/4;const haOpen=i===0?(c.open+c.close)/2:(ha[i-1].open+ha[i-1].close)/2;const haHigh=Math.max(c.high,haOpen,haClose);const haLow=Math.min(c.low,haOpen,haClose);ha.push({time:c.time,open:haOpen,high:haHigh,low:haLow,close:haClose});}return ha;}
 function initTVChart(){
   if(tvChart)return;
@@ -3389,6 +3431,7 @@ function initTVChart(){
     tvChart=LightweightCharts.createChart(container,{layout:{background:{color:'#131820'},textColor:'#484644'},grid:{vertLines:{color:'rgba(255,255,255,0.03)'},horzLines:{color:'rgba(255,255,255,0.03)'}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal},rightPriceScale:{borderColor:'rgba(255,255,255,0.05)'},timeScale:{borderColor:'rgba(255,255,255,0.05)',timeVisible:true},handleScroll:true,handleScale:true});
     tvSeries=tvChart.addCandlestickSeries({upColor:'#3A8AE0',downColor:'#E05530',borderUpColor:'#3A8AE0',borderDownColor:'#E05530',wickUpColor:'rgba(58,138,224,.6)',wickDownColor:'rgba(224,85,48,.6)'});
     tvEMALine=tvChart.addLineSeries({color:'rgba(58,138,224,.5)',lineWidth:1,crosshairMarkerVisible:false,lastValueVisible:false,priceLineVisible:false});
+    tvUTBotLine=tvChart.addLineSeries({color:'rgba(232,201,106,.7)',lineWidth:1.5,crosshairMarkerVisible:false,lastValueVisible:false,priceLineVisible:false,lineStyle:0});
   }catch(e){console.warn('[TV]',e.message);}
 }
 function updateTVChart(r,d){
@@ -3399,6 +3442,48 @@ function updateTVChart(r,d){
     const rawCandles=hist.map((b,i)=>({time:now-(hist.length-i)*step,open:b.o||b.c,high:b.h,low:b.l,close:b.c}));
     tvSeries.setData(toHeikinAshi(rawCandles));
     if(tvEMALine&&r.e20){const k=2/21;let e=rawCandles[0].close;const emaData=rawCandles.map(c=>{e=c.close*k+e*(1-k);return{time:c.time,value:parseFloat(e.toFixed(2))};});tvEMALine.setData(emaData);}
+    // UTBotトレイリングライン + サインマーカー
+    if(tvUTBotLine && r.hist && r.hist.length >= 20){
+      try{
+        const factor = parseFloat(document.getElementById('utbotFactor')?.value||'1.5');
+        const atrP   = parseInt(document.getElementById('utbotAtrPeriod')?.value||'7');
+        const histSlice = r.hist.slice(-80);
+        const utbotFull = calcUTBotFull(histSlice, factor, atrP);
+        if(utbotFull){
+          // トレイリングライン
+          const lineData = utbotFull.xATRTS.map((v,i)=>({
+            time: rawCandles[i]?.time,
+            value: parseFloat(v.toFixed(2)),
+          })).filter(x=>x.time);
+          tvUTBotLine.setData(lineData);
+
+          // カラーリング（barbuy=緑 barsell=赤）
+          const colorData = lineData.map((d,i)=>({
+            time: d.time,
+            color: utbotFull.barDir[i]==='up'?'rgba(27,174,130,.8)':'rgba(224,85,48,.8)',
+          }));
+          try{ tvUTBotLine.setData(lineData); }catch{}
+
+          // Buy/Sellマーカー
+          const markers = [];
+          for(let i=0;i<utbotFull.signals.length;i++){
+            const sig = utbotFull.signals[i];
+            const ci  = sig.idx;
+            if(ci >= rawCandles.length) continue;
+            markers.push({
+              time:     rawCandles[ci].time,
+              position: sig.dir==='up'?'belowBar':'aboveBar',
+              color:    sig.dir==='up'?'#1BAE82':'#E05530',
+              shape:    sig.dir==='up'?'arrowUp':'arrowDown',
+              text:     sig.dir==='up'?'▲':'▼',
+              size:     1.5,
+            });
+          }
+          tvSeries.setMarkers(markers);
+        }
+      }catch(e){console.warn('[UTBot chart]',e.message);}
+    }
+
     const sig=r.signal;
     const legEl=$('chartLegend');
     if(legEl)legEl.innerHTML=
@@ -4642,6 +4727,163 @@ function renderPerf(){
   const total=perfData.records.length;const hits=perfData.records.filter(r=>r.type==='up').length;const wr=total>0?Math.round(hits/total*100):0;
   $('perfTotal').textContent=total;$('perfHit').textContent=hits;$('perfMiss').textContent=total-hits;$('perfWR').textContent=total>0?wr+'%':'--%';
   const histEl=$('perfHistory');if(histEl&&histEl.innerHTML!==undefined){histEl.innerHTML=perfData.records.slice(0,20).map(r=>`<div class="hist-row"><span style="color:var(--tx3)">${r.time}</span><span style="color:${r.dir==='up'?'var(--up)':'var(--dn)'}">${r.dir==='up'?'↑':'↓'}</span><span style="color:var(--tx2);flex:1;margin:0 6px">${r.state}</span><span class="${r.type==='up'?'hist-hit':'hist-miss'}">${r.type==='up'?'✅ 一致':'❌ ハズレ'}</span></div>`).join('')||'<div style="font-size:11px;color:var(--tx3);padding:8px 0">まだ記録がありません</div>';}
+}
+
+
+// ==================== ウェーブシグナル 音声システム (v2.9) ====================
+let waveSignalTimer   = null;  // 2分チャンスタイマー
+let waveSignalActive  = false; // チャンス継続中
+let waveSignalDir     = null;  // 'up' | 'dn'
+let waveSignalPrice   = null;  // エントリー価格
+let waveSignalTP      = null;  // 目標価格
+let waveSignalSL      = null;  // 損切り価格
+let waveSignalScore   = 0;     // 根拠スコア
+let waveSignalElapsed = 0;     // 経過秒数
+let waveNarTimer      = null;  // 30秒定期ナレーションタイマー
+let waveNarCount      = 0;     // ナレーションバリエーションカウンター
+let waveLastSignalDir = 'none'; // 前回シグナル方向
+
+// ウェーブシグナル発生時（新規サインのみ呼ぶ）
+function onWaveSignal(dir, price, tp, sl, atr, score) {
+  if (!voiceOn) return;
+
+  waveSignalActive  = true;
+  waveSignalDir     = dir;
+  waveSignalPrice   = price;
+  waveSignalTP      = tp;
+  waveSignalSL      = sl;
+  waveSignalScore   = score;
+  waveSignalElapsed = 0;
+
+  // 既存タイマークリア
+  if (waveSignalTimer) clearInterval(waveSignalTimer);
+
+  // 即座「今です」アナウンス
+  const dirJP  = dir === 'up' ? 'ロング' : 'ショート';
+  const dirJP2 = dir === 'up' ? '上昇' : '下降';
+  const scoreStr = `根拠${score}点`;
+  const priority = score >= 5 ? '優先度高め。' : score >= 3 ? '優先度中程度。' : '注意して入るなら浅め。';
+  speak(`今です。${dirJP}エントリー。価格${price.toFixed(1)}。目標${tp.toFixed(1)}、損切り${sl.toFixed(1)}。${scoreStr}、${priority}`);
+
+  // 2分間チャンスタイマー（30秒毎）
+  waveSignalTimer = setInterval(() => {
+    waveSignalElapsed += 30;
+    if (waveSignalElapsed >= 120) {
+      clearInterval(waveSignalTimer);
+      waveSignalActive = false;
+      if (voiceOn) speak('チャンス終了。次のウェーブシグナルを待ちます。');
+      return;
+    }
+    if (!voiceOn) return;
+    const currentPrice = lastResult?.price || price;
+    const remain = 120 - waveSignalElapsed;
+    const dist = dir === 'up'
+      ? (tp - currentPrice).toFixed(1)
+      : (currentPrice - tp).toFixed(1);
+
+    if (waveSignalElapsed === 30) {
+      speak(`まだチャンスあり。${dirJP}継続中。現在${currentPrice.toFixed(1)}。目標まであと${dist}ドル。`);
+    } else if (waveSignalElapsed === 60) {
+      speak(`1分経過。エントリー有効範囲内。${dirJP2}の流れ継続中。残り1分。`);
+    } else if (waveSignalElapsed === 90) {
+      speak(`残り30秒。目標まであと${dist}ドル。`);
+    }
+  }, 30000);
+}
+
+// ウェーブシグナルなし時の30秒定期ナレーション
+function buildWaveNarration(r) {
+  if (!r) return null;
+  const p     = r.price?.toFixed(1) || '--';
+  const atr   = r.ATR?.toFixed(1) || '--';
+  const adx   = r.ADX?.adx || 0;
+  const sess  = r.sessName || '';
+  waveNarCount++;
+  const n = waveNarCount;
+
+  // ニュース系（経済指標）
+  const news = getUpcomingNewsText();
+
+  // バリエーション6パターン
+  const patterns = [
+    // 環境認識
+    () => {
+      const dir = r.price > (r.e200 || r.price) ? '上' : '下';
+      return `現在${p}ドル。EMA200の${dir}で推移中。エーディーエックス${adx}。${adx >= 25 ? 'トレンド相場です。' : 'レンジ気味です。'}ウェーブシグナル待ち。`;
+    },
+    // ニュース
+    () => news
+      ? `${news}ウェーブシグナルは${p}ドル付近を監視中。`
+      : `現在${p}ドル。ATR${atr}ドル。${sess}セッション。ボラティリティ${parseFloat(atr) > 3 ? '高め' : '標準'}。シグナル待機中。`,
+    // BB状態
+    () => {
+      const bb = r.bbStateLabel || 'BB通常';
+      return `${p}ドル。${bb}。${r.isTrueSqueeze ? 'スクイーズ中のためシグナルは見送りです。' : 'エクスパンション${r.isExpansion ? "継続中" : "待ち"}。ウェーブシグナル監視中。'}`;
+    },
+    // FVG・ゾーン
+    () => {
+      const fvg = r.fvgData?.nearFVG;
+      return fvg
+        ? `注目ゾーン。${fvg.type === 'bull' ? '買い' : '売り'}FVGが${fvg.low?.toFixed(1)}から${fvg.high?.toFixed(1)}付近。価格${p}ドル。このゾーンでのウェーブシグナルに注目。`
+        : `現在${p}ドル。${sess}セッション進行中。ATR${atr}ドル。次のウェーブシグナルを待っています。`;
+    },
+    // セッション・時間帯
+    () => {
+      const jst = new Date(Date.now() + 9*3600000);
+      const h = jst.getUTCHours();
+      const sessTxt = h >= 15 && h < 18 ? 'ロンドン時間まであと少し。大きな動きに備えてください。'
+        : h >= 21 && h < 24 ? 'ニューヨーク時間です。ボラティリティが高くなりやすい時間帯。'
+        : h >= 9  && h < 12 ? '東京時間です。比較的レンジになりやすい時間帯。'
+        : `現在${sess}セッション。`;
+      return `${p}ドル。${sessTxt}ウェーブシグナル監視中。`;
+    },
+    // ニュース（2回目）
+    () => news
+      ? `再確認。${news}`
+      : `${p}ドル。ADX${adx}、ATR${atr}ドル。${adx >= 25 ? 'トレンド相場継続中。' : 'レンジ相場。'}シグナル発生まで待機。`,
+  ];
+
+  return patterns[n % patterns.length]();
+}
+
+// 次の重要ニュースをテキストで返す
+function getUpcomingNewsText() {
+  const now = new Date();
+  const jst = new Date(now.getTime() + 9*3600000);
+  const dow = jst.getUTCDay();
+  const hm  = jst.getUTCHours() * 100 + jst.getUTCMinutes();
+
+  const schedule = {
+    1:[{t:'21:30',n:'米ISM製造業景況指数',imp:'high'},{t:'23:00',n:'米建設支出',imp:'low'}],
+    2:[{t:'08:30',n:'豪RBA政策金利',imp:'high'},{t:'21:30',n:'米貿易収支',imp:'med'},{t:'22:00',n:'米JOLTS求人件数',imp:'high'}],
+    3:[{t:'20:15',n:'米ADP雇用統計',imp:'high'},{t:'23:00',n:'米ISM非製造業',imp:'high'},{t:'27:00',n:'FOMC議事録',imp:'high'}],
+    4:[{t:'21:30',n:'米新規失業保険申請',imp:'high'},{t:'21:30',n:'米PPIコア前月比',imp:'high'}],
+    5:[{t:'21:30',n:'米雇用統計 非農業部門',imp:'high'},{t:'21:30',n:'米失業率',imp:'high'}],
+  };
+
+  const items = (schedule[dow] || []).filter(ev => {
+    const evHM = parseInt(ev.t.replace(':', ''));
+    return evHM > hm && evHM <= hm + 300; // 3時間以内
+  });
+
+  if (items.length === 0) return null;
+  const ev = items[0];
+  const impTxt = ev.imp === 'high' ? '高重要度指標です。注意してください。' : '指標があります。';
+  return `本日${ev.t}JST、${ev.n}。${impTxt}`;
+}
+
+// ウェーブ用triggerVoice（タブ判定付き）
+function triggerWaveVoice(r) {
+  if (!voiceOn) return;
+  const now = Date.now();
+  // シグナルなし時の30秒定期ナレーション
+  if (!waveSignalActive) {
+    if (now - (waveState.lastNarTime || 0) > 30000) {
+      waveState.lastNarTime = now;
+      const txt = buildWaveNarration(r);
+      if (txt) speak(txt);
+    }
+  }
 }
 
 // ==================== レイアウトエディター (v2.8) ====================
