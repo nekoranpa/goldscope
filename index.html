@@ -766,6 +766,69 @@ function buyPressure(h){
 }
 function vwap(h){ let pv=0,v=0; for(const b of h){ const t=(b.h+b.l+b.c)/3; pv+=t*(b.v||500); v+=(b.v||500); } return v>0?pv/v:h[h.length-1]?.c||0; }
 
+
+// ==================== SUPPORT FUNCTIONS v3.0.1 ====================
+// Saved HTMLから抜けていた定義を補完。これが無いと calcMACD is not defined で画面更新が止まります。
+const ROSS_RULES = {
+  utbotKV: 1.5,
+  utbotATR: 7,
+  volumeSpikeRatio: 5.0,
+  priceUpPctMin: 5.0,
+  rrMin: 2.0,
+  rrBest: 3.0
+};
+
+function emaSeries(values, period){
+  if(!values || !values.length) return [];
+  const k = 2 / (period + 1);
+  let e = values[0];
+  const out = [e];
+  for(let i=1;i<values.length;i++){
+    e = values[i] * k + e * (1 - k);
+    out.push(e);
+  }
+  return out;
+}
+
+function calcMACD(values, fast=12, slow=26, signal=9){
+  if(!values || values.length < slow + signal + 2){
+    return {macd:0, signal:0, hist:0, prevHist:0, isGreen:false, crossUp:false, crossDn:false};
+  }
+  const ef = emaSeries(values, fast);
+  const es = emaSeries(values, slow);
+  const macdLine = values.map((_,i)=>(ef[i]||0) - (es[i]||0));
+  const sigLine = emaSeries(macdLine, signal);
+  const i = macdLine.length - 1;
+  const macd = macdLine[i] || 0;
+  const sig = sigLine[i] || 0;
+  const hist = macd - sig;
+  const prevHist = (macdLine[i-1] || 0) - (sigLine[i-1] || 0);
+  return {
+    macd,
+    signal: sig,
+    hist,
+    prevHist,
+    isGreen: hist >= 0,
+    crossUp: hist > 0 && prevHist <= 0,
+    crossDn: hist < 0 && prevHist >= 0
+  };
+}
+
+function calcVolumePattern(hist){
+  if(!hist || hist.length < 20){
+    return {spikeRatio:1, upVol:false, recentVol:1, avgVol:1};
+  }
+  const recent = hist.slice(-20);
+  const vols = recent.map(b=>b.v || 500);
+  const last = recent[recent.length - 1];
+  const prev = recent[recent.length - 2] || last;
+  const avgVol = vols.slice(0, -1).reduce((a,b)=>a+b,0) / Math.max(1, vols.length - 1);
+  const recentVol = last.v || avgVol || 1;
+  const spikeRatio = recentVol / Math.max(1, avgVol);
+  const upVol = last.c >= (last.o || prev.c) && recentVol >= (prev.v || avgVol) * 0.8;
+  return {spikeRatio, upVol, recentVol, avgVol};
+}
+
 // ==================== UTBot ====================
 function calcATRRMA(hist, period) {
   if (hist.length < period + 1) return calcATR(hist, period);
