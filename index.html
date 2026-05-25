@@ -1,4 +1,248 @@
+// ==================== 反発リスクスコア ====================
+// OB / MA / Strong High/Low / BB / FVG / フィボなど、進行方向の壁を点数化する
+// 自動売買では「良いシグナルを探す」より「悪い場所で入らない」ことが重要
+function calcReboundRisk(p){
+  const {
+    price,
+    dir,
+    ATR,
+    ADX,
+    BB,
+    SMC,
+    emaWalls,
+    fvgData,
+    TECH
+  } = p || {};
 
+  if(!price || !dir || dir === 'neut'){
+    return {
+      score: 0,
+      decision: 'normal',
+      label: '方向未確定',
+      lotMultiplier: 1.0,
+      tpMultiplier: 1.0,
+      autoTradeAllowed: true,
+      nearestWall: null,
+      strongestWall: null,
+      walls: []
+    };
+  }
+
+  const atr = ATR || 3;
+  const adx = ADX?.adx || 20;
+  const walls = [];
+  let score = 0;
+
+  const addWall = ({
+    type,
+    label,
+    price: wallPrice,
+    weight = 10,
+    kind = 'resistance',
+    reason = ''
+  }) => {
+    if(!wallPrice || isNaN(wallPrice)) return;
+
+    const distance = Math.abs(wallPrice - price);
+    const distanceAtr = distance / Math.max(atr, 0.01);
+
+    // 進行方向にある壁だけ評価
+    const isAhead =
+      (dir === 'up' && wallPrice > price) ||
+      (dir === 'dn' && wallPrice < price);
+
+    if(!isAhead) return;
+
+    let add = 0;
+
+    // 距離が近いほど加点
+    if(distanceAtr <= 0.4) add += weight * 1.8;
+    else if(distanceAtr <= 0.8) add += weight * 1.4;
+    else if(distanceAtr <= 1.2) add += weight * 1.0;
+    else if(distanceAtr <= 1.8) add += weight * 0.55;
+    else if(distanceAtr <= 2.5) add += weight * 0.25;
+    else return;
+
+    // ADXが弱いと壁で止まりやすい
+    if(adx < 18) add *= 1.35;
+    else if(adx < 25) add *= 1.15;
+    else if(adx >= 35) add *= 0.75;
+
+    add = Math.round(add);
+    score += add;
+
+    walls.push({
+      type,
+      label,
+      wallPrice: parseFloat(wallPrice.toFixed(1)),
+      distance: parseFloat(distance.toFixed(1)),
+      distanceAtr: parseFloat(distanceAtr.toFixed(2)),
+      add,
+      kind,
+      reason
+    });
+  };
+
+  // ── Strong High / Strong Low ─────────────────────
+  if(dir === 'up'){
+    SMC?.strongHighs?.forEach(sh => {
+      addWall({
+        type: 'STRONG_HIGH',
+        label: `Strong High ${sh.count || 2}回反発`,
+        price: sh.price,
+        weight: sh.count >= 3 ? 26 : 20,
+        kind: 'resistance',
+        reason: '過去に複数回反落している上値抵抗'
+      });
+    });
+  }
+
+  if(dir === 'dn'){
+    SMC?.strongLows?.forEach(sl => {
+      addWall({
+        type: 'STRONG_LOW',
+        label: `Strong Low ${sl.count || 2}回反発`,
+        price: sl.price,
+        weight: sl.count >= 3 ? 26 : 20,
+        kind: 'support',
+        reason: '過去に複数回反発している下値支持'
+      });
+    });
+  }
+
+  // ── EMA / SMA 壁 ─────────────────────
+  emaWalls?.forEach(w => {
+    const isRelevant =
+      (dir === 'up' && w.role === 'resist') ||
+      (dir === 'dn' && w.role === 'support');
+
+    if(!isRelevant) return;
+
+    addWall({
+      type: w.label,
+      label: `${w.label} ${w.role === 'resist' ? '抵抗' : '支持'}`,
+      price: w.val,
+      weight: w.label === '320SMA' ? 24 :
+              w.label === 'EMA200' ? 20 :
+              w.label === 'EMA75'  ? 14 : 8,
+      kind: w.role === 'resist' ? 'resistance' : 'support',
+      reason: `${w.label}が進行方向の壁`
+    });
+  });
+
+  // ── Bollinger Band 上限・下限 ─────────────────────
+  if(BB){
+    if(dir === 'up'){
+      addWall({
+        type: 'BB_UPPER',
+        label: 'BB上限',
+        price: BB.u,
+        weight: 12,
+        kind: 'resistance',
+        reason: 'ボリンジャーバンド上限接近'
+      });
+    } else if(dir === 'dn'){
+      addWall({
+        type: 'BB_LOWER',
+        label: 'BB下限',
+        price: BB.l,
+        weight: 12,
+        kind: 'support',
+        reason: 'ボリンジャーバンド下限接近'
+      });
+    }
+  }
+
+  // ── FVG 反対方向の壁 ─────────────────────
+  const nf = fvgData?.nearFVG;
+  if(nf){
+    if(dir === 'up' && nf.type === 'bear'){
+      addWall({
+        type: 'BEAR_FVG',
+        label: '売りFVG抵抗',
+        price: nf.low,
+        weight: 18,
+        kind: 'resistance',
+        reason: '上方向に売りFVGがある'
+      });
+    }
+
+    if(dir === 'dn' && nf.type === 'bull'){
+      addWall({
+        type: 'BULL_FVG',
+        label: '買いFVG支持',
+        price: nf.high,
+        weight: 18,
+        kind: 'support',
+        reason: '下方向に買いFVGがある'
+      });
+    }
+  }
+
+  // ── フィボ近接 ─────────────────────
+  if(TECH?.nearFibo){
+    const fiboName = TECH.nearFibo[0];
+    const fiboPrice = TECH.nearFibo[1];
+
+    addWall({
+      type: 'FIBO',
+      label: `Fibo ${fiboName}`,
+      price: fiboPrice,
+      weight: 8,
+      kind: dir === 'up' ? 'resistance' : 'support',
+      reason: 'フィボナッチ節目が近い'
+    });
+  }
+
+  // スコア上限
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  const nearestWall = walls.length
+    ? [...walls].sort((a,b) => a.distance - b.distance)[0]
+    : null;
+
+  const strongestWall = walls.length
+    ? [...walls].sort((a,b) => b.add - a.add)[0]
+    : null;
+
+  let decision = 'normal';
+  let label = '通常エントリー可';
+  let lotMultiplier = 1.0;
+  let tpMultiplier = 1.0;
+  let autoTradeAllowed = true;
+
+  if(score >= 85){
+    decision = 'blocked';
+    label = '反発リスク極大 — エントリー禁止';
+    lotMultiplier = 0;
+    tpMultiplier = 0;
+    autoTradeAllowed = false;
+  } else if(score >= 70){
+    decision = 'manual_only';
+    label = '反発リスク高 — 自動売買禁止・手動確認';
+    lotMultiplier = 0;
+    tpMultiplier = 0;
+    autoTradeAllowed = false;
+  } else if(score >= 50){
+    decision = 'reduce';
+    label = '反発リスク中 — ロット半分・TP短縮';
+    lotMultiplier = 0.5;
+    tpMultiplier = 0.6;
+    autoTradeAllowed = true;
+  }
+
+  return {
+    score,
+    decision,
+    label,
+    lotMultiplier,
+    tpMultiplier,
+    autoTradeAllowed,
+    nearestWall,
+    strongestWall,
+    walls
+  };
+}
 
 <!DOCTYPE html>
 <html lang="ja">
