@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>GoldScope Vision v2.7 — AI Market Intelligence XAUUSD</title>
+<title>GoldScope Vision v2.8 — AI Market Intelligence XAUUSD</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23070909'/><polygon points='16,4 20,13 30,13 22,19 25,28 16,22 7,28 10,19 2,13 12,13' fill='%23B8942A'/><polygon points='16,7 19.5,14 27,14 21,18.5 23.5,26 16,21.5 8.5,26 11,18.5 5,14 12.5,14' fill='%23E8C96A' opacity='0.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -493,6 +493,90 @@ html,body{overflow-x:hidden;width:100%;}
     padding-bottom:max(12px,env(safe-area-inset-bottom));
   }
 }
+
+/* ===== レイアウトエディター (v2.8) ===== */
+.layout-edit-btn{
+  position:fixed;bottom:18px;right:18px;z-index:9999;
+  background:var(--bg2);border:0.5px solid var(--bo2);
+  border-radius:50%;width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);
+  transition:all .2s;
+}
+.layout-edit-btn:hover{background:var(--g);border-color:var(--g);}
+.layout-edit-btn.active{background:var(--g);border-color:var(--g);}
+
+/* 編集モード時のパネル */
+.layout-editing .panel,
+.layout-editing .tr-panel,
+.layout-editing .bias-panel{
+  cursor:grab !important;
+  outline:1.5px dashed rgba(184,148,42,.5);
+  position:relative;
+}
+.layout-editing .panel:active{ cursor:grabbing !important; }
+
+/* ドラッグハンドル */
+.drag-handle{
+  display:none;
+  position:absolute;top:6px;right:8px;
+  font-size:14px;color:var(--tx3);cursor:grab;
+  z-index:10;line-height:1;
+}
+.layout-editing .drag-handle{ display:block; }
+
+/* ドラッグオーバー */
+.drag-over{
+  outline:2px solid var(--g) !important;
+  background:rgba(184,148,42,.08) !important;
+}
+
+/* カラム数コントロール */
+.layout-ctrl-bar{
+  display:none;
+  position:fixed;bottom:70px;right:12px;z-index:9999;
+  background:var(--bg2);border:0.5px solid var(--bo2);
+  border-radius:12px;padding:12px 14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  min-width:160px;
+}
+.layout-ctrl-bar.show{ display:block; }
+.layout-ctrl-bar label{
+  font-size:10px;color:var(--tx3);
+  display:block;margin-bottom:4px;
+}
+.layout-ctrl-bar input[type=range]{
+  width:100%;accent-color:var(--g);
+}
+.layout-ctrl-bar .col-val{
+  font-family:var(--mn);font-size:13px;
+  color:var(--gl);font-weight:700;
+}
+.layout-reset-btn{
+  margin-top:8px;width:100%;
+  font-size:10px;color:var(--tx3);
+  background:none;border:0.5px solid var(--bo2);
+  border-radius:4px;padding:4px;cursor:pointer;
+}
+.layout-reset-btn:hover{ color:var(--dn);border-color:var(--dn); }
+
+/* Masonryモード */
+.masonry-mode{
+  display:block !important;
+  column-gap:10px;
+}
+.masonry-mode > .panel,
+.masonry-mode > .tr-panel,
+.masonry-mode > .bias-panel,
+.masonry-mode > .scenario-box,
+.masonry-mode > .signal-hero,
+.masonry-mode > .chart-wrap{
+  break-inside:avoid;
+  margin-bottom:10px;
+  display:block;
+  width:100%;
+  box-sizing:border-box;
+}
 </style>
 </head>
 <body>
@@ -976,7 +1060,7 @@ html,body{overflow-x:hidden;width:100%;}
 
   <footer class="app-footer">
     <div class="footer-inner">
-      <div>GoldScope Vision v2.7 · 株式会社サウンドテラス</div>
+      <div>GoldScope Vision v2.8 · 株式会社サウンドテラス</div>
     </div>
     <div class="disclaimer" style="max-width:900px;margin:7px auto 0">⚠️ 投資助言・売買指示・利益保証ではありません。投資判断はご自身の責任で行ってください。</div>
   </footer>
@@ -4559,6 +4643,227 @@ function renderPerf(){
   $('perfTotal').textContent=total;$('perfHit').textContent=hits;$('perfMiss').textContent=total-hits;$('perfWR').textContent=total>0?wr+'%':'--%';
   const histEl=$('perfHistory');if(histEl&&histEl.innerHTML!==undefined){histEl.innerHTML=perfData.records.slice(0,20).map(r=>`<div class="hist-row"><span style="color:var(--tx3)">${r.time}</span><span style="color:${r.dir==='up'?'var(--up)':'var(--dn)'}">${r.dir==='up'?'↑':'↓'}</span><span style="color:var(--tx2);flex:1;margin:0 6px">${r.state}</span><span class="${r.type==='up'?'hist-hit':'hist-miss'}">${r.type==='up'?'✅ 一致':'❌ ハズレ'}</span></div>`).join('')||'<div style="font-size:11px;color:var(--tx3);padding:8px 0">まだ記録がありません</div>';}
 }
+
+// ==================== レイアウトエディター (v2.8) ====================
+const LAYOUT_KEY = 'gsv_layout_v1';
+let isLayoutEditing = false;
+let dragSrc = null;
+
+// レイアウト設定読み込み
+function loadLayout() {
+  try {
+    const d = localStorage.getItem(LAYOUT_KEY);
+    if (!d) return;
+    const cfg = JSON.parse(d);
+    if (cfg.colCount !== undefined) {
+      const sl = document.getElementById('colSlider');
+      if (sl) { sl.value = cfg.colCount; applyColCount(cfg.colCount, false); }
+    }
+    if (cfg.order && cfg.order.length) restorePanelOrder(cfg.order);
+  } catch(e) {}
+}
+
+function saveLayout() {
+  try {
+    const order = getPanelOrder();
+    const colCount = parseInt(document.getElementById('colSlider')?.value || '0');
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify({ order, colCount }));
+  } catch(e) {}
+}
+
+function resetLayout() {
+  localStorage.removeItem(LAYOUT_KEY);
+  location.reload();
+}
+
+// パネルのID順を取得
+function getPanelOrder() {
+  const containers = ['tab-sec', 'tab-scalp', 'tab-daytrade'];
+  const result = {};
+  containers.forEach(cid => {
+    const el = document.getElementById(cid);
+    if (!el) return;
+    result[cid] = Array.from(el.children)
+      .map(c => c.id || c.dataset.panelIdx || '')
+      .filter(Boolean);
+  });
+  return result;
+}
+
+// パネル順を復元
+function restorePanelOrder(order) {
+  Object.keys(order).forEach(cid => {
+    const container = document.getElementById(cid);
+    if (!container) return;
+    const ids = order[cid];
+    ids.forEach(id => {
+      const el = id ? document.getElementById(id) : null;
+      if (el && el.parentElement === container) container.appendChild(el);
+    });
+  });
+}
+
+// カラム数適用
+function applyColCount(val, save = true) {
+  const disp = document.getElementById('colValDisp');
+  if (disp) disp.textContent = val === 0 ? '自動' : val + 'カラム';
+
+  const targets = document.querySelectorAll('#tab-sec.act, #tab-scalp.act, #tab-daytrade.act, #tab-sec, #tab-scalp, #tab-daytrade');
+  targets.forEach(el => {
+    el.classList.remove('masonry-mode');
+    if (val === 0) {
+      // 自動（元のauto-fill）
+      el.style.removeProperty('column-count');
+      el.style.removeProperty('display');
+      el.style.removeProperty('grid-template-columns');
+    } else {
+      // Masonryモード
+      el.classList.add('masonry-mode');
+      el.style.columnCount = val;
+    }
+  });
+  if (save) saveLayout();
+}
+
+// レイアウト編集モード切り替え
+function toggleLayoutEdit() {
+  isLayoutEditing = !isLayoutEditing;
+  const btn = document.getElementById('layoutEditBtn');
+  const ctrl = document.getElementById('layoutCtrlBar');
+  const tabs = document.querySelectorAll('.tab-content');
+
+  if (isLayoutEditing) {
+    btn?.classList.add('active');
+    ctrl?.classList.add('show');
+    tabs.forEach(t => t.classList.add('layout-editing'));
+    initDraggable();
+    showToast('✏️ 編集モード：パネルをドラッグして並び替え');
+  } else {
+    btn?.classList.remove('active');
+    ctrl?.classList.remove('show');
+    tabs.forEach(t => t.classList.remove('layout-editing'));
+    removeDraggable();
+    saveLayout();
+    showToast('✅ レイアウトを保存しました');
+  }
+}
+
+// ドラッグ&ドロップ初期化
+function initDraggable() {
+  const panels = document.querySelectorAll(
+    '.tab-content .panel, .tab-content .tr-panel, .tab-content .bias-panel, ' +
+    '.tab-content .scenario-box, .tab-content .signal-hero, .tab-content .chart-wrap'
+  );
+
+  panels.forEach((p, idx) => {
+    if (!p.id) p.id = 'panel_auto_' + idx;
+    p.draggable = true;
+
+    // ハンドル追加
+    if (!p.querySelector('.drag-handle')) {
+      const h = document.createElement('span');
+      h.className = 'drag-handle';
+      h.textContent = '⠿';
+      h.title = 'ドラッグで移動';
+      p.appendChild(h);
+    }
+
+    p.addEventListener('dragstart', onDragStart);
+    p.addEventListener('dragover',  onDragOver);
+    p.addEventListener('dragleave', onDragLeave);
+    p.addEventListener('drop',      onDrop);
+    p.addEventListener('dragend',   onDragEnd);
+  });
+}
+
+function removeDraggable() {
+  document.querySelectorAll('[draggable="true"]').forEach(p => {
+    p.draggable = false;
+    p.querySelector('.drag-handle')?.remove();
+    p.removeEventListener('dragstart', onDragStart);
+    p.removeEventListener('dragover',  onDragOver);
+    p.removeEventListener('dragleave', onDragLeave);
+    p.removeEventListener('drop',      onDrop);
+    p.removeEventListener('dragend',   onDragEnd);
+    p.classList.remove('drag-over');
+  });
+}
+
+function onDragStart(e) {
+  dragSrc = this;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', this.id);
+  setTimeout(() => this.style.opacity = '0.4', 0);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (this !== dragSrc) this.classList.add('drag-over');
+}
+
+function onDragLeave() {
+  this.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  if (dragSrc && this !== dragSrc && this.parentElement === dragSrc.parentElement) {
+    const container = this.parentElement;
+    const allChildren = Array.from(container.children);
+    const srcIdx  = allChildren.indexOf(dragSrc);
+    const destIdx = allChildren.indexOf(this);
+    if (srcIdx < destIdx) {
+      container.insertBefore(dragSrc, this.nextSibling);
+    } else {
+      container.insertBefore(dragSrc, this);
+    }
+  }
+}
+
+function onDragEnd() {
+  this.style.opacity = '';
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  dragSrc = null;
+}
+
+// トースト通知
+function showToast(msg) {
+  let toast = document.getElementById('gsv_toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'gsv_toast';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+      'background:var(--bg2);border:0.5px solid var(--bo2);border-radius:8px;' +
+      'padding:8px 16px;font-size:12px;color:var(--tx2);z-index:99999;' +
+      'box-shadow:0 4px 12px rgba(0,0,0,.4);transition:opacity .3s;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.style.opacity = '0', 2500);
+}
+
+// 初期化
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(loadLayout, 500);
+});
+
 </script>
+
+  <!-- ===== レイアウトエディター (v2.8) ===== -->
+  <div class="layout-ctrl-bar" id="layoutCtrlBar">
+    <label>カラム数 <span class="col-val" id="colValDisp">自動</span></label>
+    <input type="range" id="colSlider" min="0" max="4" step="1" value="0"
+      oninput="applyColCount(parseInt(this.value))">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);margin-top:2px;">
+      <span>自動</span><span>1</span><span>2</span><span>3</span><span>4</span>
+    </div>
+    <button class="layout-reset-btn" onclick="resetLayout()">⟳ 並び順リセット</button>
+  </div>
+  <button class="layout-edit-btn" id="layoutEditBtn" onclick="toggleLayoutEdit()" title="レイアウト編集">⊞</button>
+
 </body>
 </html>
